@@ -1,0 +1,3 @@
+isServer: false
+port: 13371
+host: localhost
