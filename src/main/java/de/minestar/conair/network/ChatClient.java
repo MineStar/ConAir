@@ -20,7 +20,7 @@ package de.minestar.conair.network;
 
 public class ChatClient implements Runnable {
 
-    public ChatClient() throws Exception {
+    public ChatClient(int port, String host) throws Exception {
 
     }
 

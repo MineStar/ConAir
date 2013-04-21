@@ -18,16 +18,83 @@
 
 package de.minestar.conair.network;
 
+import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.logging.Logger;
+
+import de.minestar.conair.core.Core;
+
 public class ChatServer implements Runnable {
 
-    public ChatServer() throws Exception {
+    private Selector selector;
 
+    private ServerSocketChannel serverSocket;
+
+    private boolean isRunning;
+
+    public ChatServer(int port) throws Exception {
+        this.selector = Selector.open();
+
+        // Listening on the port
+        SocketChannel serverChannel = SocketChannel.open(new InetSocketAddress(port));
+        // Non-Blocking for Selector activity
+        serverChannel.configureBlocking(false);
+        serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        isRunning = true;
     }
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
+        try {
+            while (isRunning) {
+                int rdyChannels = selector.select();
+                // No channel want something
+                if (rdyChannels == 0) {
+                    continue;
+                }
 
+                // Iterate over all channel which want something
+                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    // New client wants to connect
+                    if (key.isAcceptable()) {
+                        // accept new client
+                        onClientAccept();
+                    }
+                    // client want to send something
+                    if (key.isReadable()) {
+                        onClientRead(key);
+                    }
+                    it.remove();
+                }
+
+            }
+        } catch (Exception e) {
+            Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);
+            isRunning = false;
+        }
+    }
+
+    public void stop() {
+        this.isRunning = false;
+    }
+
+    public void onClientAccept() throws Exception {
+        // accept new client
+        SocketChannel clientSocket = serverSocket.accept();
+        clientSocket.configureBlocking(false);
+
+        clientSocket.register(selector, SelectionKey.OP_READ);
+    }
+
+    public void onClientRead(SelectionKey key) throws Exception {
+        // TODO: Read input from client
     }
 
 }

@@ -46,10 +46,10 @@ public class Core extends JavaPlugin {
         readConfig();
 
         if (isServer) {
-            createChatServer();
+            createChatServer(port);
         }
 
-        createChatClient();
+        createChatClient(port, host);
     }
 
     private void enableListener(PluginManager pm) {
@@ -65,9 +65,9 @@ public class Core extends JavaPlugin {
         host = config.getString("host", "localhost");
     }
 
-    private boolean createChatServer() {
+    private boolean createChatServer(int port) {
         try {
-            this.chatServer = new ChatServer();
+            this.chatServer = new ChatServer(port);
             this.getServer().getScheduler().runTaskAsynchronously(this, this.chatServer);
             return true;
         } catch (Exception e) {
@@ -76,9 +76,9 @@ public class Core extends JavaPlugin {
         }
     }
 
-    private boolean createChatClient() {
+    private boolean createChatClient(int port, String host) {
         try {
-            this.chatClient = new ChatClient();
+            this.chatClient = new ChatClient(port, host);
             this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {
