@@ -19,6 +19,7 @@
 package de.minestar.conair.network;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -35,6 +36,8 @@ public class ChatServer implements Runnable {
     private ServerSocketChannel serverSocket;
 
     private boolean isRunning;
+
+    private static final ByteBuffer NETWORK_BUFFER = ByteBuffer.allocateDirect(4096);
 
     public ChatServer(int port) throws Exception {
         this.selector = Selector.open();
@@ -90,11 +93,24 @@ public class ChatServer implements Runnable {
         SocketChannel clientSocket = serverSocket.accept();
         clientSocket.configureBlocking(false);
 
-        clientSocket.register(selector, SelectionKey.OP_READ);
+        clientSocket.register(selector, SelectionKey.OP_READ).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
     }
 
     public void onClientRead(SelectionKey key) throws Exception {
-        // TODO: Read input from client
+        if (!(key.channel() instanceof SocketChannel)) {
+            return;
+        }
+        // Read into the clients specific buffer
+        SocketChannel channel = (SocketChannel) key.channel();
+        ConnectedClient client = (ConnectedClient) key.attachment();
+        client.readFrom(channel);
+        if (client.isPacketComplete())
+            handlePacket(client);
+
+    }
+
+    private void handlePacket(ConnectedClient client) {
+
     }
 
 }
