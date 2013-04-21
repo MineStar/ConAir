@@ -16,30 +16,17 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.core;
+package de.minestar.conair.listener;
 
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import de.minestar.conair.listener.ChatListener;
+public class ChatListener implements Listener {
 
-public class Core extends JavaPlugin {
-
-    public static final String NAME = "ConAir";
-
-    @Override
-    public void onEnable() {
-        enableListener(this.getServer().getPluginManager());
-    }
-
-    private void enableListener(PluginManager pm) {
-        pm.registerEvents(new ChatListener(), this);
-    }
-
-    @Override
-    public void onDisable() {
-        // TODO Auto-generated method stub
-        super.onDisable();
+    @EventHandler
+    public void onChatEvent(AsyncPlayerChatEvent event) {
+        // TODO : Invoke broadcast
     }
 
 }
