@@ -1,0 +1,3 @@
+name: ConAir
+main: de.minestar.conair.core.Core
+version: ${pom.version}
