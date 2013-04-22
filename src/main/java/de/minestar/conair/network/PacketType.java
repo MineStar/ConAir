@@ -18,33 +18,6 @@
 
 package de.minestar.conair.network;
 
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-
-public class ConnectedClient {
-
-    private final ByteBuffer clientBuffer = ByteBuffer.allocateDirect(4096);
-
-    private String name;
-
-    public ConnectedClient(String name) {
-        this.name = name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void readFrom(SocketChannel channel) throws Exception {
-        channel.read(clientBuffer);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    protected ByteBuffer getClientBuffer() {
-        return clientBuffer;
-    }
+public enum PacketType {
 
 }

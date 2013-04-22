@@ -18,6 +18,31 @@
 
 package de.minestar.conair.network;
 
-public class NetworkHandler {
+public abstract class NetworkPacket {
+
+    private final PacketType type;
+
+    protected NetworkPacket(PacketType type) {
+        this.type = type;
+    }
+
+    protected NetworkPacket(PacketType type, PacketBuffer buffer) {
+        this(type);
+        onReceive(buffer);
+    }
+
+    public final PacketType getType() {
+        return type;
+    }
+
+    protected final void pack(PacketBuffer buffer) {
+        buffer.clear();
+        buffer.putInt(type.ordinal());
+        onSend(buffer);
+    }
+
+    public abstract void onSend(PacketBuffer buffer);
+
+    public abstract void onReceive(PacketBuffer buffer);
 
 }
