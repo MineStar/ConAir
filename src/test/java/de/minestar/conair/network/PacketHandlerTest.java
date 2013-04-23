@@ -18,59 +18,37 @@
 
 package de.minestar.conair.network;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
+import de.minestar.conair.network.packets.HelloWorldPacket;
+
 public class PacketHandlerTest {
 
     @Test
     public void test() {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+        PacketHandler packetHandler = new PacketHandler();
 
-        buffer.putInt("Hello World".length());
-        buffer.put("Hello World".getBytes());
-        buffer.put(PacketHandler.PACKET_SEPERATOR);
+        NetworkPacket packet = new HelloWorldPacket();
 
-        buffer.putInt("Bye World".length());
-        buffer.put("Bye World".getBytes());
-        buffer.put(PacketHandler.PACKET_SEPERATOR);
+        packetHandler.packPacket(packet);
+        packetHandler.packPacket(packet);
 
-        buffer.putInt("Spast GeMo".length());
-        buffer.put("Spast GeMo".getBytes());
-        buffer.put(PacketHandler.PACKET_SEPERATOR);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4096);
+        buffer.put(packetHandler.packetbuffer.getBuffer());
+        if (packetHandler.isPacketComplete(buffer)) {
+            HelloWorldPacket packet2 = (HelloWorldPacket) packetHandler.extractPacket(buffer);
 
-        PacketHandler ph = new PacketHandler();
-        byte[] b = null;
-        String s = null;
-        if (ph.isPacketComplete(buffer)) {
-            ph.extractPacket(buffer);
-            b = ph.read();
-            s = new String(b, 4, b.length - 4);
-            assertEquals("Hello World", s);
-        }
-        if (ph.isPacketComplete(buffer)) {
-            ph.extractPacket(buffer);
-            b = ph.read();
-            s = new String(b, 4, b.length - 4);
-            assertEquals("Bye World", s);
-        }
-        if (ph.isPacketComplete(buffer)) {
-            ph.extractPacket(buffer);
-            b = ph.read();
-            s = new String(b, 4, b.length - 4);
-            assertEquals("Spast GeMo", s);
-        }
-    }
+            System.out.println(packet2.getHelloWorld());
 
-    @Test
-    public void packetBufferTest() {
-        PacketBuffer buffer = new PacketBuffer();
-        buffer.putString("Hallo World");
-        buffer.getBuffer().flip();
-        assertEquals("Hallo World", buffer.getString());
+
+
+        } else
+            fail();
+
     }
 
 }

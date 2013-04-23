@@ -36,9 +36,12 @@ public abstract class NetworkPacket {
     }
 
     protected final void pack(PacketBuffer buffer) {
-        buffer.clear();
-        buffer.putInt(type.ordinal());
-        onSend(buffer);
+        buffer.putInt(0); // Size
+        buffer.putInt(type.ordinal()); // Type
+        onSend(buffer); // Content
+        buffer.putInt(0, buffer.getBuffer().position()); // Write size
+        buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
+
     }
 
     public abstract void onSend(PacketBuffer buffer);

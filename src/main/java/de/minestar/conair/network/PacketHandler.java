@@ -20,10 +20,11 @@ package de.minestar.conair.network;
 
 import java.nio.ByteBuffer;
 
+import de.minestar.conair.network.packets.HelloWorldPacket;
+
 public class PacketHandler {
 
-    private final PacketBuffer packetbuffer = new PacketBuffer();
-    private int pos = -1;
+    protected final PacketBuffer packetbuffer = new PacketBuffer();
 
     public static final byte PACKET_SEPERATOR = 3;
 
@@ -32,40 +33,45 @@ public class PacketHandler {
     }
 
     public boolean isPacketComplete(ByteBuffer buffer) {
-
         buffer.flip();
-        while (buffer.hasRemaining()) {
-            if (buffer.get() == PACKET_SEPERATOR) {
-                pos = buffer.position() - 1;
-                buffer.rewind();
-                return true;
-            }
-        }
-        buffer.limit(buffer.capacity());
-        return false;
+        int len = 0;
+        if (buffer.hasRemaining())
+            len = buffer.getInt();
+        else
+            return false;
+        if (buffer.remaining() <= len - 4)
+            return false;
+        return buffer.get(len) == PACKET_SEPERATOR;
     }
 
-    // TODO: Return a network packet
-    public void extractPacket(ByteBuffer buffer) {
+    public NetworkPacket extractPacket(ByteBuffer buffer) {
+        buffer.rewind();
+        int len = buffer.getInt();
         int limit = buffer.limit();
-        buffer.clear();
-        buffer.limit(pos);
-
+        buffer.limit(len);
+        packetbuffer.clear();
         packetbuffer.put(buffer);
+        packetbuffer.getBuffer().flip();
         buffer.limit(limit);
-        buffer.position(pos + 1);
         buffer.compact();
 
-        pos = -1;
+        return createPacket();
     }
 
-    public byte[] read() {
-        packetbuffer.getBuffer().flip();
-        byte[] b = new byte[packetbuffer.getBuffer().limit()];
-        packetbuffer.get(b);
-
+    public void packPacket(NetworkPacket packet) {
         packetbuffer.clear();
-        return b;
-
+        packet.pack(packetbuffer);
+        packetbuffer.getBuffer().flip();
     }
+
+    private NetworkPacket createPacket() {
+        int type = packetbuffer.getInt();
+        switch (type) {
+            case 0 :
+                return new HelloWorldPacket(packetbuffer);
+            default :
+                return null;
+        }
+    }
+
 }

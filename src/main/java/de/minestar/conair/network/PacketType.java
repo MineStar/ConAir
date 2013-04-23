@@ -19,5 +19,7 @@
 package de.minestar.conair.network;
 
 public enum PacketType {
+    
+    HelloWorld
 
 }
