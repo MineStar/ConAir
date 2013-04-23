@@ -114,6 +114,11 @@ public class ChatClient implements Runnable {
 
     }
 
+    public void sendPacket(NetworkPacket packet) {
+        packetHandler.packPacket(packet);
+        this.client.addPacket(packetHandler.packetbuffer.getBuffer());
+    }
+
     // Handle a single packet
     private void handlePacket(NetworkPacket packet) {
 
