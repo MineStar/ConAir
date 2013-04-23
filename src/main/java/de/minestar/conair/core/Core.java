@@ -78,7 +78,7 @@ public class Core extends JavaPlugin {
 
     private boolean createChatClient(int port, String host) {
         try {
-            this.chatClient = new ChatClient(port, host);
+            this.chatClient = new ChatClient(host, port);
             this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {
