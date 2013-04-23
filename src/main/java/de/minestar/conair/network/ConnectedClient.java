@@ -18,12 +18,16 @@
 
 package de.minestar.conair.network;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class ConnectedClient {
 
-    private final ByteBuffer clientBuffer = ByteBuffer.allocateDirect(4096);
+    private final ByteBuffer inBuffer = ByteBuffer.allocateDirect(4096);
+    private final ByteBuffer outBuffer = ByteBuffer.allocateDirect(4096);
+
+    private boolean dataToSend = false;
 
     private String name;
 
@@ -36,7 +40,23 @@ public class ConnectedClient {
     }
 
     public void readFrom(SocketChannel channel) throws Exception {
-        channel.read(clientBuffer);
+        channel.read(inBuffer);
+    }
+
+    public void addPacket(ByteBuffer buffer) {
+        buffer.rewind();
+        this.outBuffer.put(buffer);
+        this.dataToSend = true;
+    }
+
+    public boolean hasDataToSend() {
+        return dataToSend;
+    }
+
+    public void write(SocketChannel channel) throws IOException {
+        int b = channel.write(outBuffer);
+        if (b == 0)
+            dataToSend = false;
     }
 
     public String getName() {
@@ -44,7 +64,7 @@ public class ConnectedClient {
     }
 
     protected ByteBuffer getClientBuffer() {
-        return clientBuffer;
+        return inBuffer;
     }
 
 }

@@ -19,16 +19,20 @@
 package de.minestar.conair.network;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
 
 public class ChatServer implements Runnable {
+
+    private final ByteBuffer networkBuffer;
 
     private Selector selector;
 
@@ -40,7 +44,9 @@ public class ChatServer implements Runnable {
 
     public ChatServer(int port) throws Exception {
 
-        this.packetHandler = new PacketHandler();
+        this.networkBuffer = ByteBuffer.allocateDirect(4096);
+
+        this.packetHandler = new PacketHandler(networkBuffer);
 
         this.selector = Selector.open();
 
@@ -76,6 +82,10 @@ public class ChatServer implements Runnable {
                     if (key.isReadable()) {
                         onClientRead(key);
                     }
+                    // client can receive something
+                    if (key.isWritable()) {
+                        onClientWrite(key);
+                    }
                     it.remove();
                 }
 
@@ -90,14 +100,21 @@ public class ChatServer implements Runnable {
         this.isRunning = false;
     }
 
+    /*
+     * ACCEPTING
+     */
+
     public void onClientAccept() throws Exception {
         // accept new client
         SocketChannel clientSocket = serverSocket.accept();
         clientSocket.configureBlocking(false);
 
-        clientSocket.register(selector, SelectionKey.OP_READ).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
+        clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
     }
 
+    /*
+     * READING
+     */
     public void onClientRead(SelectionKey key) throws Exception {
         if (!(key.channel() instanceof SocketChannel)) {
             return;
@@ -108,9 +125,44 @@ public class ChatServer implements Runnable {
         client.readFrom(channel);
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
-            packetHandler.extractPacket(client.getClientBuffer());
+            NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            handlePacket(client, packet);
         }
 
     }
 
+    // Handle a single packet
+    private void handlePacket(ConnectedClient src, NetworkPacket packet) {
+        // We have a broadcast server - broadcast all packages
+        broadcastPacket(src, packet);
+    }
+
+    // Deliver the packet the all other clients
+    private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
+        Set<SelectionKey> keys = selector.keys();
+        for (SelectionKey key : keys) {
+            if (!(key.channel() instanceof SocketChannel))
+                continue;
+            ConnectedClient client = (ConnectedClient) key.attachment();
+            if (client.equals(src))
+                continue;
+
+            client.addPacket(networkBuffer);
+        }
+        networkBuffer.clear();
+    }
+
+    /*
+     * WRITINGG
+     */
+    private void onClientWrite(SelectionKey key) throws Exception {
+        if (!(key.channel() instanceof SocketChannel)) {
+            return;
+        }
+
+        ConnectedClient client = (ConnectedClient) key.attachment();
+        if (client.hasDataToSend()) {
+            client.write((SocketChannel) key.channel());
+        }
+    }
 }

@@ -25,8 +25,12 @@ public class PacketBuffer {
 
     private final ByteBuffer buffer;
 
+    public PacketBuffer(ByteBuffer buffer) {
+        this.buffer = buffer;
+    }
+
     public PacketBuffer(int bufferSize) {
-        this.buffer = ByteBuffer.allocateDirect(bufferSize);
+        this(ByteBuffer.allocateDirect(bufferSize));
     }
 
     public PacketBuffer() {

@@ -24,12 +24,12 @@ import de.minestar.conair.network.packets.HelloWorldPacket;
 
 public class PacketHandler {
 
-    protected final PacketBuffer packetbuffer = new PacketBuffer();
+    protected final PacketBuffer packetbuffer;
 
     public static final byte PACKET_SEPERATOR = 3;
 
-    public PacketHandler() {
-
+    public PacketHandler(ByteBuffer buffer) {
+        this.packetbuffer = new PacketBuffer(buffer);
     }
 
     public boolean isPacketComplete(ByteBuffer buffer) {
@@ -44,16 +44,16 @@ public class PacketHandler {
         return buffer.get(len) == PACKET_SEPERATOR;
     }
 
-    public NetworkPacket extractPacket(ByteBuffer buffer) {
-        buffer.rewind();
-        int len = buffer.getInt();
-        int limit = buffer.limit();
-        buffer.limit(len);
+    public NetworkPacket extractPacket(ByteBuffer src) {
+        src.rewind();
+        int len = src.getInt();
+        int limit = src.limit();
+        src.limit(len);
         packetbuffer.clear();
-        packetbuffer.put(buffer);
+        packetbuffer.put(src);
         packetbuffer.getBuffer().flip();
-        buffer.limit(limit);
-        buffer.compact();
+        src.limit(limit);
+        src.compact();
 
         return createPacket();
     }

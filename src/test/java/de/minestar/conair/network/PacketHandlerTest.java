@@ -18,37 +18,6 @@
 
 package de.minestar.conair.network;
 
-import static org.junit.Assert.fail;
-
-import java.nio.ByteBuffer;
-
-import org.junit.Test;
-
-import de.minestar.conair.network.packets.HelloWorldPacket;
-
 public class PacketHandlerTest {
-
-    @Test
-    public void test() {
-        PacketHandler packetHandler = new PacketHandler();
-
-        NetworkPacket packet = new HelloWorldPacket();
-
-        packetHandler.packPacket(packet);
-        packetHandler.packPacket(packet);
-
-        ByteBuffer buffer = ByteBuffer.allocateDirect(4096);
-        buffer.put(packetHandler.packetbuffer.getBuffer());
-        if (packetHandler.isPacketComplete(buffer)) {
-            HelloWorldPacket packet2 = (HelloWorldPacket) packetHandler.extractPacket(buffer);
-
-            System.out.println(packet2.getHelloWorld());
-
-
-
-        } else
-            fail();
-
-    }
 
 }
