@@ -4,6 +4,8 @@ port: 13371
 server:
     isServer: false
     #ignore if isServer = false
+    whiteList:
+        - 127.0.0.1
 
 #client configuration
 client:

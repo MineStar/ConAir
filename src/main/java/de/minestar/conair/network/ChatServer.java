@@ -25,6 +25,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -42,7 +43,9 @@ public class ChatServer implements Runnable {
 
     private PacketHandler packetHandler;
 
-    public ChatServer(int port) throws Exception {
+    private List<String> addressWhitelist;
+
+    public ChatServer(int port, List<String> addressWhitelist) throws Exception {
 
         this.networkBuffer = ByteBuffer.allocateDirect(4096);
 
@@ -59,6 +62,8 @@ public class ChatServer implements Runnable {
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         isRunning = true;
+
+        this.addressWhitelist = addressWhitelist;
     }
 
     @Override
@@ -109,8 +114,20 @@ public class ChatServer implements Runnable {
     public void onClientAccept() throws Exception {
         // accept new client
         SocketChannel clientSocket = serverSocket.accept();
-        clientSocket.configureBlocking(false);
 
+        // Is client allowed to connect?
+        String address = clientSocket.getRemoteAddress().toString();
+        // Remove the port number
+        int i = address.charAt(':');
+        if (i != -1)
+            address = address.substring(0, i);
+
+        // Client is not allowed to connect - refuse connection
+        if (!addressWhitelist.contains(address)) {
+            clientSocket.close();
+        }
+
+        clientSocket.configureBlocking(false);
         clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
     }
 
