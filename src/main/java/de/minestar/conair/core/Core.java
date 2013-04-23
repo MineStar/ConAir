@@ -18,6 +18,8 @@
 
 package de.minestar.conair.core;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -57,12 +59,23 @@ public class Core extends JavaPlugin {
     }
 
     private void readConfig() {
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(this.getResource("config.yml"));
+        File configFile = new File(getDataFolder(), "config.yml");
+        // Create default config when no config was found
+        if (!configFile.exists()) {
+            try {
+                YamlConfiguration.loadConfiguration(this.getResource("config.yml")).save(configFile);
+            } catch (IOException e) {
 
-        isServer = config.getBoolean("isServer", false);
+                e.printStackTrace();
+                return;
+            }
+        }
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+
+        isServer = config.getBoolean("server.isServer", false);
 
         port = config.getInt("port", 13371);
-        host = config.getString("host", "localhost");
+        host = config.getString("client.host", "localhost");
     }
 
     private boolean createChatServer(int port) {

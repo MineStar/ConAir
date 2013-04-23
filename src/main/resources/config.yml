@@ -1,3 +1,10 @@
-isServer: false
 port: 13371
-host: localhost
+
+# server configuration
+server:
+    isServer: false
+    #ignore if isServer = false
+
+#client configuration
+client:
+    host: localhost
