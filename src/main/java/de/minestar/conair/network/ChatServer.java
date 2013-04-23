@@ -51,10 +51,10 @@ public class ChatServer implements Runnable {
         this.selector = Selector.open();
 
         // Listening on the port
-        SocketChannel serverChannel = SocketChannel.open(new InetSocketAddress(port));
+        SocketChannel serverSocket = SocketChannel.open(new InetSocketAddress(port));
         // Non-Blocking for Selector activity
-        serverChannel.configureBlocking(false);
-        serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+        serverSocket.configureBlocking(false);
+        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         isRunning = true;
     }
