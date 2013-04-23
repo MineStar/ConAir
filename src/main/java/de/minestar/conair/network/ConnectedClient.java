@@ -39,8 +39,8 @@ public class ConnectedClient {
         this.name = name;
     }
 
-    public void readFrom(SocketChannel channel) throws Exception {
-        channel.read(inBuffer);
+    public boolean readFrom(SocketChannel channel) throws Exception {
+        return channel.read(inBuffer) != -1;
     }
 
     public void addPacket(ByteBuffer buffer) {
@@ -53,10 +53,11 @@ public class ConnectedClient {
         return dataToSend;
     }
 
-    public void write(SocketChannel channel) throws IOException {
+    public boolean write(SocketChannel channel) throws IOException {
         int b = channel.write(outBuffer);
         if (b == 0)
             dataToSend = false;
+        return b != -1;
     }
 
     public String getName() {

@@ -122,7 +122,10 @@ public class ChatServer implements Runnable {
         // Read into the clients specific buffer
         SocketChannel channel = (SocketChannel) key.channel();
         ConnectedClient client = (ConnectedClient) key.attachment();
-        client.readFrom(channel);
+        // When readfrom fails the client has disconnected
+        if (!client.readFrom(channel)) {
+            key.cancel();
+        }
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
             NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
@@ -162,7 +165,10 @@ public class ChatServer implements Runnable {
 
         ConnectedClient client = (ConnectedClient) key.attachment();
         if (client.hasDataToSend()) {
-            client.write((SocketChannel) key.channel());
+            // If write fails the client has disconnected
+            if (!client.write((SocketChannel) key.channel())) {
+                key.cancel();
+            }
         }
     }
 }
