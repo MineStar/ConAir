@@ -24,10 +24,11 @@ import de.minestar.conair.network.PacketType;
 
 public class HelloWorldPacket extends NetworkPacket {
 
-    private String dummyText;
+    private String text;
 
-    public HelloWorldPacket() {
+    public HelloWorldPacket(String text) {
         super(PacketType.HelloWorld);
+        this.text = text;
     }
 
     public HelloWorldPacket(PacketBuffer buffer) {
@@ -36,18 +37,17 @@ public class HelloWorldPacket extends NetworkPacket {
 
     @Override
     public void onSend(PacketBuffer buffer) {
-        buffer.putString("Hello world");
-
+        buffer.putString(this.text);
     }
 
     @Override
     public void onReceive(PacketBuffer buffer) {
-        this.dummyText = buffer.getString();
+        this.text = buffer.getString();
 
     }
 
-    public String getHelloWorld() {
-        return dummyText;
+    public String getText() {
+        return text;
     }
 
 }

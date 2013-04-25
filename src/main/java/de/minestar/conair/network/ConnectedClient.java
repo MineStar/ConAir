@@ -40,12 +40,23 @@ public class ConnectedClient {
     }
 
     public boolean readFrom(SocketChannel channel) throws Exception {
-        return channel.read(inBuffer) != -1;
+        int b = 0;
+        try {
+            b = channel.read(inBuffer);
+        } catch (IOException e) {
+            return false;
+        }
+        return b != -1;
     }
 
     public void addPacket(ByteBuffer buffer) {
-        buffer.rewind();
+        System.out.println("a-1: " + buffer);
         this.outBuffer.put(buffer);
+
+        System.out.println("b-1: " + outBuffer);
+        this.outBuffer.flip();
+        System.out.println("b-2: " + outBuffer);
+        buffer.rewind();
         this.dataToSend = true;
     }
 
@@ -54,9 +65,16 @@ public class ConnectedClient {
     }
 
     public boolean write(SocketChannel channel) throws IOException {
-        int b = channel.write(outBuffer);
-        if (b == 0)
+        int b = 0;
+        try {
+            b = channel.write(outBuffer);
+        } catch (IOException e) {
+            return false;
+        }
+        if (b == 0) {
             dataToSend = false;
+            this.outBuffer.clear();
+        }
         return b != -1;
     }
 

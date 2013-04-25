@@ -37,11 +37,17 @@ public class PacketHandler {
         int len = 0;
         if (buffer.hasRemaining())
             len = buffer.getInt();
-        else
+        else {
+            System.out.println(1);
             return false;
-        if (buffer.remaining() <= len - 4)
+        }
+        if (buffer.remaining() <= len - 4) {
+            System.out.println(2);
             return false;
-        return buffer.get(len) == PACKET_SEPERATOR;
+        }
+        boolean end = (buffer.get(len) == PACKET_SEPERATOR);
+        System.out.println("complete: " + end);
+        return end;
     }
 
     public NetworkPacket extractPacket(ByteBuffer src) {

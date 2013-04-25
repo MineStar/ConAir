@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
+import de.minestar.conair.network.packets.HelloWorldPacket;
 
 public class ChatServer implements Runnable {
 
@@ -55,7 +56,7 @@ public class ChatServer implements Runnable {
 
         // Listening on the port
         serverSocket = ServerSocketChannel.open();
-        serverSocket.bind(new InetSocketAddress(port));
+        serverSocket.socket().bind(new InetSocketAddress(port));
 
         // Non-Blocking for Selector activity
         serverSocket.configureBlocking(false);
@@ -98,6 +99,7 @@ public class ChatServer implements Runnable {
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);
             isRunning = false;
         }
@@ -115,17 +117,17 @@ public class ChatServer implements Runnable {
         // accept new client
         SocketChannel clientSocket = serverSocket.accept();
 
-        // Is client allowed to connect?
-        String address = clientSocket.getRemoteAddress().toString();
-        // Remove the port number
-        int i = address.charAt(':');
-        if (i != -1)
-            address = address.substring(0, i);
-
-        // Client is not allowed to connect - refuse connection
-        if (!addressWhitelist.contains(address)) {
-            clientSocket.close();
-        }
+//        // Is client allowed to connect?
+//        String address = clientSocket.getRemoteAddress().toString();
+//        // Remove the port number
+//        int i = address.charAt(':');
+//        if (i != -1)
+//            address = address.substring(0, i);
+//
+//        // Client is not allowed to connect - refuse connection
+//        if (!addressWhitelist.contains(address)) {
+//            clientSocket.close();
+//        }
 
         clientSocket.configureBlocking(false);
         clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
@@ -136,6 +138,7 @@ public class ChatServer implements Runnable {
      */
     public void onClientRead(SelectionKey key) throws Exception {
         if (!(key.channel() instanceof SocketChannel)) {
+            System.out.println("not a socketchannel");
             return;
         }
         // Read into the clients specific buffer
@@ -144,11 +147,23 @@ public class ChatServer implements Runnable {
         // When readfrom fails the client has disconnected
         if (!client.readFrom(channel)) {
             key.cancel();
+            System.out.println("Client is disconnected!");
         }
 
+        System.out.println("Buffer: " + client.getClientBuffer());
+
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
+            System.out.println("packet complete");
             NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            System.out.println("packet: " + packet);
+            if (packet != null) {
+                HelloWorldPacket pack = (HelloWorldPacket) packet;
+                System.out.println("text: " + pack.getText());
+            }
             handlePacket(client, packet);
+        } else {
+            System.out.println("packet incomplete!");
+            System.out.println(client.getClientBuffer());
         }
 
     }
@@ -162,13 +177,15 @@ public class ChatServer implements Runnable {
     // Deliver the packet the all other clients
     private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
         Set<SelectionKey> keys = selector.keys();
+
+        this.packetHandler.packPacket(packet);
+
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
                 continue;
             ConnectedClient client = (ConnectedClient) key.attachment();
             if (client.equals(src))
                 continue;
-
             client.addPacket(networkBuffer);
         }
         networkBuffer.clear();

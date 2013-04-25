@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
+import de.minestar.conair.network.packets.HelloWorldPacket;
 
 public class ChatClient implements Runnable {
 
@@ -52,6 +53,8 @@ public class ChatClient implements Runnable {
 
         // Create Connection to the server
         this.socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
+//        this.socketChannel.connect();
+
         // Non-Blocking for Selector activity
         this.socketChannel.configureBlocking(false);
         this.socketChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
@@ -88,6 +91,7 @@ public class ChatClient implements Runnable {
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);
             isRunning = false;
         }
@@ -111,7 +115,6 @@ public class ChatClient implements Runnable {
             NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
             handlePacket(packet);
         }
-
     }
 
     public void sendPacket(NetworkPacket packet) {
@@ -121,7 +124,12 @@ public class ChatClient implements Runnable {
 
     // Handle a single packet
     private void handlePacket(NetworkPacket packet) {
-
+        System.out.println("Packet received!");
+        if (packet != null) {
+            System.out.println("Type: " + packet.getType());
+            HelloWorldPacket pack = (HelloWorldPacket) packet;
+            System.out.println("MSG: " + pack.getText());
+        }
     }
 
     /*
