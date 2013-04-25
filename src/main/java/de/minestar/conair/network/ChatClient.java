@@ -134,12 +134,9 @@ public class ChatClient implements Runnable {
     private void handlePacket(NetworkPacket packet) {
         System.out.println("-------------------------");
         System.out.println("Packet received!");
-        if (packet != null) {
-            System.out.println("Type: " + packet.getType());
-            HelloWorldPacket pack = (HelloWorldPacket) packet;
-            System.out.println("MSG: " + pack.getText());
-        }
-
+        System.out.println("Type: " + packet.getType());
+        HelloWorldPacket pack = (HelloWorldPacket) packet;
+        System.out.println("MSG: " + pack.getText());
         System.out.println("-------------------------");
     }
 
