@@ -41,13 +41,13 @@ public class ChatClient implements Runnable {
 
     private boolean isRunning;
 
-    private PacketHandler packetHandler;
+    private ClientPacketHandler packetHandler;
 
     public ChatClient(String host, int port) throws Exception {
 
         this.networkBuffer = ByteBuffer.allocateDirect(4096);
 
-        this.packetHandler = new PacketHandler(networkBuffer);
+        this.packetHandler = new ClientPacketHandler(networkBuffer);
 
         this.selector = Selector.open();
 
@@ -128,7 +128,6 @@ public class ChatClient implements Runnable {
 
     public void sendPacket(NetworkPacket packet) {
         if (packetHandler.packPacket(packet)) {
-            System.out.println("C-Packetsize: " + packetHandler.packetBuffer.getBuffer().limit());
             this.client.addPacket(packetHandler.packetBuffer.getBuffer());
         } else {
             System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");

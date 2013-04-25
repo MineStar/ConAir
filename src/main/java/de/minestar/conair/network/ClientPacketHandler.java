@@ -21,13 +21,13 @@ package de.minestar.conair.network;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
-public class PacketHandler {
+public class ClientPacketHandler {
 
     protected final PacketBuffer packetBuffer;
 
     public static final byte PACKET_SEPERATOR = 3;
 
-    public PacketHandler(ByteBuffer buffer) {
+    public ClientPacketHandler(ByteBuffer buffer) {
         this.packetBuffer = new PacketBuffer(buffer);
     }
 

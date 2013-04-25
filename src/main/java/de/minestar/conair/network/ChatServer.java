@@ -193,7 +193,6 @@ public class ChatServer implements Runnable {
 
         // pack the packet
         this.packetHandler.packPacket(packet);
-        System.out.println(networkBuffer.limit());
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))

@@ -44,12 +44,12 @@ public class Main {
             PacketType.registerPacket(HelloWorldPacket.class);
 
             NetworkPacket packet = new HelloWorldPacket("Hallo Welt!");
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 3; i++) {
+                System.out.println("print " + i);
                 client.sendPacket(packet);
-                System.out.println("sending packet");
-                Thread.sleep(500);
             }
 
+            Thread.sleep(2000);
             client.stop();
             cThread.stop();
 

@@ -49,12 +49,13 @@ public abstract class NetworkPacket {
             buffer.writeInt(packetID); // Type
             onSend(buffer); // Content
             buffer.writeInt(0, buffer.getBuffer().position()); // Write size
-            buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
+            buffer.put(ClientPacketHandler.PACKET_SEPERATOR); // Close packet
             return true;
         } else {
             return false;
         }
     }
+
     public abstract void onSend(PacketBuffer buffer);
 
     public abstract void onReceive(PacketBuffer buffer);

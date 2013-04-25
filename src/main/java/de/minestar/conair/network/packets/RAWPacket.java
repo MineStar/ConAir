@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
-import de.minestar.conair.network.PacketHandler;
+import de.minestar.conair.network.ClientPacketHandler;
 
 public final class RAWPacket extends NetworkPacket {
 
@@ -47,6 +47,7 @@ public final class RAWPacket extends NetworkPacket {
 
     @Override
     public void onReceive(PacketBuffer buffer) {
+        // should never be called...
     }
 
     public PacketBuffer getDataBuffer() {
@@ -59,7 +60,7 @@ public final class RAWPacket extends NetworkPacket {
         buffer.writeInt(packetID); // Type
         onSend(buffer); // Content
         buffer.writeInt(0, buffer.getBuffer().position()); // Write size
-        buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
+        buffer.put(ClientPacketHandler.PACKET_SEPERATOR); // Close packet
         return true;
     }
 }
