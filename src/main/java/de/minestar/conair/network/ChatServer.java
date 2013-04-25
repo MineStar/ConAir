@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
+import de.minestar.conair.network.packets.RAWPacket;
 
 public class ChatServer implements Runnable {
 
@@ -42,7 +43,7 @@ public class ChatServer implements Runnable {
 
     private boolean isRunning;
 
-    private PacketHandler packetHandler;
+    private ServerPacketHandler packetHandler;
 
     private List<String> addressWhitelist;
 
@@ -50,7 +51,7 @@ public class ChatServer implements Runnable {
 
         this.networkBuffer = ByteBuffer.allocateDirect(4096);
 
-        this.packetHandler = new PacketHandler(networkBuffer);
+        this.packetHandler = new ServerPacketHandler(networkBuffer);
 
         this.selector = Selector.open();
 
@@ -71,6 +72,8 @@ public class ChatServer implements Runnable {
             addressWhitelist.add("127.0.0.1");
         }
         this.addressWhitelist = addressWhitelist;
+
+        PacketType.registerPacket(RAWPacket.class);
     }
 
     @Override
@@ -166,7 +169,7 @@ public class ChatServer implements Runnable {
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
             // extract the packet
-            NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            RAWPacket packet = packetHandler.extractPacket(client.getClientBuffer());
 
             // if we have found a packet, we handle it...
             if (packet != null) {
@@ -175,23 +178,22 @@ public class ChatServer implements Runnable {
 
             // clear the clientBuffer
             client.getClientBuffer().clear();
-        } else {
-            System.out.println("Packet incomplete: " + client.getClientBuffer());
         }
     }
 
     // Handle a single packet
-    private void handlePacket(ConnectedClient src, NetworkPacket packet) {
+    private void handlePacket(ConnectedClient src, RAWPacket packet) {
         // We have a broadcast server - broadcast all packages
         broadcastPacket(src, packet);
     }
 
     // Deliver the packet the all other clients
-    private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
+    private void broadcastPacket(ConnectedClient src, RAWPacket packet) {
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet
         this.packetHandler.packPacket(packet);
+        System.out.println(networkBuffer.limit());
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))

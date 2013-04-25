@@ -22,7 +22,7 @@ import java.io.IOException;
 
 public abstract class NetworkPacket {
 
-    private int packetID = -1;
+    protected int packetID = -1;
 
     /**
      * Empty constructor. Used for creation of packets to be sent.
@@ -42,7 +42,7 @@ public abstract class NetworkPacket {
         onReceive(buffer);
     }
 
-    protected final boolean pack(PacketBuffer buffer) {
+    protected boolean pack(PacketBuffer buffer) {
         Integer packetID = PacketType.getID(this.getClass());
         if (packetID != null) {
             buffer.writeInt(0); // Size

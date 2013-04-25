@@ -42,7 +42,7 @@ public class PacketBuffer {
         return this;
     }
 
-    protected ByteBuffer getBuffer() {
+    public ByteBuffer getBuffer() {
         return this.buffer;
     }
 
@@ -84,7 +84,7 @@ public class PacketBuffer {
         return this;
     }
 
-    public PacketBuffer writeByteBuffer(PacketBuffer src) {
+    public PacketBuffer writePacketBuffer(PacketBuffer src) {
         this.buffer.put(src.buffer);
         return this;
     }

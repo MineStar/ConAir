@@ -121,11 +121,14 @@ public class ChatClient implements Runnable {
 
             // clear the clientBuffer
             client.getClientBuffer().clear();
+        } else {
+            System.out.println("Packet incomplete: " + client.getClientBuffer());
         }
     }
 
     public void sendPacket(NetworkPacket packet) {
         if (packetHandler.packPacket(packet)) {
+            System.out.println("C-Packetsize: " + packetHandler.packetBuffer.getBuffer().limit());
             this.client.addPacket(packetHandler.packetBuffer.getBuffer());
         } else {
             System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
