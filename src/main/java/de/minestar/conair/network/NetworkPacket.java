@@ -18,33 +18,48 @@
 
 package de.minestar.conair.network;
 
+import java.io.IOException;
+
 public abstract class NetworkPacket {
 
-    private final PacketType type;
+    private int packetID = -1;
 
-    protected NetworkPacket(PacketType type) {
-        this.type = type;
+    /**
+     * Empty constructor. Used for creation of packets to be sent.
+     */
+    protected NetworkPacket() {
     }
 
-    protected NetworkPacket(PacketType type, PacketBuffer buffer) {
-        this(type);
+    /**
+     * Constructor used for received packets.
+     * 
+     * @param packetID
+     * @param buffer
+     * @throws IOException
+     */
+    public NetworkPacket(int packetID, PacketBuffer buffer) throws IOException {
+        this.packetID = packetID;
         onReceive(buffer);
     }
 
-    public final PacketType getType() {
-        return type;
+    protected final boolean pack(PacketBuffer buffer) {
+        Integer packetID = PacketType.getID(this.getClass());
+        if (packetID != null) {
+            buffer.writeInt(0); // Size
+            buffer.writeInt(packetID); // Type
+            onSend(buffer); // Content
+            buffer.writeInt(0, buffer.getBuffer().position()); // Write size
+            buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
+            return true;
+        } else {
+            return false;
+        }
     }
-
-    protected final void pack(PacketBuffer buffer) {
-        buffer.putInt(0); // Size
-        buffer.putInt(type.ordinal()); // Type
-        onSend(buffer); // Content
-        buffer.putInt(0, buffer.getBuffer().position()); // Write size
-        buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
-    }
-
     public abstract void onSend(PacketBuffer buffer);
 
     public abstract void onReceive(PacketBuffer buffer);
 
+    public int getPacketID() {
+        return packetID;
+    }
 }

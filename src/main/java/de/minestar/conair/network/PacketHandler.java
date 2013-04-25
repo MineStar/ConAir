@@ -18,18 +18,17 @@
 
 package de.minestar.conair.network;
 
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
-
-import de.minestar.conair.network.packets.HelloWorldPacket;
 
 public class PacketHandler {
 
-    protected final PacketBuffer packetbuffer;
+    protected final PacketBuffer packetBuffer;
 
     public static final byte PACKET_SEPERATOR = 3;
 
     public PacketHandler(ByteBuffer buffer) {
-        this.packetbuffer = new PacketBuffer(buffer);
+        this.packetBuffer = new PacketBuffer(buffer);
     }
 
     public boolean isPacketComplete(ByteBuffer buffer) {
@@ -51,28 +50,57 @@ public class PacketHandler {
         int len = src.getInt();
         int limit = src.limit();
         src.limit(len);
-        packetbuffer.clear();
-        packetbuffer.put(src);
-        packetbuffer.getBuffer().flip();
+        packetBuffer.clear();
+        packetBuffer.writeByteBuffer(src);
+        packetBuffer.getBuffer().flip();
         src.limit(limit);
         src.compact();
-        return createPacket();
+        return createPacket(len);
     }
 
-    public void packPacket(NetworkPacket packet) {
-        packetbuffer.clear();
-        packet.pack(packetbuffer);
-        packetbuffer.getBuffer().flip();
+    public boolean packPacket(NetworkPacket packet) {
+        packetBuffer.clear();
+        boolean result = packet.pack(packetBuffer);
+        packetBuffer.getBuffer().flip();
+        return result;
     }
 
-    private NetworkPacket createPacket() {
-        int type = packetbuffer.getInt();
-        switch (type) {
-            case 0 :
-                return new HelloWorldPacket(packetbuffer);
-            default :
+    private NetworkPacket createPacket(int datalength) {
+        try {
+            // reduce the datalength, because we read two integers first.
+            // One integer is 4 bytes long
+            datalength -= 8;
+
+            // get packettype
+            int packetID = packetBuffer.readInt();
+            Class<? extends NetworkPacket> packetClazz = PacketType.getClassByID(packetID);
+
+            // packet not found...
+            if (packetClazz == null) {
                 return null;
+            }
+
+            // get the constructor
+            Constructor<? extends NetworkPacket> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
+            if (packetConstructor == null) {
+                return null;
+            }
+
+            // read data...
+            byte[] data = new byte[datalength];
+            packetBuffer.readBytes(data);
+
+            // ... and create a new PacketBuffer
+            PacketBuffer newBuffer = new PacketBuffer(data.length);
+            newBuffer.writeBytes(data);
+            newBuffer.getBuffer().rewind();
+
+            // finally create the packet and return it
+            return packetConstructor.newInstance(packetID, newBuffer);
+        } catch (Exception e) {
+            System.out.println("error");
+            e.printStackTrace();
+            return null;
         }
     }
-
 }

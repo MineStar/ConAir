@@ -1,25 +1,60 @@
-/*
- * Copyright (C) 2013 MineStar.de 
- * 
- * This file is part of ConAir.
- * 
- * ConAir is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3 of the License.
- * 
- * ConAir is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package de.minestar.conair.network;
 
-public enum PacketType {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-    HelloWorld
+public class PacketType {
 
+    private static Map<String, Integer> packetIDMap;
+    private static Map<Integer, Class<? extends NetworkPacket>> packetClassMap;
+
+    static {
+        packetIDMap = new HashMap<String, Integer>();
+        packetClassMap = new HashMap<Integer, Class<? extends NetworkPacket>>();
+    }
+
+    public static Integer getID(Class<? extends NetworkPacket> packetClazz) {
+        return packetIDMap.get(packetClazz.getName());
+    }
+
+    public static Class<? extends NetworkPacket> getClassByID(int ID) {
+        return packetClassMap.get(ID);
+    }
+
+    public static boolean registerPacket(Class<? extends NetworkPacket> packetClazz) {
+        try {
+            int ID = getUniqueID(packetClazz.getName());
+            if (packetClassMap.containsKey(ID)) {
+                throw new RuntimeException("NetworkPacket '" + packetClazz.getSimpleName() + "' is already registered!");
+            }
+            packetIDMap.put(packetClazz.getName(), ID);
+            packetClassMap.put(ID, packetClazz);
+            System.out.println("Registering '" + packetClazz.getSimpleName() + "' , ID: " + ID);
+            return true;
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean unregisterPacket(Class<? extends NetworkPacket> packet) {
+        int ID = getUniqueID(packet.getName());
+        if (!packetClassMap.containsKey(ID)) {
+            throw new RuntimeException("NetworkPacket '" + packet.getSimpleName() + "' is not registered!");
+        }
+        packetIDMap.remove(packet.getName());
+        packetClassMap.remove(ID);
+        return true;
+    }
+
+    /**
+     * This method will (hopefully) return a unique ID for a given string. This is needed for saving selftriggered ICs.
+     * 
+     * @param string
+     * @return the ID
+     */
+    private static int getUniqueID(String string) {
+        return UUID.nameUUIDFromBytes(string.getBytes()).hashCode();
+    }
 }

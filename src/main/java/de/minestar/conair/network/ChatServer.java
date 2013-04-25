@@ -102,7 +102,6 @@ public class ChatServer implements Runnable {
                     }
                     it.remove();
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -144,6 +143,7 @@ public class ChatServer implements Runnable {
 
         clientSocket.configureBlocking(false);
         clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
+        System.out.println("Client connected: " + address);
     }
 
     /*
@@ -153,13 +153,14 @@ public class ChatServer implements Runnable {
         if (!(key.channel() instanceof SocketChannel)) {
             return;
         }
+
         // Read into the clients specific buffer
         SocketChannel channel = (SocketChannel) key.channel();
         ConnectedClient client = (ConnectedClient) key.attachment();
         // When readfrom fails the client has disconnected
         if (!client.readFrom(channel)) {
             key.cancel();
-            System.out.println("Client is disconnected!");
+            System.out.println("Client '" + client.getName() + "' disconnected!");
         }
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
@@ -173,6 +174,8 @@ public class ChatServer implements Runnable {
 
             // clear the clientBuffer
             client.getClientBuffer().clear();
+        } else {
+            System.out.println("Packet incomplete: " + client.getClientBuffer());
         }
     }
 

@@ -50,7 +50,7 @@ public class PacketBuffer {
      * BYTES AND BYTE ARRAYS
      */
 
-    public byte get() {
+    public byte readByte() {
         return this.buffer.get();
     }
 
@@ -59,62 +59,62 @@ public class PacketBuffer {
         return this;
     }
 
-    public PacketBuffer get(byte[] dst) {
+    public PacketBuffer readBytes(byte[] dst) {
         this.buffer.get(dst);
         return this;
     }
 
-    public PacketBuffer put(byte[] src) {
+    public PacketBuffer writeBytes(byte[] src) {
         this.buffer.put(src);
         return this;
     }
 
-    public PacketBuffer get(byte[] dst, int offset, int length) {
+    public PacketBuffer getBytes(byte[] dst, int offset, int length) {
         this.buffer.get(dst, offset, length);
         return this;
     }
 
-    public PacketBuffer put(byte[] src, int offset, int length) {
+    public PacketBuffer writeBytes(byte[] src, int offset, int length) {
         this.buffer.put(src, offset, length);
         return this;
     }
 
-    public PacketBuffer put(ByteBuffer src) {
+    public PacketBuffer writeByteBuffer(ByteBuffer src) {
         this.buffer.put(src);
         return this;
     }
 
-    public PacketBuffer put(PacketBuffer src) {
+    public PacketBuffer writeByteBuffer(PacketBuffer src) {
         this.buffer.put(src.buffer);
         return this;
     }
 
-    public byte get(int index) {
-        return this.buffer.get(index);
+    public byte readByte(int position) {
+        return this.buffer.get(position);
     }
 
-    public PacketBuffer put(int index, byte b) {
-        this.buffer.put(index, b);
+    public PacketBuffer writeByte(int position, byte b) {
+        this.buffer.put(position, b);
         return this;
     }
 
     /*
      * CHARS
      */
-    public char getChar() {
+    public char readChar() {
         return this.buffer.getChar();
     }
 
-    public PacketBuffer putChar(char value) {
+    public PacketBuffer writeChar(char value) {
         this.buffer.putChar(value);
         return this;
     }
 
-    public char getChar(int index) {
-        return this.buffer.getChar(index);
+    public char readChar(int position) {
+        return this.buffer.getChar(position);
     }
 
-    public PacketBuffer putChar(int index, char value) {
+    public PacketBuffer writeChar(int position, char value) {
         this.buffer.putChar(value);
         return this;
     }
@@ -122,105 +122,105 @@ public class PacketBuffer {
     /*
      * DOUBLES
      */
-    public double getDouble() {
+    public double readDouble() {
         return this.buffer.getDouble();
     }
 
-    public PacketBuffer putDouble(double value) {
+    public PacketBuffer writeDouble(double value) {
         this.buffer.putDouble(value);
         return this;
     }
 
-    public double getDouble(int index) {
-        return this.buffer.getDouble(index);
+    public double readDouble(int position) {
+        return this.buffer.getDouble(position);
     }
 
-    public PacketBuffer putDouble(int index, double value) {
-        this.buffer.putDouble(index, value);
+    public PacketBuffer writeDouble(int position, double value) {
+        this.buffer.putDouble(position, value);
         return this;
     }
 
     /*
      * FLOATS
      */
-    public float getFloat() {
+    public float readFloat() {
         return this.buffer.getFloat();
     }
 
-    public PacketBuffer putFloat(float value) {
+    public PacketBuffer writeFloat(float value) {
         this.buffer.putFloat(value);
         return this;
     }
 
-    public float getFloat(int index) {
-        return this.buffer.getFloat(index);
+    public float readFloat(int position) {
+        return this.buffer.getFloat(position);
     }
 
-    public PacketBuffer putFloat(int index, float value) {
-        this.buffer.putFloat(index, value);
+    public PacketBuffer writeFloat(int position, float value) {
+        this.buffer.putFloat(position, value);
         return this;
     }
 
     /*
      * INTEGER
      */
-    public int getInt() {
+    public int readInt() {
         return this.buffer.getInt();
     }
 
-    public PacketBuffer putInt(int value) {
+    public PacketBuffer writeInt(int value) {
         this.buffer.putInt(value);
         return this;
     }
 
-    public int getInt(int index) {
-        return this.buffer.getInt(index);
+    public int readInt(int position) {
+        return this.buffer.getInt(position);
     }
 
-    public PacketBuffer putInt(int index, int value) {
-        this.buffer.putInt(index, value);
+    public PacketBuffer writeInt(int position, int value) {
+        this.buffer.putInt(position, value);
         return this;
     }
 
     /*
      * LONG
      */
-    public long getLong() {
+    public long readLong() {
         return this.buffer.getLong();
     }
 
-    public PacketBuffer putLong(long value) {
+    public PacketBuffer writeLong(long value) {
         this.buffer.putLong(value);
         return this;
     }
 
-    public long getLong(int index) {
-        return this.buffer.getLong(index);
+    public long readLong(int position) {
+        return this.buffer.getLong(position);
     }
 
-    public PacketBuffer putLong(int index, long value) {
-        this.buffer.putLong(index, value);
+    public PacketBuffer writeLong(int position, long value) {
+        this.buffer.putLong(position, value);
         return this;
     }
 
     /*
      * SHORTS
      */
-    public short getShort() {
+    public short readShort() {
         return this.buffer.getShort();
     }
 
-    public PacketBuffer putShort(short value) {
+    public PacketBuffer writeShort(short value) {
         this.buffer.putShort(value);
         return this;
     }
 
-    public short getShort(int index) {
-        return this.buffer.getShort(index);
+    public short readShort(int position) {
+        return this.buffer.getShort(position);
     }
 
-    public PacketBuffer putShort(int index, short value) {
-        this.buffer.putShort(index, value);
+    public PacketBuffer writeShort(int position, short value) {
+        this.buffer.putShort(position, value);
         return this;
     }
 
@@ -229,13 +229,13 @@ public class PacketBuffer {
      */
     private final static Charset CHARSET = Charset.forName("UTF-8");
 
-    public void putString(String s) {
+    public void writeString(String s) {
         byte[] b = s.getBytes(CHARSET);
         buffer.putInt(b.length);
         buffer.put(b);
     }
 
-    public String getString() {
+    public String readString() {
         int len = buffer.getInt();
         byte[] b = new byte[len];
         buffer.get(b);

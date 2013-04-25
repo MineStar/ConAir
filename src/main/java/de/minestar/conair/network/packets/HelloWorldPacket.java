@@ -18,31 +18,31 @@
 
 package de.minestar.conair.network.packets;
 
+import java.io.IOException;
+
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
-import de.minestar.conair.network.PacketType;
 
 public class HelloWorldPacket extends NetworkPacket {
 
     private String text;
 
     public HelloWorldPacket(String text) {
-        super(PacketType.HelloWorld);
         this.text = text;
     }
 
-    public HelloWorldPacket(PacketBuffer buffer) {
-        super(PacketType.HelloWorld, buffer);
+    public HelloWorldPacket(int packetID, PacketBuffer buffer) throws IOException {
+        super(packetID, buffer);
     }
 
     @Override
     public void onSend(PacketBuffer buffer) {
-        buffer.putString(this.text);
+        buffer.writeString(this.text);
     }
 
     @Override
     public void onReceive(PacketBuffer buffer) {
-        this.text = buffer.getString();
+        this.text = buffer.readString();
 
     }
 

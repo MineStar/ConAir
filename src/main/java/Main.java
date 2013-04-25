@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 import de.minestar.conair.network.ChatClient;
 import de.minestar.conair.network.ChatServer;
+import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.HelloWorldPacket;
 
 /*
@@ -28,8 +29,9 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-
         try {
+            PacketType.registerPacket(HelloWorldPacket.class);
+
             ChatServer server = new ChatServer(9002, new ArrayList<String>());
 
             Thread t = new Thread(server);
@@ -40,12 +42,10 @@ public class Main {
             cThread.start();
 
             HelloWorldPacket packet = new HelloWorldPacket("Hallo Welt!");
-            for (int i = 0; i < 5; i++) {
-                Thread.sleep(500);
+            for (int i = 0; i < 1; i++) {
                 client.sendPacket(packet);
+                Thread.sleep(500);
             }
-
-            Thread.sleep(500);
 
             client.stop();
             cThread.stop();

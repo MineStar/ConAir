@@ -53,7 +53,6 @@ public class ChatClient implements Runnable {
 
         // Create Connection to the server
         this.socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
-//        this.socketChannel.connect();
 
         // Non-Blocking for Selector activity
         this.socketChannel.configureBlocking(false);
@@ -88,8 +87,8 @@ public class ChatClient implements Runnable {
                     }
                     it.remove();
                 }
-
             }
+            this.socketChannel.close();
         } catch (Exception e) {
             e.printStackTrace();
             Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);
@@ -126,15 +125,18 @@ public class ChatClient implements Runnable {
     }
 
     public void sendPacket(NetworkPacket packet) {
-        packetHandler.packPacket(packet);
-        this.client.addPacket(packetHandler.packetbuffer.getBuffer());
+        if (packetHandler.packPacket(packet)) {
+            this.client.addPacket(packetHandler.packetBuffer.getBuffer());
+        } else {
+            System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
+        }
     }
 
     // Handle a single packet
     private void handlePacket(NetworkPacket packet) {
         System.out.println("-------------------------");
         System.out.println("Packet received!");
-        System.out.println("Type: " + packet.getType());
+        System.out.println("Type: " + packet.getPacketID());
         HelloWorldPacket pack = (HelloWorldPacket) packet;
         System.out.println("MSG: " + pack.getText());
         System.out.println("-------------------------");
