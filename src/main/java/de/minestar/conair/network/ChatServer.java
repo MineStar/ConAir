@@ -103,6 +103,7 @@ public class ChatServer implements Runnable {
                     it.remove();
                 }
             }
+            this.serverSocket.close();
         } catch (Exception e) {
             e.printStackTrace();
             Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);

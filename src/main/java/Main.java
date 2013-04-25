@@ -47,11 +47,11 @@ public class Main {
                 Thread.sleep(500);
             }
 
-            client.stop();
-            cThread.stop();
-
             server.stop();
             t.stop();
+
+            client.stop();
+            cThread.stop();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
