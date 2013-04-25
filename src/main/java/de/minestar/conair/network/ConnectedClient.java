@@ -50,12 +50,8 @@ public class ConnectedClient {
     }
 
     public void addPacket(ByteBuffer buffer) {
-        System.out.println("a-1: " + buffer);
         this.outBuffer.put(buffer);
-
-        System.out.println("b-1: " + outBuffer);
         this.outBuffer.flip();
-        System.out.println("b-2: " + outBuffer);
         buffer.rewind();
         this.dataToSend = true;
     }

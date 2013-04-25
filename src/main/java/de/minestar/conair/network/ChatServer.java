@@ -24,6 +24,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +65,12 @@ public class ChatServer implements Runnable {
 
         isRunning = true;
 
+        if (addressWhitelist == null) {
+            addressWhitelist = new ArrayList<String>();
+        }
+        if (addressWhitelist.isEmpty()) {
+            addressWhitelist.add("127.0.0.1");
+        }
         this.addressWhitelist = addressWhitelist;
     }
 
@@ -143,6 +150,7 @@ public class ChatServer implements Runnable {
             System.out.println("not a socketchannel");
             return;
         }
+        System.out.println("reading client");
         // Read into the clients specific buffer
         SocketChannel channel = (SocketChannel) key.channel();
         ConnectedClient client = (ConnectedClient) key.attachment();
@@ -178,23 +186,32 @@ public class ChatServer implements Runnable {
 
     // Deliver the packet the all other clients
     private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
+        System.out.println("Broadcasting packet!");
         Set<SelectionKey> keys = selector.keys();
 
+        // pack the packet
         this.packetHandler.packPacket(packet);
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
                 continue;
+
             ConnectedClient client = (ConnectedClient) key.attachment();
-            if (client.equals(src))
-                continue;
+
+            // ignore if the client is the sender
+//            if (client.equals(src))
+//                continue;
+
+            // add packetdata to clientbuffer
             client.addPacket(networkBuffer);
         }
+
+        // clear the networkBuffer
         networkBuffer.clear();
     }
 
     /*
-     * WRITINGG
+     * WRITING
      */
     private void onClientWrite(SelectionKey key) throws Exception {
         if (!(key.channel() instanceof SocketChannel)) {
