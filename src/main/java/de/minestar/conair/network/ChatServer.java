@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
-import de.minestar.conair.network.packets.HelloWorldPacket;
 
 public class ChatServer implements Runnable {
 
@@ -124,19 +123,18 @@ public class ChatServer implements Runnable {
         // accept new client
         SocketChannel clientSocket = serverSocket.accept();
 
-        // TODO: implement whitelist
+        // Is client allowed to connect?
+        String address = clientSocket.getRemoteAddress().toString();
 
-//        // Is client allowed to connect?
-//        String address = clientSocket.getRemoteAddress().toString();
-//        // Remove the port number
-//        int i = address.charAt(':');
-//        if (i != -1)
-//            address = address.substring(0, i);
-//
-//        // Client is not allowed to connect - refuse connection
-//        if (!addressWhitelist.contains(address)) {
-//            clientSocket.close();
-//        }
+        // Remove the port number
+        int i = address.charAt(':');
+        if (i != -1)
+            address = address.substring(0, i);
+
+        // Client is not allowed to connect - refuse connection
+        if (!addressWhitelist.contains(address)) {
+            clientSocket.close();
+        }
 
         clientSocket.configureBlocking(false);
         clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
