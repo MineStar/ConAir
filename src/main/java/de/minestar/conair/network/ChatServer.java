@@ -117,6 +117,8 @@ public class ChatServer implements Runnable {
         // accept new client
         SocketChannel clientSocket = serverSocket.accept();
 
+        // TODO: implement whitelist
+
 //        // Is client allowed to connect?
 //        String address = clientSocket.getRemoteAddress().toString();
 //        // Remove the port number

@@ -60,7 +60,6 @@ public class PacketHandler {
         packetbuffer.getBuffer().flip();
         src.limit(limit);
         src.compact();
-
         return createPacket();
     }
 
