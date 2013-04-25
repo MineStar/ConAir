@@ -30,12 +30,12 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-            ChatServer server = new ChatServer(9001, new ArrayList<String>());
+            ChatServer server = new ChatServer(9002, new ArrayList<String>());
 
             Thread t = new Thread(server);
             t.start();
 
-            ChatClient client = new ChatClient("localhost", 9001);
+            ChatClient client = new ChatClient("localhost", 9002);
             Thread cThread = new Thread(client);
             cThread.start();
 

@@ -127,13 +127,19 @@ public class ChatServer implements Runnable {
         String address = clientSocket.getRemoteAddress().toString();
 
         // Remove the port number
-        int i = address.charAt(':');
+        int i = address.indexOf(':');
         if (i != -1)
             address = address.substring(0, i);
+
+        if (address.startsWith("/")) {
+            address = address.substring(1, address.length());
+        }
 
         // Client is not allowed to connect - refuse connection
         if (!addressWhitelist.contains(address)) {
             clientSocket.close();
+            System.out.println("Client is not whitelisted: " + address);
+            return;
         }
 
         clientSocket.configureBlocking(false);
