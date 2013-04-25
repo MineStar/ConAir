@@ -40,7 +40,7 @@ public class Main {
             cThread.start();
 
             HelloWorldPacket packet = new HelloWorldPacket("Hallo Welt!");
-            for (int i = 1; i < 3; i++) {
+            for (int i = 0; i < 2; i++) {
                 System.out.println("-------------------");
                 Thread.sleep(500);
                 client.sendPacket(packet);

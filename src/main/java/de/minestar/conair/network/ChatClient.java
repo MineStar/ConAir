@@ -112,8 +112,16 @@ public class ChatClient implements Runnable {
         }
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
+            // extract the packet
             NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
-            handlePacket(packet);
+
+            // if we have found a packet, we handle it...
+            if (packet != null) {
+                handlePacket(packet);
+            }
+
+            // clear the clientBuffer
+            client.getClientBuffer().clear();
         }
     }
 

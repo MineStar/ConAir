@@ -35,19 +35,15 @@ public class PacketHandler {
     public boolean isPacketComplete(ByteBuffer buffer) {
         buffer.flip();
         int len = 0;
-        if (buffer.hasRemaining())
+        if (buffer.hasRemaining()) {
             len = buffer.getInt();
-        else {
-            System.out.println(1);
+        } else {
             return false;
         }
         if (buffer.remaining() <= len - 4) {
-            System.out.println(2);
             return false;
         }
-        boolean end = (buffer.get(len) == PACKET_SEPERATOR);
-        System.out.println("complete: " + end);
-        return end;
+        return (buffer.get(len) == PACKET_SEPERATOR);
     }
 
     public NetworkPacket extractPacket(ByteBuffer src) {

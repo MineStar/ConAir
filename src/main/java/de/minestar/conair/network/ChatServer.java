@@ -147,10 +147,8 @@ public class ChatServer implements Runnable {
      */
     public void onClientRead(SelectionKey key) throws Exception {
         if (!(key.channel() instanceof SocketChannel)) {
-            System.out.println("not a socketchannel");
             return;
         }
-        System.out.println("reading client");
         // Read into the clients specific buffer
         SocketChannel channel = (SocketChannel) key.channel();
         ConnectedClient client = (ConnectedClient) key.attachment();
@@ -160,22 +158,18 @@ public class ChatServer implements Runnable {
             System.out.println("Client is disconnected!");
         }
 
-        System.out.println("Buffer: " + client.getClientBuffer());
-
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
-            System.out.println("packet complete");
+            // extract the packet
             NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
-            System.out.println("packet: " + packet);
-            if (packet != null) {
-                HelloWorldPacket pack = (HelloWorldPacket) packet;
-                System.out.println("text: " + pack.getText());
-            }
-            handlePacket(client, packet);
-        } else {
-            System.out.println("packet incomplete!");
-            System.out.println(client.getClientBuffer());
-        }
 
+            // if we have found a packet, we handle it...
+            if (packet != null) {
+                handlePacket(client, packet);
+            }
+
+            // clear the clientBuffer
+            client.getClientBuffer().clear();
+        }
     }
 
     // Handle a single packet
@@ -186,7 +180,6 @@ public class ChatServer implements Runnable {
 
     // Deliver the packet the all other clients
     private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
-        System.out.println("Broadcasting packet!");
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet

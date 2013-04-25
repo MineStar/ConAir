@@ -41,7 +41,6 @@ public abstract class NetworkPacket {
         onSend(buffer); // Content
         buffer.putInt(0, buffer.getBuffer().position()); // Write size
         buffer.put(PacketHandler.PACKET_SEPERATOR); // Close packet
-        System.out.println("PacketSize: " + buffer.getBuffer().position());
     }
 
     public abstract void onSend(PacketBuffer buffer);
