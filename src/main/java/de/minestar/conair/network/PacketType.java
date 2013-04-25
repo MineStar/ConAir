@@ -49,8 +49,7 @@ public class PacketType {
     }
 
     /**
-     * This method will (hopefully) return a unique ID for a given string. This
-     * is needed for saving selftriggered ICs.
+     * This method will (hopefully) return a unique ID for a given string.
      * 
      * @param string
      * @return the ID
