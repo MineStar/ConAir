@@ -29,14 +29,11 @@ import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import de.minestar.conair.network.NetworkPacket;
-import de.minestar.conair.network.PacketType;
-import de.minestar.conair.network.client.ChatClient;
-import de.minestar.conair.network.packets.HelloWorldPacket;
 import de.minestar.conair.network.server.ChatServer;
 
 public class MainWindow extends JFrame {
@@ -143,13 +140,13 @@ public class MainWindow extends JFrame {
         this.getContentPane().add(scrollPane);
     }
 
-    private void createServer() {
+    private void createServer(int port) {
         try {
             if (this.server == null) {
                 MainWindow.INSTANCE.startServer.setEnabled(false);
                 MainWindow.INSTANCE.stopServer.setEnabled(true);
                 MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
-                server = new ChatServer(9002, new ArrayList<String>());
+                server = new ChatServer(port, new ArrayList<String>());
                 serverThread = new Thread(server);
                 serverThread.start();
 
@@ -213,9 +210,29 @@ public class MainWindow extends JFrame {
     }
 
     public static void startServer() {
-        MainWindow.INSTANCE.createServer();
-    }
+        int port = 9000;
 
+        boolean inputCorrect = false;
+        while (!inputCorrect) {
+            String input = JOptionPane.showInputDialog(null, "Enter port: ", "Enter port please...", 1);
+            if (input == null) {
+                port = -1;
+                break;
+            }
+            input = input.replace(" ", "");
+            try {
+                port = Integer.valueOf(input);
+                inputCorrect = true;
+            } catch (Exception e) {
+                inputCorrect = false;
+            }
+        }
+        if (port > 0) {
+            MainWindow.INSTANCE.createServer(port);
+        } else {
+            System.out.println("Cancelled serverstart!");
+        }
+    }
     // /////////////////////////////////////////////////////////////////////
     //
     // LISTENERS
