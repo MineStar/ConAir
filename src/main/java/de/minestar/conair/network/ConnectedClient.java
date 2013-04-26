@@ -50,13 +50,11 @@ public final class ConnectedClient {
     }
 
     public void addByteBuffer(ByteBuffer buffer) {
-        synchronized (this.outBuffer) {
-            if (!this.dataToSend) {
-                this.outBuffer.put(buffer);
-                this.outBuffer.flip();
-                buffer.rewind();
-                this.dataToSend = true;
-            }
+        if (!this.dataToSend) {
+            this.outBuffer.put(buffer);
+            this.outBuffer.flip();
+            buffer.rewind();
+            this.dataToSend = true;
         }
     }
 
@@ -66,16 +64,14 @@ public final class ConnectedClient {
 
     public boolean write(SocketChannel channel) throws IOException {
         int b = 0;
-        synchronized (this.outBuffer) {
-            try {
-                b = channel.write(outBuffer);
-            } catch (IOException e) {
-                return false;
-            }
-            if (b == 0) {
-                dataToSend = false;
-                this.outBuffer.clear();
-            }
+        try {
+            b = channel.write(outBuffer);
+        } catch (IOException e) {
+            return false;
+        }
+        if (b == 0) {
+            dataToSend = false;
+            this.outBuffer.clear();
         }
         return b != -1;
     }

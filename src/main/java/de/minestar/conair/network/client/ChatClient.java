@@ -66,6 +66,7 @@ public final class ChatClient implements Runnable {
         try {
             while (isRunning) {
                 int rdyChannels = selector.select();
+
                 // No channel want something
                 if (rdyChannels == 0) {
                     continue;
@@ -85,7 +86,8 @@ public final class ChatClient implements Runnable {
                     }
                     it.remove();
                 }
-                Thread.sleep(10);
+                // sleep for 1 nanosecond...
+                Thread.sleep(0, 1);
             }
             this.socketChannel.close();
         } catch (Exception e) {

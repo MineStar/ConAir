@@ -45,7 +45,7 @@ public class Main {
             cThread.start();
 
             NetworkPacket packet = new HelloWorldPacket("Hallo Welt!");
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 300; i++) {
                 client.sendPacket(packet);
             }
 

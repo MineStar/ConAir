@@ -93,7 +93,7 @@ public final class ChatServer implements Runnable {
                         // accept new client
                         onClientAccept();
                     }
-                    // client want to send something
+                    // client is sending something
                     if (key.isReadable()) {
                         onClientRead(key);
                     }
@@ -103,6 +103,8 @@ public final class ChatServer implements Runnable {
                     }
                     it.remove();
                 }
+                // sleep for 1 nanosecond...
+                Thread.sleep(0, 1);
             }
             this.serverSocket.close();
         } catch (Exception e) {
@@ -182,6 +184,7 @@ public final class ChatServer implements Runnable {
     }
 
     // Handle a single packet
+    int pc = 0;
     private void handlePacket(ConnectedClient src, RAWPacket packet) {
         // We have a broadcast server - broadcast all packages
         broadcastPacket(src, packet);
