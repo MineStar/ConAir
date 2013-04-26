@@ -23,6 +23,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import de.minestar.conair.core.Core;
 import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.ChatPacket;
 
@@ -36,7 +37,7 @@ public class ChatListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChatEvent(AsyncPlayerChatEvent event) {
-        client.sendPacket(new ChatPacket(event.getMessage()));
+        client.sendPacket(new ChatPacket(Core.prefixColor + Core.serverPrefix + " " + event.getMessage()));
     }
 
 }

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +33,9 @@ import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
+
+    public static String serverPrefix = "";
+    public static ChatColor prefixColor = ChatColor.AQUA;
 
     public static final String NAME = "ConAir";
 
@@ -78,6 +82,11 @@ public class Core extends JavaPlugin {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
 
         port = config.getInt("port", 9000);
+        serverPrefix = config.getString("prefix", "[M]");
+        prefixColor = ChatColor.values()[config.getInt("color", ChatColor.AQUA.ordinal())];
+        if (prefixColor == null) {
+            prefixColor = ChatColor.AQUA;
+        }
         host = config.getString("host", "localhost");
     }
 
