@@ -135,9 +135,9 @@ public class Core extends JavaPlugin {
             this.readConfig();
 
             if (createChatClient(port, host)) {
-                System.out.println("Connected to " + host + ":" + port);
+                sender.sendMessage(ChatColor.GREEN + "Connected to " + host + ":" + port);
             } else {
-                System.out.println("NO CHATCLIENT CREATED!");
+                sender.sendMessage(ChatColor.RED + "Could not connect!");
             }
             this.chatListener.setClient(this.chatClient);
         }
