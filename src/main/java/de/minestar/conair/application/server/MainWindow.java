@@ -149,23 +149,6 @@ public class MainWindow extends JFrame {
                 server = new ChatServer(port, new ArrayList<String>());
                 serverThread = new Thread(server);
                 serverThread.start();
-
-//                Thread.sleep(500);
-//                ChatClient client = new ChatClient(new MainPacketHandler(), "localhost", 9002);
-//                Thread cThread = new Thread(client);
-//
-//                PacketType.registerPacket(HelloWorldPacket.class);
-//
-//                cThread.start();
-//
-//                NetworkPacket packet = new HelloWorldPacket("Hallo Welt!");
-//                for (int i = 0; i < 300; i++) {
-//                    client.sendPacket(packet);
-//                }
-//
-//                Thread.sleep(2000);
-//                client.stop();
-//                cThread.stop();
             } else {
                 System.out.println("ERROR : Server is already running!");
             }
@@ -233,6 +216,7 @@ public class MainWindow extends JFrame {
             System.out.println("Cancelled serverstart!");
         }
     }
+
     // /////////////////////////////////////////////////////////////////////
     //
     // LISTENERS

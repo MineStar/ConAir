@@ -41,7 +41,6 @@ public class Core extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        enableListener(this.getServer().getPluginManager());
         readConfig();
 
         this.registerPackets();
@@ -51,6 +50,8 @@ public class Core extends JavaPlugin {
         } else {
             System.out.println("NO CHATCLIENT CREATED!");
         }
+
+        enableListener(this.getServer().getPluginManager());
     }
 
     private void registerPackets() {
@@ -70,7 +71,6 @@ public class Core extends JavaPlugin {
             try {
                 YamlConfiguration.loadConfiguration(this.getResource("config.yml")).save(configFile);
             } catch (IOException e) {
-
                 e.printStackTrace();
                 return;
             }
