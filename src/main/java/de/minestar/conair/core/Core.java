@@ -20,7 +20,6 @@ package de.minestar.conair.core;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,21 +29,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import de.minestar.conair.listener.ChatListener;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ChatClient;
-import de.minestar.conair.network.packets.HelloWorldPacket;
-import de.minestar.conair.network.server.ChatServer;
+import de.minestar.conair.network.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
 
     public static final String NAME = "ConAir";
 
-    private boolean isServer;
-
     private int port;
     private String host;
-
-    private List<String> addressWhitelist;
-
-    private ChatServer chatServer;
     private ChatClient chatClient;
 
     @Override
@@ -54,24 +46,21 @@ public class Core extends JavaPlugin {
 
         this.registerPackets();
 
-        if (isServer) {
-            createChatServer(port);
-        }
-
         if (createChatClient(port, host)) {
             System.out.println("Connected to " + host + ":" + port);
-            this.chatClient.sendPacket(new HelloWorldPacket("Hello world!"));
         } else {
             System.out.println("NO CHATCLIENT CREATED!");
         }
     }
 
     private void registerPackets() {
-        PacketType.registerPacket(HelloWorldPacket.class);
+        PacketType.registerPacket(ChatPacket.class);
     }
 
     private void enableListener(PluginManager pm) {
-        pm.registerEvents(new ChatListener(), this);
+        if (this.chatClient != null) {
+            pm.registerEvents(new ChatListener(this.chatClient), this);
+        }
     }
 
     private void readConfig() {
@@ -88,28 +77,8 @@ public class Core extends JavaPlugin {
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
 
-        isServer = config.getBoolean("server.isServer", false);
-
         port = config.getInt("port", 13371);
-        host = config.getString("client.host", "localhost");
-
-        addressWhitelist = config.getStringList("server.whitelist");
-        // Always allow local host to connect to the server
-        if (addressWhitelist.isEmpty()) {
-            addressWhitelist.add("127.0.0.1");
-        }
-    }
-
-    private boolean createChatServer(int port) {
-        try {
-            this.chatServer = new ChatServer(port, addressWhitelist);
-            this.getServer().getScheduler().runTaskAsynchronously(this, this.chatServer);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.getLogger(NAME).throwing("de.minestar.conair.core.Core", "createChatServer", e);
-            return false;
-        }
+        host = config.getString("host", "localhost");
     }
 
     private boolean createChatClient(int port, String host) {
@@ -126,8 +95,9 @@ public class Core extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // TODO Auto-generated method stub
-        super.onDisable();
+        if (this.chatClient != null) {
+            this.chatClient.stop();
+        }
     }
 
 }

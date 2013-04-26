@@ -19,14 +19,24 @@
 package de.minestar.conair.listener;
 
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import de.minestar.conair.network.client.ChatClient;
+import de.minestar.conair.network.packets.ChatPacket;
+
 public class ChatListener implements Listener {
 
-    @EventHandler
+    private ChatClient client;
+
+    public ChatListener(ChatClient client) {
+        this.client = client;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChatEvent(AsyncPlayerChatEvent event) {
-        // TODO : Invoke broadcast
+        client.sendPacket(new ChatPacket(event.getMessage()));
     }
 
 }

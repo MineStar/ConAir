@@ -18,14 +18,20 @@
 
 package de.minestar.conair.core;
 
+import org.bukkit.Bukkit;
+
 import de.minestar.conair.network.NetworkPacket;
+import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;
+import de.minestar.conair.network.packets.ChatPacket;
 
 public class BukkitPacketHandler extends ClientPacketHandler {
 
     @Override
     public void handlePacket(NetworkPacket packet) {
-        System.out.println("Packet received!");
+        if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
+            Bukkit.broadcastMessage(((ChatPacket) packet).getMessage());
+            return;
+        }
     }
-
 }

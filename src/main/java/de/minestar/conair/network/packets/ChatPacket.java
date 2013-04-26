@@ -23,31 +23,30 @@ import java.io.IOException;
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
 
-public class HelloWorldPacket extends NetworkPacket {
+public class ChatPacket extends NetworkPacket {
 
-    private String text;
+    private String message;
 
-    public HelloWorldPacket(String text) {
-        this.text = text;
+    public ChatPacket(String message) {
+        this.message = message;
     }
 
-    public HelloWorldPacket(int packetID, PacketBuffer buffer) throws IOException {
+    public ChatPacket(int packetID, PacketBuffer buffer) throws IOException {
         super(packetID, buffer);
     }
 
     @Override
     public void onSend(PacketBuffer buffer) {
-        buffer.writeString(this.text);
+        buffer.writeString(this.message);
     }
 
     @Override
     public void onReceive(PacketBuffer buffer) {
-        this.text = buffer.readString();
-
+        this.message = buffer.readString();
     }
 
-    public String getText() {
-        return text;
+    public String getMessage() {
+        return message;
     }
 
 }
