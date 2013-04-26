@@ -76,9 +76,10 @@ public final class ChatServer implements Runnable {
 
     @Override
     public void run() {
-        try {
-            System.out.println("Server started!");
-            while (isRunning) {
+
+        System.out.println("Server started!");
+        while (isRunning) {
+            try {
                 int rdyChannels = selector.select();
                 // No channel want something
                 if (rdyChannels == 0) {
@@ -106,12 +107,10 @@ public final class ChatServer implements Runnable {
                 }
                 // sleep for 1 nanosecond...
                 Thread.sleep(0, 1);
-            }
-
-        } catch (Exception e) {
-            if (!(e instanceof java.nio.channels.CancelledKeyException)) {
-                e.printStackTrace();
-                isRunning = false;
+            } catch (Exception e) {
+                if (!(e instanceof java.nio.channels.CancelledKeyException)) {
+                    e.printStackTrace();
+                }
             }
         }
     }
