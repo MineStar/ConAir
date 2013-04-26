@@ -20,7 +20,6 @@ package de.minestar.conair.core;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -103,7 +102,6 @@ public class Core extends JavaPlugin {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.getLogger(NAME).throwing("de.minestar.conair.core.Core", "createChatClient", e);
             return false;
         }
     }
@@ -125,7 +123,9 @@ public class Core extends JavaPlugin {
         if (!label.startsWith("/"))
             label = "/" + label;
 
-        if (label.startsWith("/reconnect ")) {
+        label = label.toLowerCase();
+
+        if (label.equalsIgnoreCase("/reconnect")) {
             if (this.chatClient != null) {
                 this.clientTask.cancel();
                 this.chatClient.stop();
