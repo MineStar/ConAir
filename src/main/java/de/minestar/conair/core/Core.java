@@ -34,7 +34,7 @@ import de.minestar.conair.network.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
 
-    public static String serverPrefix = "";
+    public static String serverPrefix = "", serverName = "";
     public static ChatColor prefixColor = ChatColor.AQUA;
 
     public static final String NAME = "ConAir";
@@ -83,6 +83,7 @@ public class Core extends JavaPlugin {
 
         port = config.getInt("port", 9000);
         serverPrefix = config.getString("prefix", "[M]");
+        serverName = config.getString("servername", "Main");
         prefixColor = ChatColor.values()[config.getInt("color", ChatColor.AQUA.ordinal())];
         if (prefixColor == null) {
             prefixColor = ChatColor.AQUA;

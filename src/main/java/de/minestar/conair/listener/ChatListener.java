@@ -18,10 +18,14 @@
 
 package de.minestar.conair.listener;
 
+import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.minestar.conair.core.Core;
 import de.minestar.conair.network.client.ChatClient;
@@ -40,4 +44,18 @@ public class ChatListener implements Listener {
         client.sendPacket(new ChatPacket(Core.prefixColor + Core.serverPrefix + " " + event.getMessage()));
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Core.serverName));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerKick(PlayerKickEvent event) {
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " was kicked from the server: " + Core.serverName));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Core.serverName));
+    }
 }

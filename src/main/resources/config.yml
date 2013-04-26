@@ -2,3 +2,4 @@ port: 9000
 host: localhost
 prefix: '[M]'
 color: 0
+servername: 'Main'
