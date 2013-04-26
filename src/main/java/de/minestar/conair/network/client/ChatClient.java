@@ -141,8 +141,7 @@ public final class ChatClient implements Runnable {
      * QUEUEING
      */
     public final void sendPacket(NetworkPacket packet) {
-        if (this.packetHandler.sendPacket(packet)) {
-        }
+        this.packetHandler.sendPacket(packet);
     }
 
     /*
