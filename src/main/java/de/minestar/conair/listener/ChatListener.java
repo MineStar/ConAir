@@ -54,20 +54,20 @@ public class ChatListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Core.serverName));
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Core.prefixColor + Core.serverName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerKick(PlayerKickEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " was kicked from the server: " + Core.serverName));
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " was kicked from the server: " + Core.prefixColor + Core.serverName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Core.serverName));
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Core.prefixColor + Core.serverName));
     }
 }
