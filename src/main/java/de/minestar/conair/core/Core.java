@@ -77,7 +77,7 @@ public class Core extends JavaPlugin {
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
 
-        port = config.getInt("port", 13371);
+        port = config.getInt("port", 9000);
         host = config.getString("host", "localhost");
     }
 
