@@ -1,3 +1,4 @@
+package de.minestar.conair.application.server;
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;

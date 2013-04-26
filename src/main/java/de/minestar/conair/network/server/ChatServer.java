@@ -18,7 +18,6 @@
 
 package de.minestar.conair.network.server;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -47,6 +46,8 @@ public final class ChatServer implements Runnable {
     private List<String> addressWhitelist;
 
     public ChatServer(int port, List<String> addressWhitelist) throws Exception {
+        System.out.println("--------------------");
+        System.out.println("Starting server on port " + port + "...");
 
         this.networkBuffer = ByteBuffer.allocateDirect(8 * 1024);
 
@@ -76,6 +77,7 @@ public final class ChatServer implements Runnable {
     @Override
     public void run() {
         try {
+            System.out.println("Server started!");
             while (isRunning) {
                 int rdyChannels = selector.select();
                 // No channel want something
@@ -107,8 +109,10 @@ public final class ChatServer implements Runnable {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            isRunning = false;
+            if (!(e instanceof java.nio.channels.CancelledKeyException)) {
+                e.printStackTrace();
+                isRunning = false;
+            }
         }
     }
 
@@ -116,15 +120,18 @@ public final class ChatServer implements Runnable {
      * STOPPING
      */
     public void stop() {
+        System.out.println("--------------------");
         try {
             this.isRunning = false;
             System.out.println("Stopping server...");
             this.serverSocket.close();
             System.out.println("Server stopped!");
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            if (!(e instanceof java.nio.channels.CancelledKeyException)) {
+                e.printStackTrace();
+            }
         }
-
+        System.out.println("--------------------");
     }
 
     /*
@@ -156,7 +163,7 @@ public final class ChatServer implements Runnable {
 
         clientSocket.configureBlocking(false);
         clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
-        System.out.println("Client connected: " + address);
+        System.out.println("Client connected from: " + address);
     }
 
     /*
@@ -187,8 +194,6 @@ public final class ChatServer implements Runnable {
 
             // clear the clientBuffer
             client.getClientBuffer().clear();
-        } else {
-            System.out.println("Packet is incomplete: " + client.getClientBuffer());
         }
     }
 
@@ -213,8 +218,8 @@ public final class ChatServer implements Runnable {
             ConnectedClient client = (ConnectedClient) key.attachment();
 
             // ignore if the client is the sender
-//            if (client.equals(src))
-//                continue;
+            if (client.equals(src))
+                continue;
 
             // add packetdata to clientbuffer
             client.addByteBuffer(networkBuffer);
