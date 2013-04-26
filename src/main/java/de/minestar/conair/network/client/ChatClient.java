@@ -18,14 +18,13 @@
 
 package de.minestar.conair.network.client;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
-import de.minestar.conair.core.Core;
 import de.minestar.conair.network.ConnectedClient;
 import de.minestar.conair.network.NetworkPacket;
 
@@ -89,10 +88,8 @@ public final class ChatClient implements Runnable {
                 // sleep for 1 nanosecond...
                 Thread.sleep(0, 1);
             }
-            this.socketChannel.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.getLogger(Core.NAME).throwing("de.minestar.conair.core.network.ChatServer", "run", e);
             isRunning = false;
         }
     }
@@ -101,7 +98,14 @@ public final class ChatClient implements Runnable {
      * STOPPING
      */
     public final void stop() {
-        this.isRunning = false;
+        try {
+            this.isRunning = false;
+            System.out.println("Stopping client...");
+            this.socketChannel.close();
+            System.out.println("Client stopped!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /*
@@ -151,7 +155,7 @@ public final class ChatClient implements Runnable {
         if (client.hasDataToSend()) {
             // If write fails the client has disconnected
             if (!client.write(socketChannel)) {
-                this.isRunning = false;
+                this.stop();
                 return;
             }
         } else {
