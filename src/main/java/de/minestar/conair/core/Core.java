@@ -28,9 +28,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.minestar.conair.listener.ChatListener;
-import de.minestar.conair.network.ChatClient;
-import de.minestar.conair.network.ChatServer;
+import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.HelloWorldPacket;
+import de.minestar.conair.network.server.ChatServer;
 
 public class Core extends JavaPlugin {
 
@@ -51,6 +52,8 @@ public class Core extends JavaPlugin {
         enableListener(this.getServer().getPluginManager());
         readConfig();
 
+        this.registerPackets();
+
         if (isServer) {
             createChatServer(port);
         }
@@ -61,6 +64,10 @@ public class Core extends JavaPlugin {
         } else {
             System.out.println("NO CHATCLIENT CREATED!");
         }
+    }
+
+    private void registerPackets() {
+        PacketType.registerPacket(HelloWorldPacket.class);
     }
 
     private void enableListener(PluginManager pm) {
@@ -107,7 +114,7 @@ public class Core extends JavaPlugin {
 
     private boolean createChatClient(int port, String host) {
         try {
-            this.chatClient = new ChatClient(host, port);
+            this.chatClient = new ChatClient(new BukkitPacketHandler(), host, port);
             this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {

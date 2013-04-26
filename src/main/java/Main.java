@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 
-import de.minestar.conair.network.ChatClient;
-import de.minestar.conair.network.ChatServer;
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.HelloWorldPacket;
+import de.minestar.conair.network.server.ChatServer;
 
 /*
  * Copyright (C) 2013 MineStar.de 
@@ -37,15 +37,15 @@ public class Main {
             Thread t = new Thread(server);
             t.start();
 
-            ChatClient client = new ChatClient("localhost", 9002);
+            ChatClient client = new ChatClient(new MainPacketHandler(), "localhost", 9002);
             Thread cThread = new Thread(client);
-            cThread.start();
 
             PacketType.registerPacket(HelloWorldPacket.class);
 
+            cThread.start();
+
             NetworkPacket packet = new HelloWorldPacket("Hallo Welt!");
-            for (int i = 0; i < 3; i++) {
-                System.out.println("print " + i);
+            for (int i = 0; i < 30; i++) {
                 client.sendPacket(packet);
             }
 
@@ -55,7 +55,6 @@ public class Main {
 
             server.stop();
             t.stop();
-
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

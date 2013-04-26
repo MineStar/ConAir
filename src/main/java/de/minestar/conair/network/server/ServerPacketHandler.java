@@ -16,13 +16,13 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.server;
 
 import java.nio.ByteBuffer;
 
-import de.minestar.conair.network.packets.RAWPacket;
+import de.minestar.conair.network.PacketBuffer;
 
-public class ServerPacketHandler {
+public final class ServerPacketHandler {
 
     protected final PacketBuffer packetBuffer;
 

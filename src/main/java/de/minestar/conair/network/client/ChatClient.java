@@ -16,10 +16,9 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.client;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -27,11 +26,10 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
-import de.minestar.conair.network.packets.HelloWorldPacket;
+import de.minestar.conair.network.ConnectedClient;
+import de.minestar.conair.network.NetworkPacket;
 
-public class ChatClient implements Runnable {
-
-    private final ByteBuffer networkBuffer;
+public final class ChatClient implements Runnable {
 
     private Selector selector;
 
@@ -43,11 +41,8 @@ public class ChatClient implements Runnable {
 
     private ClientPacketHandler packetHandler;
 
-    public ChatClient(String host, int port) throws Exception {
-
-        this.networkBuffer = ByteBuffer.allocateDirect(4096);
-
-        this.packetHandler = new ClientPacketHandler(networkBuffer);
+    public ChatClient(ClientPacketHandler packetHandler, String host, int port) throws Exception {
+        this.packetHandler = packetHandler;
 
         this.selector = Selector.open();
 
@@ -63,8 +58,11 @@ public class ChatClient implements Runnable {
         this.client = new ConnectedClient("localhost");
     }
 
+    /*
+     * RUNNING
+     */
     @Override
-    public void run() {
+    public final void run() {
         try {
             while (isRunning) {
                 int rdyChannels = selector.select();
@@ -87,6 +85,7 @@ public class ChatClient implements Runnable {
                     }
                     it.remove();
                 }
+                Thread.sleep(10);
             }
             this.socketChannel.close();
         } catch (Exception e) {
@@ -96,14 +95,17 @@ public class ChatClient implements Runnable {
         }
     }
 
-    public void stop() {
+    /*
+     * STOPPING
+     */
+    public final void stop() {
         this.isRunning = false;
     }
 
     /*
      * READING
      */
-    public void onClientRead() throws Exception {
+    public final void onClientRead() throws Exception {
         // When readfrom fails the client has disconnected
         if (!client.readFrom(this.socketChannel)) {
             isRunning = false;
@@ -116,7 +118,7 @@ public class ChatClient implements Runnable {
 
             // if we have found a packet, we handle it...
             if (packet != null) {
-                handlePacket(packet);
+                this.handlePacket(packet);
             }
 
             // clear the clientBuffer
@@ -126,34 +128,34 @@ public class ChatClient implements Runnable {
         }
     }
 
-    public void sendPacket(NetworkPacket packet) {
-        if (packetHandler.packPacket(packet)) {
-            this.client.addPacket(packetHandler.packetBuffer.getBuffer());
-        } else {
-            System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
-        }
-    }
-
-    // Handle a single packet
+    /*
+     * HANDLING
+     */
     private void handlePacket(NetworkPacket packet) {
-        System.out.println("-------------------------");
-        System.out.println("Packet received!");
-        System.out.println("Type: " + packet.getPacketID());
-        HelloWorldPacket pack = (HelloWorldPacket) packet;
-        System.out.println("MSG: " + pack.getText());
-        System.out.println("-------------------------");
+        this.packetHandler.handlePacket(packet);
     }
 
     /*
-     * WRITINGG
+     * QUEUEING
      */
-    private void onClientWrite() throws Exception {
+    public final void sendPacket(NetworkPacket packet) {
+        if (this.packetHandler.sendPacket(packet)) {
+        }
+    }
 
+    /*
+     * WRITING
+     */
+    private final void onClientWrite() throws Exception {
         if (client.hasDataToSend()) {
             // If write fails the client has disconnected
             if (!client.write(socketChannel)) {
                 this.isRunning = false;
                 return;
+            }
+        } else {
+            if (!client.hasDataToSend()) {
+                this.packetHandler.updateQueue(client);
             }
         }
     }

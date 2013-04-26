@@ -16,22 +16,28 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.client;
 
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
-public class ClientPacketHandler {
+import de.minestar.conair.network.ConnectedClient;
+import de.minestar.conair.network.NetworkPacket;
+import de.minestar.conair.network.PacketBuffer;
+import de.minestar.conair.network.PacketQueue;
+import de.minestar.conair.network.PacketType;
 
-    protected final PacketBuffer packetBuffer;
+public abstract class ClientPacketHandler {
 
-    public static final byte PACKET_SEPERATOR = 3;
+    private final PacketBuffer packetBuffer;
+    private final PacketQueue packetQueue;
 
-    public ClientPacketHandler(ByteBuffer buffer) {
-        this.packetBuffer = new PacketBuffer(buffer);
+    public ClientPacketHandler() {
+        this.packetQueue = new PacketQueue();
+        this.packetBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4096));
     }
 
-    public boolean isPacketComplete(ByteBuffer buffer) {
+    protected final boolean isPacketComplete(ByteBuffer buffer) {
         buffer.flip();
         int len = 0;
         if (buffer.hasRemaining()) {
@@ -42,10 +48,19 @@ public class ClientPacketHandler {
         if (buffer.remaining() <= len - 4) {
             return false;
         }
-        return (buffer.get(len) == PACKET_SEPERATOR);
+        return (buffer.get(len) == NetworkPacket.PACKET_SEPERATOR);
     }
 
-    public NetworkPacket extractPacket(ByteBuffer src) {
+    public final boolean sendPacket(NetworkPacket packet) {
+        if (!this.packetQueue.addPacket(packet)) {
+            System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
+            return false;
+        } else {
+            return this.packetQueue.getSize() == 1;
+        }
+    }
+
+    public final NetworkPacket extractPacket(ByteBuffer src) {
         src.rewind();
         int len = src.getInt();
         int limit = src.limit();
@@ -58,14 +73,7 @@ public class ClientPacketHandler {
         return createPacket(len);
     }
 
-    public boolean packPacket(NetworkPacket packet) {
-        packetBuffer.clear();
-        boolean result = packet.pack(packetBuffer);
-        packetBuffer.getBuffer().flip();
-        return result;
-    }
-
-    private NetworkPacket createPacket(int datalength) {
+    private final NetworkPacket createPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
             // One integer is 4 bytes long
@@ -101,4 +109,18 @@ public class ClientPacketHandler {
             return null;
         }
     }
+
+    protected final boolean updateQueue(ConnectedClient client) {
+        if (this.packetQueue.updateQueue()) {
+            this.packetQueue.packPacket(this.packetBuffer);
+            client.addByteBuffer(packetBuffer.getBuffer());
+            return true;
+        }
+        return false;
+    }
+
+    /*
+     * HANDLE THE PACKET
+     */
+    public abstract void handlePacket(NetworkPacket packet);
 }

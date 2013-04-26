@@ -16,7 +16,7 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.server;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.minestar.conair.core.Core;
-import de.minestar.conair.network.packets.RAWPacket;
+import de.minestar.conair.network.ConnectedClient;
 
-public class ChatServer implements Runnable {
+public final class ChatServer implements Runnable {
 
     private final ByteBuffer networkBuffer;
 
@@ -49,7 +49,7 @@ public class ChatServer implements Runnable {
 
     public ChatServer(int port, List<String> addressWhitelist) throws Exception {
 
-        this.networkBuffer = ByteBuffer.allocateDirect(4096);
+        this.networkBuffer = ByteBuffer.allocateDirect(8 * 1024);
 
         this.packetHandler = new ServerPacketHandler(networkBuffer);
 
@@ -72,8 +72,6 @@ public class ChatServer implements Runnable {
             addressWhitelist.add("127.0.0.1");
         }
         this.addressWhitelist = addressWhitelist;
-
-        PacketType.registerPacket(RAWPacket.class);
     }
 
     @Override
@@ -178,6 +176,8 @@ public class ChatServer implements Runnable {
 
             // clear the clientBuffer
             client.getClientBuffer().clear();
+        } else {
+            System.out.println("Packet is incomplete: " + client.getClientBuffer());
         }
     }
 
@@ -205,7 +205,7 @@ public class ChatServer implements Runnable {
 //                continue;
 
             // add packetdata to clientbuffer
-            client.addPacket(networkBuffer);
+            client.addByteBuffer(networkBuffer);
         }
 
         // clear the networkBuffer

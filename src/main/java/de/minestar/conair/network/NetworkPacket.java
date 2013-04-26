@@ -22,6 +22,8 @@ import java.io.IOException;
 
 public abstract class NetworkPacket {
 
+    public static final byte PACKET_SEPERATOR = 3;
+
     protected int packetID = -1;
 
     /**
@@ -42,25 +44,26 @@ public abstract class NetworkPacket {
         onReceive(buffer);
     }
 
-    protected boolean pack(PacketBuffer buffer) {
+    protected final boolean pack(PacketBuffer buffer) {
         Integer packetID = PacketType.getID(this.getClass());
         if (packetID != null) {
             buffer.writeInt(0); // Size
             buffer.writeInt(packetID); // Type
             onSend(buffer); // Content
             buffer.writeInt(0, buffer.getBuffer().position()); // Write size
-            buffer.put(ClientPacketHandler.PACKET_SEPERATOR); // Close packet
+            buffer.put(PACKET_SEPERATOR); // Close packet
             return true;
         } else {
             return false;
         }
     }
 
+    public final int getPacketID() {
+        return packetID;
+    }
+
     public abstract void onSend(PacketBuffer buffer);
 
     public abstract void onReceive(PacketBuffer buffer);
 
-    public int getPacketID() {
-        return packetID;
-    }
 }

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class PacketType {
+public final class PacketType {
 
     private static Map<String, Integer> packetIDMap;
     private static Map<Integer, Class<? extends NetworkPacket>> packetClassMap;

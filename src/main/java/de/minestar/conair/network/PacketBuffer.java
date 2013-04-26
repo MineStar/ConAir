@@ -21,7 +21,7 @@ package de.minestar.conair.network;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public class PacketBuffer {
+public final class PacketBuffer {
 
     private final ByteBuffer buffer;
 

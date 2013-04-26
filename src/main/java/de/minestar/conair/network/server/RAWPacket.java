@@ -16,18 +16,17 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network.packets;
+package de.minestar.conair.network.server;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
-import de.minestar.conair.network.ClientPacketHandler;
 
-public final class RAWPacket extends NetworkPacket {
+public final class RAWPacket {
 
     private PacketBuffer dataBuffer;
+    private int packetID = -1;
 
     public RAWPacket(int packetID, ByteBuffer buffer) {
         this.packetID = packetID;
@@ -36,31 +35,13 @@ public final class RAWPacket extends NetworkPacket {
         this.dataBuffer.getBuffer().flip();
     }
 
-    public RAWPacket(int packetID, PacketBuffer buffer) throws IOException {
-        super(packetID, buffer);
-    }
-
-    @Override
-    public void onSend(PacketBuffer buffer) {
-        buffer.writeByteBuffer(this.dataBuffer.getBuffer());
-    }
-
-    @Override
-    public void onReceive(PacketBuffer buffer) {
-        // should never be called...
-    }
-
-    public PacketBuffer getDataBuffer() {
-        return dataBuffer;
-    }
-
-    @Override
     public final boolean pack(PacketBuffer buffer) {
         buffer.writeInt(0); // Size
         buffer.writeInt(packetID); // Type
-        onSend(buffer); // Content
+
+        buffer.writeByteBuffer(this.dataBuffer.getBuffer()); // Content
         buffer.writeInt(0, buffer.getBuffer().position()); // Write size
-        buffer.put(ClientPacketHandler.PACKET_SEPERATOR); // Close packet
+        buffer.put(NetworkPacket.PACKET_SEPERATOR); // Close packet
         return true;
     }
 }
