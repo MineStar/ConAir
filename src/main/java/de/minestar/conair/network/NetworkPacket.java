@@ -62,6 +62,10 @@ public abstract class NetworkPacket {
         return packetID;
     }
 
+    public boolean broadcastPacket() {
+        return false;
+    }
+
     public abstract void onSend(PacketBuffer buffer);
 
     public abstract void onReceive(PacketBuffer buffer);
