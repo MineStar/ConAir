@@ -197,7 +197,6 @@ public final class ChatServer implements Runnable {
     }
 
     // Handle a single packet
-    int pc = 0;
     private void handlePacket(ConnectedClient src, RAWPacket packet) {
         // We have a broadcast server - broadcast all packages
         broadcastPacket(src, packet);
