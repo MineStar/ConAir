@@ -41,12 +41,12 @@ public class Core extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Settings.loadConfig(this);
+        ClientSettings.loadConfig(this);
 
         this.registerPackets();
 
         if (createChatClient()) {
-            System.out.println("Connected to " + Settings.host + ":" + Settings.port);
+            System.out.println("Connected to " + ClientSettings.host + ":" + ClientSettings.port);
         } else {
             System.out.println("NO CHATCLIENT CREATED!");
         }
@@ -65,7 +65,7 @@ public class Core extends JavaPlugin {
 
     private boolean createChatClient() {
         try {
-            this.chatClient = new ChatClient(new BukkitPacketHandler(), Settings.host, Settings.port);
+            this.chatClient = new ChatClient(new BukkitPacketHandler(), ClientSettings.host, ClientSettings.port);
             clientTask = this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {
@@ -100,10 +100,10 @@ public class Core extends JavaPlugin {
                 this.chatClient = null;
             }
 
-            Settings.loadConfig(this);
+            ClientSettings.loadConfig(this);
 
             if (createChatClient()) {
-                sender.sendMessage(ChatColor.GREEN + "Connected to " + Settings.host + ":" + Settings.port);
+                sender.sendMessage(ChatColor.GREEN + "Connected to " + ClientSettings.host + ":" + ClientSettings.port);
             } else {
                 sender.sendMessage(ChatColor.RED + "Could not connect!");
             }

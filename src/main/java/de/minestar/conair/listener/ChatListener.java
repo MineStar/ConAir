@@ -26,7 +26,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import de.minestar.conair.core.Settings;
+import de.minestar.conair.core.ClientSettings;
 import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.ChatPacket;
 
@@ -44,22 +44,25 @@ public class ChatListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChatEvent(AsyncPlayerChatEvent event) {
-        if (client == null)
+        if (client == null || !ClientSettings.informChat) {
             return;
-        client.sendPacket(new ChatPacket(Settings.prefixColor + Settings.serverPrefix + " " + event.getMessage()));
+        }
+        client.sendPacket(new ChatPacket(ClientSettings.prefixColor + ClientSettings.serverPrefix + " " + event.getMessage()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (client == null)
+        if (client == null || !ClientSettings.informJoin) {
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Settings.prefixColor + Settings.serverName));
+        }
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + ClientSettings.prefixColor + ClientSettings.serverName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        if (client == null)
+        if (client == null || !ClientSettings.informQuit) {
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Settings.prefixColor + Settings.serverName));
+        }
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + ClientSettings.prefixColor + ClientSettings.serverName));
     }
 }
