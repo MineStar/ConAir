@@ -26,7 +26,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import de.minestar.conair.core.Core;
+import de.minestar.conair.core.Settings;
 import de.minestar.conair.network.client.ChatClient;
 import de.minestar.conair.network.packets.ChatPacket;
 
@@ -46,20 +46,20 @@ public class ChatListener implements Listener {
     public void onChatEvent(AsyncPlayerChatEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(Core.prefixColor + Core.serverPrefix + " " + event.getMessage()));
+        client.sendPacket(new ChatPacket(Settings.prefixColor + Settings.serverPrefix + " " + event.getMessage()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Core.prefixColor + Core.serverName));
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Settings.prefixColor + Settings.serverName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (client == null)
             return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Core.prefixColor + Core.serverName));
+        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " left the server: " + Settings.prefixColor + Settings.serverName));
     }
 }

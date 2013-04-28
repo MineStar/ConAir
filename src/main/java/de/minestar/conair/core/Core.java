@@ -18,13 +18,9 @@
 
 package de.minestar.conair.core;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -36,13 +32,8 @@ import de.minestar.conair.network.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
 
-    public static String serverPrefix = "", serverName = "";
-    public static ChatColor prefixColor = ChatColor.AQUA;
-
     public static final String NAME = "ConAir";
 
-    private int port;
-    private String host;
     private ChatClient chatClient;
     private BukkitTask clientTask = null;
 
@@ -50,12 +41,12 @@ public class Core extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        readConfig();
+        Settings.loadConfig(this);
 
         this.registerPackets();
 
-        if (createChatClient(port, host)) {
-            System.out.println("Connected to " + host + ":" + port);
+        if (createChatClient()) {
+            System.out.println("Connected to " + Settings.host + ":" + Settings.port);
         } else {
             System.out.println("NO CHATCLIENT CREATED!");
         }
@@ -72,32 +63,9 @@ public class Core extends JavaPlugin {
         pm.registerEvents(this.chatListener, this);
     }
 
-    private void readConfig() {
-        File configFile = new File(getDataFolder(), "config.yml");
-        // Create default config when no config was found
-        if (!configFile.exists()) {
-            try {
-                YamlConfiguration.loadConfiguration(this.getResource("config.yml")).save(configFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-
-        port = config.getInt("port", 9000);
-        serverPrefix = config.getString("prefix", "[M]");
-        serverName = config.getString("servername", "Main");
-        prefixColor = ChatColor.values()[config.getInt("color", ChatColor.AQUA.ordinal())];
-        if (prefixColor == null) {
-            prefixColor = ChatColor.AQUA;
-        }
-        host = config.getString("host", "localhost");
-    }
-
-    private boolean createChatClient(int port, String host) {
+    private boolean createChatClient() {
         try {
-            this.chatClient = new ChatClient(new BukkitPacketHandler(), host, port);
+            this.chatClient = new ChatClient(new BukkitPacketHandler(), Settings.host, Settings.port);
             clientTask = this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {
@@ -132,10 +100,10 @@ public class Core extends JavaPlugin {
                 this.chatClient = null;
             }
 
-            this.readConfig();
+            Settings.loadConfig(this);
 
-            if (createChatClient(port, host)) {
-                sender.sendMessage(ChatColor.GREEN + "Connected to " + host + ":" + port);
+            if (createChatClient()) {
+                sender.sendMessage(ChatColor.GREEN + "Connected to " + Settings.host + ":" + Settings.port);
             } else {
                 sender.sendMessage(ChatColor.RED + "Could not connect!");
             }
