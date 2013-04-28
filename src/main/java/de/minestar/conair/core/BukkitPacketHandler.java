@@ -18,7 +18,7 @@
 
 package de.minestar.conair.core;
 
-import org.bukkit.Bukkit;
+import com.bukkit.gemo.FalseBook.Chat.ChatManager;
 
 import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketType;
@@ -33,7 +33,7 @@ public class BukkitPacketHandler extends ClientPacketHandler {
             if (!ClientSettings.informChat) {
                 return;
             }
-            Bukkit.broadcastMessage(((ChatPacket) packet).getMessage());
+            ChatManager.broadcast(((ChatPacket) packet).getMessage());
             return;
         }
     }
