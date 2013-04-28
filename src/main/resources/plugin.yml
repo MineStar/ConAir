@@ -1,7 +1,7 @@
 name: ConAir
 main: de.minestar.conair.core.Core
 version: ${pom.version}
-depend: [FalseBookChat]
+soft-depend: [FalseBookChat]
 commands:
   reconnect:
     description: Reconnect to the server

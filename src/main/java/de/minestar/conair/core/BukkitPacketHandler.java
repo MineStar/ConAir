@@ -18,6 +18,9 @@
 
 package de.minestar.conair.core;
 
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
+
 import com.bukkit.gemo.FalseBook.Chat.ChatManager;
 
 import de.minestar.conair.network.NetworkPacket;
@@ -27,13 +30,30 @@ import de.minestar.conair.network.packets.ChatPacket;
 
 public class BukkitPacketHandler extends ClientPacketHandler {
 
+    private boolean useFBChat = false;
+
+    public BukkitPacketHandler() {
+        this.searchFBChat();
+    }
+
+    private void searchFBChat() {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("FalseBookChat");
+        if (plugin != null && plugin.isEnabled()) {
+            useFBChat = true;
+        }
+    }
+
     @Override
     public void handlePacket(NetworkPacket packet) {
         if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
             if (!ClientSettings.informChat) {
                 return;
             }
-            ChatManager.broadcast(((ChatPacket) packet).getMessage());
+            if (!useFBChat) {
+                Bukkit.getServer().broadcastMessage(((ChatPacket) packet).getMessage());
+            } else {
+                ChatManager.broadcast(((ChatPacket) packet).getMessage());
+            }
             return;
         }
     }

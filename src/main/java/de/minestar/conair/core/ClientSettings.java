@@ -82,7 +82,7 @@ public class ClientSettings {
             config.set("port", port);
             config.set("prefix", serverPrefix);
             config.set("servername", serverName);
-            config.set("color", ChatColor.AQUA.ordinal());
+            config.set("color", prefixColor.ordinal());
             config.set("host", host);
 
             // inform settings
