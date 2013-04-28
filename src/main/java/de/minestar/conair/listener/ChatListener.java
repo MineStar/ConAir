@@ -24,7 +24,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.minestar.conair.core.Core;
@@ -55,13 +54,6 @@ public class ChatListener implements Listener {
         if (client == null)
             return;
         client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " joined the server: " + Core.prefixColor + Core.serverName));
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerKick(PlayerKickEvent event) {
-        if (client == null)
-            return;
-        client.sendPacket(new ChatPacket(ChatColor.YELLOW + event.getPlayer().getName() + " was kicked from the server: " + Core.prefixColor + Core.serverName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
