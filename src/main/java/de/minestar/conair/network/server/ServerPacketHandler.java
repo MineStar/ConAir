@@ -158,9 +158,10 @@ public final class ServerPacketHandler {
             int packetID = packetBuffer.readInt();
             Class<? extends NetworkPacket> packetClazz = PacketType.getClassByID(packetID);
 
-            // packet not found...
+            // packet not found...            
             if (packetClazz == null) {
                 // CREATE THE RAWPACKET
+                System.out.println("Server: Create a RAWPACKET!");
 
                 // read data...
                 byte[] data = new byte[datalength];
@@ -171,7 +172,6 @@ public final class ServerPacketHandler {
                 newBuffer.writeBytes(data);
                 newBuffer.getBuffer().rewind();
 
-                System.out.println("String: " + new String(data));
                 // finally create the packet and return it
                 return new RAWPacket(packetID, newBuffer.getBuffer());
             }

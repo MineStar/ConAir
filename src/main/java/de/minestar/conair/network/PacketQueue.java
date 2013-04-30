@@ -36,7 +36,6 @@ public final class PacketQueue {
 
     public boolean addUnsafePacket(NetworkPacket packet) {
         synchronized (this.packetQueue) {
-            System.out.println("queueing packet: " + packet.getClass().getSimpleName());
             this.packetQueue.add(packet);
             return true;
         }
@@ -73,7 +72,6 @@ public final class PacketQueue {
 
     public boolean packPacket(PacketBuffer packetBuffer) {
         if (this.isActive()) {
-            System.out.println("Packing packet: " + this.activePacket.getClass().getSimpleName());
             packetBuffer.clear();
             boolean result = this.activePacket.pack(packetBuffer);
             packetBuffer.getBuffer().flip();

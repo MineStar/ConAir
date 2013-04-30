@@ -103,8 +103,6 @@ public abstract class ClientPacketHandler {
             newBuffer.getBuffer().rewind();
 
             // finally create the packet and return it
-            System.out.println("received bytes: " + data.length);
-            
             return packetConstructor.newInstance(packetID, newBuffer);
         } catch (Exception e) {
             return null;

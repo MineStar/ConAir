@@ -94,6 +94,8 @@ public final class ConnectedServerClient {
 
             if (this.packetQueue.updateQueue()) {
                 this.packetQueue.packPacket(this.outBuffer);
+                
+               
                 this.dataToSend = true;
             }
         }

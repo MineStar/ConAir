@@ -170,6 +170,7 @@ public final class ChatClient implements Runnable {
      */
     private void handlePacket(NetworkPacket packet) {
         if (!this.clientSidePacketHandler.handlePacket(packet)) {
+            System.out.println(this.clientName + " is handling packet: " + packet.getClass().getSimpleName());
             this.packetHandler.handlePacket(packet);
         }
     }

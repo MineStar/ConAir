@@ -18,6 +18,7 @@
 
 package de.minestar.conair.network.server;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -138,18 +139,25 @@ public final class ChatServer implements Runnable {
                 }
             }
         }
+        System.out.println("--------------------");
+
+        System.out.println("Stopping server...");
+        try {
+            this.serverSocket.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        System.out.println("Server stopped!");
+
     }
 
     /*
      * STOPPING
      */
     public void stop() {
-        System.out.println("--------------------");
         try {
             this.isRunning = false;
-            System.out.println("Stopping server...");
-            this.serverSocket.close();
-            System.out.println("Server stopped!");
         } catch (Exception e) {
             if (!(e instanceof java.nio.channels.CancelledKeyException)) {
                 e.printStackTrace();
@@ -227,7 +235,7 @@ public final class ChatServer implements Runnable {
     private void handlePacket(ConnectedServerClient client, NetworkPacket packet) {
         // We have a broadcast server - broadcast all packages
         if (packet.isBroadcastPacket()) {
-            System.out.println("this is a broadcastpacket...");
+            System.out.println("Broadcasting packet: " + packet.getClass().getSimpleName());
             broadcastPacket(client, packet);
         } else {
             boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
@@ -242,9 +250,7 @@ public final class ChatServer implements Runnable {
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet
-//        this.packetHandler.packPacket(packet);
-
-        System.out.println("We received a packet: " + packet.getClass().getSimpleName());
+        //this.packetHandler.packPacket(packet);
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
