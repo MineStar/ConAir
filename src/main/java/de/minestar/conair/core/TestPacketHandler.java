@@ -25,12 +25,6 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public class TestPacketHandler extends ClientPacketHandler {
 
-    private boolean useFBChat = false;
-
-    public TestPacketHandler() {
-
-    }
-
     @Override
     public void handlePacket(NetworkPacket packet) {
         if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {

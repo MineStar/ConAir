@@ -132,6 +132,9 @@ public final class TCPClient implements Runnable {
         try {
             this.isRunning = false;
             System.out.println("Stopping client...");
+            this.selector.close();
+            this.socketChannel.socket().close();
+            this.socketChannel.socket().getChannel().close();
             this.socketChannel.close();
             System.out.println("Client stopped!");
         } catch (IOException e) {

@@ -1,10 +1,7 @@
-import java.util.ArrayList;
-
 import de.minestar.conair.core.TestPacketHandler;
 import de.minestar.conair.network.PacketType;
-import de.minestar.conair.network.client.TCPClient;
+import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
-import de.minestar.conair.network.server.DedicatedTCPServer;
 
 /*
  * Copyright (C) 2013 MineStar.de 
@@ -32,36 +29,20 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-            
-            DedicatedTCPServer server = new DedicatedTCPServer(9002, new ArrayList<String>());
-//               PacketType.registerPacket(ChatPacket.class);
-//            ChatClient client = new ChatClient("TestClient", new TestPacketHandler(), "localhost", 9002);
-//            Thread cThread = new Thread(client);
-//            cThread.start();
-//
-//            ChatClient client2 = new ChatClient("TestClient2", new TestPacketHandler(), "localhost", 9002);
-//            Thread cThread2 = new Thread(client2);
-//            cThread2.start();
-//           
-
+            PacketType.registerPacket(ChatPacket.class);
+            DedicatedTCPClient client1 = new DedicatedTCPClient("Client-1", new TestPacketHandler(), "localhost", 9000);
+            DedicatedTCPClient client2 = new DedicatedTCPClient("Client-2", new TestPacketHandler(), "localhost", 9000);
             Thread.sleep(500);
-            
-//            for (int i = 1; i <= 1; i++) {
-//                client.sendPacket(new ChatPacket("Hallo Welt! " + i));
-//            }
-//
-//            Thread.sleep(1000);
-//            
-//            client.stop();
-//            cThread.stop();
-//            
-//
-//            client2.stop();
-//            cThread2.stop();
 
-            server.stop();
-            
-           } catch (Exception e) {
+            for (int i = 1; i <= 5; i++) {
+                client1.sendPacket(new ChatPacket("Hello World from '" + client1.getClientName() + "' -> " + i));
+            }
+
+            Thread.sleep(1000);
+
+            client1.stop();
+            client2.stop();
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
