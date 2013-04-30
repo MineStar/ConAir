@@ -31,7 +31,7 @@ import de.minestar.conair.network.packets.RegisterDenyPacket;
 import de.minestar.conair.network.packets.RegisterOKPacket;
 import de.minestar.conair.network.packets.RegisterRequestPacket;
 
-public final class ChatClient implements Runnable {
+public final class TCPClient implements Runnable {
 
     private Selector selector;
 
@@ -47,7 +47,7 @@ public final class ChatClient implements Runnable {
 
     private ClientSidePacketHandler clientSidePacketHandler;
 
-    public ChatClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
+    public TCPClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
         this.clientName = name;
 
         this.packetHandler = packetHandler;

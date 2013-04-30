@@ -27,14 +27,14 @@ import org.bukkit.scheduler.BukkitTask;
 
 import de.minestar.conair.listener.ChatListener;
 import de.minestar.conair.network.PacketType;
-import de.minestar.conair.network.client.ChatClient;
+import de.minestar.conair.network.client.TCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
 
     public static final String NAME = "ConAir";
 
-    private ChatClient chatClient;
+    private TCPClient chatClient;
     private BukkitTask clientTask = null;
 
     private ChatListener chatListener;
@@ -65,7 +65,7 @@ public class Core extends JavaPlugin {
 
     private boolean createChatClient() {
         try {
-            this.chatClient = new ChatClient(ClientSettings.serverName, new BukkitPacketHandler(), ClientSettings.host, ClientSettings.port);
+            this.chatClient = new TCPClient(ClientSettings.serverName, new BukkitPacketHandler(), ClientSettings.host, ClientSettings.port);
             clientTask = this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
             return true;
         } catch (Exception e) {

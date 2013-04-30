@@ -25,9 +25,9 @@ import de.minestar.conair.network.packets.RegisterOKPacket;
 
 public class ClientSidePacketHandler extends AbstractClientPacketHandler {
 
-    private final ChatClient client;
+    private final TCPClient client;
 
-    public ClientSidePacketHandler(ChatClient client) {
+    public ClientSidePacketHandler(TCPClient client) {
         this.client = client;
     }
 

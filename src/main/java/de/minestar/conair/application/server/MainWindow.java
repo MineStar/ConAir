@@ -34,7 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import de.minestar.conair.network.server.ChatServer;
+import de.minestar.conair.network.server.DedicatedTCPServer;
 
 public class MainWindow extends JFrame {
 
@@ -47,8 +47,7 @@ public class MainWindow extends JFrame {
     private JScrollPane scrollPane;
     private boolean serverRunning = false;
 
-    private ChatServer server;
-    private Thread serverThread;
+    private DedicatedTCPServer server;
 
     public MainWindow() {
         MainWindow.INSTANCE = this;
@@ -146,9 +145,7 @@ public class MainWindow extends JFrame {
                 MainWindow.INSTANCE.startServer.setEnabled(false);
                 MainWindow.INSTANCE.stopServer.setEnabled(true);
                 MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
-                server = new ChatServer(port, new ArrayList<String>());
-                serverThread = new Thread(server);
-                serverThread.start();
+                server = new DedicatedTCPServer(port, new ArrayList<String>());
             } else {
                 System.out.println("ERROR : Server is already running!");
             }
@@ -158,23 +155,13 @@ public class MainWindow extends JFrame {
         }
 
     }
-
-    @SuppressWarnings("deprecation")
     private void destroyServer() {
-        try {
-            MainWindow.INSTANCE.stopServer.setEnabled(false);
-            MainWindow.INSTANCE.startServer.setEnabled(true);
-            MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
-            if (this.server != null) {
-                this.server.stop();
-                this.server = null;
-                if (this.serverThread != null) {
-                    this.serverThread.stop();
-                    this.serverThread = null;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        MainWindow.INSTANCE.stopServer.setEnabled(false);
+        MainWindow.INSTANCE.startServer.setEnabled(true);
+        MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
+        if (this.server != null) {
+            this.server.stop();
+            this.server = null;
         }
     }
 

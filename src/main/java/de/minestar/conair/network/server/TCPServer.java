@@ -36,7 +36,7 @@ import de.minestar.conair.network.packets.RegisterDenyPacket;
 import de.minestar.conair.network.packets.RegisterOKPacket;
 import de.minestar.conair.network.packets.RegisterRequestPacket;
 
-public final class ChatServer implements Runnable {
+public final class TCPServer implements Runnable {
 
     private final ByteBuffer networkBuffer;
 
@@ -52,7 +52,7 @@ public final class ChatServer implements Runnable {
 
     private ServerSidePacketHandler serverSidePacketHandler;
 
-    public ChatServer(int port, List<String> addressWhitelist) throws Exception {
+    public TCPServer(int port, List<String> addressWhitelist) throws Exception {
         System.out.println("--------------------");
         System.out.println("Starting server on port " + port + "...");
 
@@ -139,33 +139,26 @@ public final class ChatServer implements Runnable {
                 }
             }
         }
-        System.out.println("--------------------");
-
-        System.out.println("Stopping server...");
-        try {
-            this.serverSocket.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        System.out.println("Server stopped!");
-
     }
 
     /*
      * STOPPING
      */
     public void stop() {
+        this.isRunning = false;
+        System.out.println("--------------------");
+        System.out.println("Stopping server...");
         try {
-            this.isRunning = false;
-        } catch (Exception e) {
-            if (!(e instanceof java.nio.channels.CancelledKeyException)) {
-                e.printStackTrace();
-            }
+            this.selector.close();
+            this.serverSocket.socket().close();
+            this.serverSocket.socket().getChannel().close();
+            this.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        System.out.println("Server stopped!");
         System.out.println("--------------------");
     }
-
     /*
      * ACCEPTING
      */
@@ -250,7 +243,7 @@ public final class ChatServer implements Runnable {
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet
-        //this.packetHandler.packPacket(packet);
+        // this.packetHandler.packPacket(packet);
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
