@@ -171,8 +171,7 @@ public final class ServerPacketHandler {
                 newBuffer.writeBytes(data);
                 newBuffer.getBuffer().rewind();
 
-                System.out.println("RAWPacket: " + data.length);
-
+                System.out.println("String: " + new String(data));
                 // finally create the packet and return it
                 return new RAWPacket(packetID, newBuffer.getBuffer());
             }
