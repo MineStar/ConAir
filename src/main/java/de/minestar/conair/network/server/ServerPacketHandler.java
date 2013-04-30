@@ -69,53 +69,56 @@ public final class ServerPacketHandler {
     //
     // //////////////////////////////////////////////////////////
 
-    public RAWPacket extractRAWPacket(ByteBuffer src) {
-        src.rewind();
-        int len = src.getInt();
-        int limit = src.limit();
-        src.limit(len);
-        packetBuffer.clear();
-        packetBuffer.writeByteBuffer(src);
-        packetBuffer.getBuffer().flip();
-        src.limit(limit);
-        src.compact();
-
-        // create packet
-        RAWPacket packet = createRAWPacket(len);
-
-        // reset
-        src.rewind();
-        packetBuffer.clear();
-
-        // return
-        return packet;
-    }
-
-    private RAWPacket createRAWPacket(int datalength) {
-        try {
-            // reduce the datalength, because we read two integers first.
-            // One integer is 4 bytes long
-            datalength -= 8;
-
-            // get packettype
-            int packetID = packetBuffer.readInt();
-
-            // read data...
-            byte[] data = new byte[datalength];
-            packetBuffer.readBytes(data);
-
-            // ... and create a new PacketBuffer
-            PacketBuffer newBuffer = new PacketBuffer(data.length);
-            newBuffer.writeBytes(data);
-            newBuffer.getBuffer().rewind();
-
-            // finally create the packet and return it
-            return new RAWPacket(packetID, newBuffer.getBuffer());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+//    public RAWPacket extractRAWPacket(ByteBuffer src) {
+//
+//        src.rewind();
+//        int len = src.getInt();
+//        int limit = src.limit();
+//        src.limit(len);
+//        
+//        packetBuffer.clear();
+//        packetBuffer.writeByteBuffer(src);
+//        packetBuffer.getBuffer().flip();
+//        
+//        src.limit(limit);
+//        src.compact();
+//
+//        // create packet
+//        RAWPacket packet = createRAWPacket(len);
+//
+//        // reset
+//        src.rewind();
+//        packetBuffer.clear();
+//
+//        // return
+//        return packet;
+//    }
+//
+//    private RAWPacket createRAWPacket(int datalength) {
+//        try {
+//            // reduce the datalength, because we read two integers first.
+//            // One integer is 4 bytes long
+//            datalength -= 8;
+//
+//            // get packettype
+//            int packetID = packetBuffer.readInt();
+//
+//            // read data...
+//            byte[] data = new byte[datalength];
+//            packetBuffer.readBytes(data);
+//
+//            // ... and create a new PacketBuffer
+//            PacketBuffer newBuffer = new PacketBuffer(data.length);
+//            newBuffer.writeBytes(data);
+//            newBuffer.getBuffer().rewind();
+//
+//            // finally create the packet and return it
+//            return new RAWPacket(packetID, newBuffer.getBuffer());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
 
     // //////////////////////////////////////////////////////////
     //
@@ -157,7 +160,21 @@ public final class ServerPacketHandler {
 
             // packet not found...
             if (packetClazz == null) {
-                return null;
+                // CREATE THE RAWPACKET
+
+                // read data...
+                byte[] data = new byte[datalength];
+                packetBuffer.readBytes(data);
+
+                // ... and create a new PacketBuffer
+                PacketBuffer newBuffer = new PacketBuffer(data.length);
+                newBuffer.writeBytes(data);
+                newBuffer.getBuffer().rewind();
+
+                System.out.println("RAWPacket: " + data.length);
+
+                // finally create the packet and return it
+                return new RAWPacket(packetID, newBuffer.getBuffer());
             }
 
             // get the constructor
@@ -190,9 +207,9 @@ public final class ServerPacketHandler {
 
     public NetworkPacket extractPacket(ByteBuffer src) {
         NetworkPacket packet = this.extractNetworkPacket(src);
-        if (packet == null) {
-            packet = this.extractRAWPacket(src);
-        }
+//        if (packet == null) {
+//            packet = this.extractRAWPacket(src);
+//        }
         return packet;
     }
 }

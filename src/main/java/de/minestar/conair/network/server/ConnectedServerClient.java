@@ -16,23 +16,30 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.server;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-public final class ConnectedClient {
+import de.minestar.conair.network.PacketBuffer;
+import de.minestar.conair.network.PacketQueue;
+import de.minestar.conair.network.packets.NetworkPacket;
 
-    private final ByteBuffer inBuffer = ByteBuffer.allocateDirect(32 * 1024);
-    private final ByteBuffer outBuffer = ByteBuffer.allocateDirect(4 * 1024);
+public final class ConnectedServerClient {
+
+    private final PacketBuffer inBuffer = new PacketBuffer(ByteBuffer.allocateDirect(32 * 1024));
+    private final PacketBuffer outBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4 * 1024));
 
     private boolean dataToSend = false;
 
     private String name;
 
-    public ConnectedClient(String name) {
+    private final PacketQueue packetQueue;
+
+    public ConnectedServerClient(String name) {
         this.name = name;
+        this.packetQueue = new PacketQueue();
     }
 
     public void setName(String name) {
@@ -42,21 +49,33 @@ public final class ConnectedClient {
     public boolean readFrom(SocketChannel channel) throws Exception {
         int b = 0;
         try {
-            b = channel.read(inBuffer);
+            b = channel.read(inBuffer.getBuffer());
         } catch (IOException e) {
             return false;
         }
         return b != -1;
     }
 
-    public void addByteBuffer(ByteBuffer buffer) {
-        if (!this.dataToSend) {
-            this.outBuffer.put(buffer);
-            this.outBuffer.flip();
-            buffer.rewind();
-            this.dataToSend = true;
+    public void sendPacket(NetworkPacket packet) {
+        this.packetQueue.addUnsafePacket(packet);
+        boolean wasEmpty = this.packetQueue.getSize() == 1;
+        // the queue was empty, so we send the first packet
+        if (wasEmpty) {
+            if (this.packetQueue.updateQueue()) {
+                this.packetQueue.packPacket(this.outBuffer);
+                this.dataToSend = true;
+            }
         }
     }
+
+//    private void addByteBuffer(ByteBuffer buffer) {
+//        if (!this.dataToSend) {
+//            this.outBuffer.getBuffer().put(buffer);
+//            this.outBuffer.getBuffer().flip();
+//            buffer.rewind();
+//            this.dataToSend = true;
+//        }
+//    }
 
     public boolean hasDataToSend() {
         return dataToSend;
@@ -65,13 +84,18 @@ public final class ConnectedClient {
     public boolean write(SocketChannel channel) throws IOException {
         int b = 0;
         try {
-            b = channel.write(outBuffer);
+            b = channel.write(outBuffer.getBuffer());
         } catch (IOException e) {
             return false;
         }
         if (b == 0) {
             dataToSend = false;
             this.outBuffer.clear();
+
+            if (this.packetQueue.updateQueue()) {
+                this.packetQueue.packPacket(this.outBuffer);
+                this.dataToSend = true;
+            }
         }
         return b != -1;
     }
@@ -81,7 +105,7 @@ public final class ConnectedClient {
     }
 
     public ByteBuffer getClientBuffer() {
-        return inBuffer;
+        return inBuffer.getBuffer();
     }
 
 }

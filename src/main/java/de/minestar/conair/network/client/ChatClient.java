@@ -25,7 +25,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
-import de.minestar.conair.network.ConnectedClient;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.NetworkPacket;
 import de.minestar.conair.network.packets.RegisterDenyPacket;
@@ -46,6 +45,8 @@ public final class ChatClient implements Runnable {
 
     private final String clientName;
 
+    private ClientSidePacketHandler clientSidePacketHandler;
+
     public ChatClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
         this.clientName = name;
 
@@ -63,6 +64,9 @@ public final class ChatClient implements Runnable {
         this.isRunning = true;
 
         this.client = new ConnectedClient("localhost");
+
+        // create ClientSidePacketHandler
+        this.clientSidePacketHandler = new ClientSidePacketHandler(this);
 
         // register standardpackets
         this.registerStandardPacketTypes();
@@ -165,7 +169,9 @@ public final class ChatClient implements Runnable {
      * HANDLING
      */
     private void handlePacket(NetworkPacket packet) {
-        this.packetHandler.handlePacket(packet);
+        if (!this.clientSidePacketHandler.handlePacket(packet)) {
+            this.packetHandler.handlePacket(packet);
+        }
     }
 
     /*

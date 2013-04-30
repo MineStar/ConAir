@@ -44,7 +44,7 @@ public class RegisterRequestPacket extends NetworkPacket {
         this.clientName = buffer.readString();
     }
 
-    public String getServerName() {
+    public String getClientName() {
         return clientName;
     }
 

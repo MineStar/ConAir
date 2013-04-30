@@ -21,7 +21,6 @@ package de.minestar.conair.network.client;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
-import de.minestar.conair.network.ConnectedClient;
 import de.minestar.conair.network.PacketBuffer;
 import de.minestar.conair.network.PacketQueue;
 import de.minestar.conair.network.PacketType;

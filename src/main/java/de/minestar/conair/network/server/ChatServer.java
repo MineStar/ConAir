@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import de.minestar.conair.network.ConnectedClient;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.NetworkPacket;
 import de.minestar.conair.network.packets.RegisterDenyPacket;
@@ -49,6 +48,8 @@ public final class ChatServer implements Runnable {
     private ServerPacketHandler packetHandler;
 
     private List<String> addressWhitelist;
+
+    private ServerSidePacketHandler serverSidePacketHandler;
 
     public ChatServer(int port, List<String> addressWhitelist) throws Exception {
         System.out.println("--------------------");
@@ -80,6 +81,9 @@ public final class ChatServer implements Runnable {
 
         // register standardpackets
         this.registerStandardPacketTypes();
+
+        // create ServerSidePacketHandler
+        this.serverSidePacketHandler = new ServerSidePacketHandler();
     }
 
     private final void registerStandardPacketTypes() {
@@ -181,8 +185,9 @@ public final class ChatServer implements Runnable {
             return;
         }
 
+        address = address + ":" + clientSocket.socket().getPort();
         clientSocket.configureBlocking(false);
-        clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedClient(clientSocket.getRemoteAddress().toString()));
+        clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedServerClient(address));
         System.out.println("Client connected from: " + address);
     }
 
@@ -196,10 +201,11 @@ public final class ChatServer implements Runnable {
 
         // Read into the clients specific buffer
         SocketChannel channel = (SocketChannel) key.channel();
-        ConnectedClient client = (ConnectedClient) key.attachment();
+        ConnectedServerClient client = (ConnectedServerClient) key.attachment();
         // When readfrom fails the client has disconnected
         if (!client.readFrom(channel)) {
             key.cancel();
+            this.serverSidePacketHandler.unregisterClient(client);
             System.out.println("Client '" + client.getName() + "' disconnected!");
         }
 
@@ -218,34 +224,42 @@ public final class ChatServer implements Runnable {
     }
 
     // Handle a single packet
-    private void handlePacket(ConnectedClient src, NetworkPacket packet) {
+    private void handlePacket(ConnectedServerClient client, NetworkPacket packet) {
         // We have a broadcast server - broadcast all packages
         if (packet.isBroadcastPacket()) {
-            broadcastPacket(src, packet);
+            System.out.println("this is a broadcastpacket...");
+            broadcastPacket(client, packet);
         } else {
-            System.out.println("Handle packet serverside only: " + packet.getPacketID());
+            boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
+            if (!result) {
+                // TODO: Handle the packet in registered plugins...
+            }
         }
     }
 
     // Deliver the packet the all other clients
-    private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
+    private void broadcastPacket(ConnectedServerClient src, NetworkPacket packet) {
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet
-        this.packetHandler.packPacket(packet);
+//        this.packetHandler.packPacket(packet);
+
+        System.out.println("We received a packet: " + packet.getClass().getSimpleName());
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
                 continue;
 
-            ConnectedClient client = (ConnectedClient) key.attachment();
+            ConnectedServerClient client = (ConnectedServerClient) key.attachment();
 
             // ignore if the client is the sender
             if (client.equals(src))
                 continue;
 
             // add packetdata to clientbuffer
-            client.addByteBuffer(networkBuffer);
+            client.sendPacket(packet);
+
+//            client.addByteBuffer(networkBuffer);
         }
 
         // clear the networkBuffer
@@ -260,7 +274,7 @@ public final class ChatServer implements Runnable {
             return;
         }
 
-        ConnectedClient client = (ConnectedClient) key.attachment();
+        ConnectedServerClient client = (ConnectedServerClient) key.attachment();
         if (client.hasDataToSend()) {
             // If write fails the client has disconnected
             if (!client.write((SocketChannel) key.channel())) {
