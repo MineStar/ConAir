@@ -23,19 +23,17 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import de.minestar.conair.listener.ChatListener;
 import de.minestar.conair.network.PacketType;
-import de.minestar.conair.network.client.TCPClient;
+import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
 
 public class Core extends JavaPlugin {
 
     public static final String NAME = "ConAir";
 
-    private TCPClient chatClient;
-    private BukkitTask clientTask = null;
+    private DedicatedTCPClient chatClient;
 
     private ChatListener chatListener;
 
@@ -65,8 +63,7 @@ public class Core extends JavaPlugin {
 
     private boolean createChatClient() {
         try {
-            this.chatClient = new TCPClient(ClientSettings.serverName, new BukkitPacketHandler(), ClientSettings.host, ClientSettings.port);
-            clientTask = this.getServer().getScheduler().runTaskAsynchronously(this, this.chatClient);
+            this.chatClient = new DedicatedTCPClient(ClientSettings.serverName, new BukkitPacketHandler(), ClientSettings.host, ClientSettings.port);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,7 +92,6 @@ public class Core extends JavaPlugin {
 
         if (label.equalsIgnoreCase("/reconnect")) {
             if (this.chatClient != null) {
-                this.clientTask.cancel();
                 this.chatClient.stop();
                 this.chatClient = null;
             }

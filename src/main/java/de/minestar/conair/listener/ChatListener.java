@@ -27,18 +27,18 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import de.minestar.conair.core.ClientSettings;
-import de.minestar.conair.network.client.TCPClient;
+import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
 
 public class ChatListener implements Listener {
 
-    private TCPClient client;
+    private DedicatedTCPClient client;
 
-    public ChatListener(TCPClient client) {
+    public ChatListener(DedicatedTCPClient client) {
         this.client = client;
     }
 
-    public void setClient(TCPClient client) {
+    public void setClient(DedicatedTCPClient client) {
         this.client = client;
     }
 
