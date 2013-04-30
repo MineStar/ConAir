@@ -20,6 +20,7 @@ package de.minestar.conair.network.client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -120,7 +121,9 @@ public final class TCPClient implements Runnable {
                 Thread.sleep(0, 1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            if (!(e instanceof CancelledKeyException)) {
+                e.printStackTrace();
+            }
             isRunning = false;
         }
     }
@@ -131,11 +134,8 @@ public final class TCPClient implements Runnable {
     public final void stop() {
         try {
             this.isRunning = false;
-            System.out.println("Stopping client...");
-            this.selector.close();
+            System.out.println("Stopping client '" + this.clientName + "' ...");
             this.socketChannel.socket().close();
-            this.socketChannel.socket().getChannel().close();
-            this.socketChannel.close();
             System.out.println("Client stopped!");
         } catch (IOException e) {
             e.printStackTrace();
