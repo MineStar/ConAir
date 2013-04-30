@@ -20,6 +20,8 @@ package de.minestar.conair.network;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import de.minestar.conair.network.packets.NetworkPacket;
+
 public final class PacketQueue {
 
     private ConcurrentLinkedQueue<NetworkPacket> packetQueue;

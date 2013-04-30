@@ -26,7 +26,11 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
 import de.minestar.conair.network.ConnectedClient;
-import de.minestar.conair.network.NetworkPacket;
+import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.packets.NetworkPacket;
+import de.minestar.conair.network.packets.RegisterDenyPacket;
+import de.minestar.conair.network.packets.RegisterOKPacket;
+import de.minestar.conair.network.packets.RegisterRequestPacket;
 
 public final class ChatClient implements Runnable {
 
@@ -40,7 +44,11 @@ public final class ChatClient implements Runnable {
 
     private ClientPacketHandler packetHandler;
 
-    public ChatClient(ClientPacketHandler packetHandler, String host, int port) throws Exception {
+    private final String clientName;
+
+    public ChatClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
+        this.clientName = name;
+
         this.packetHandler = packetHandler;
 
         this.selector = Selector.open();
@@ -55,6 +63,25 @@ public final class ChatClient implements Runnable {
         this.isRunning = true;
 
         this.client = new ConnectedClient("localhost");
+
+        // register standardpackets
+        this.registerStandardPacketTypes();
+
+        // send RegisterRequestPacket
+        this.sendPacket(new RegisterRequestPacket(this.clientName));
+    }
+
+    private final void registerStandardPacketTypes() {
+        this.registerSinglePacket(RegisterRequestPacket.class);
+        this.registerSinglePacket(RegisterOKPacket.class);
+        this.registerSinglePacket(RegisterDenyPacket.class);
+    }
+
+    private final void registerSinglePacket(Class<? extends NetworkPacket> packetClazz) {
+        Integer ID = PacketType.getID(packetClazz);
+        if (ID == null) {
+            PacketType.registerPacket(packetClazz);
+        }
     }
 
     /*

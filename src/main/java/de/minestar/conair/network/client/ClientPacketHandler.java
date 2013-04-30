@@ -22,10 +22,10 @@ import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.ConnectedClient;
-import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
 import de.minestar.conair.network.PacketQueue;
 import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.packets.NetworkPacket;
 
 public abstract class ClientPacketHandler {
 

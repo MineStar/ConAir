@@ -18,9 +18,13 @@
 
 package de.minestar.conair.network.server;
 
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.PacketBuffer;
+import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.packets.NetworkPacket;
+import de.minestar.conair.network.server.packets.RAWPacket;
 
 public final class ServerPacketHandler {
 
@@ -31,6 +35,12 @@ public final class ServerPacketHandler {
     public ServerPacketHandler(ByteBuffer buffer) {
         this.packetBuffer = new PacketBuffer(buffer);
     }
+
+    // //////////////////////////////////////////////////////////
+    //
+    // Both packets
+    //
+    // //////////////////////////////////////////////////////////
 
     public boolean isPacketComplete(ByteBuffer buffer) {
         buffer.flip();
@@ -46,7 +56,20 @@ public final class ServerPacketHandler {
         return (buffer.get(len) == PACKET_SEPERATOR);
     }
 
-    public RAWPacket extractPacket(ByteBuffer src) {
+    public boolean packPacket(NetworkPacket packet) {
+        packetBuffer.clear();
+        boolean result = packet.pack(packetBuffer);
+        packetBuffer.getBuffer().flip();
+        return result;
+    }
+
+    // //////////////////////////////////////////////////////////
+    //
+    // RAWPacket
+    //
+    // //////////////////////////////////////////////////////////
+
+    public RAWPacket extractRAWPacket(ByteBuffer src) {
         src.rewind();
         int len = src.getInt();
         int limit = src.limit();
@@ -56,17 +79,19 @@ public final class ServerPacketHandler {
         packetBuffer.getBuffer().flip();
         src.limit(limit);
         src.compact();
-        return createPacket(len);
-    }
 
-    public boolean packPacket(RAWPacket packet) {
+        // create packet
+        RAWPacket packet = createRAWPacket(len);
+
+        // reset
+        src.rewind();
         packetBuffer.clear();
-        boolean result = packet.pack(packetBuffer);
-        packetBuffer.getBuffer().flip();
-        return result;
+
+        // return
+        return packet;
     }
 
-    private RAWPacket createPacket(int datalength) {
+    private RAWPacket createRAWPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
             // One integer is 4 bytes long
@@ -90,5 +115,84 @@ public final class ServerPacketHandler {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // //////////////////////////////////////////////////////////
+    //
+    // NetworkPacket
+    //
+    // //////////////////////////////////////////////////////////
+
+    public final NetworkPacket extractNetworkPacket(ByteBuffer src) {
+        src.rewind();
+        int len = src.getInt();
+        int limit = src.limit();
+        src.limit(len);
+        packetBuffer.clear();
+        packetBuffer.writeByteBuffer(src);
+        packetBuffer.getBuffer().flip();
+        src.limit(limit);
+        src.compact();
+
+        // create packet
+        NetworkPacket packet = createNetworkPacket(len);
+
+        // reset
+        src.rewind();
+        packetBuffer.clear();
+
+        // return
+        return packet;
+    }
+
+    private final NetworkPacket createNetworkPacket(int datalength) {
+        try {
+            // reduce the datalength, because we read two integers first.
+            // One integer is 4 bytes long
+            datalength -= 8;
+
+            // get packettype
+            int packetID = packetBuffer.readInt();
+            Class<? extends NetworkPacket> packetClazz = PacketType.getClassByID(packetID);
+
+            // packet not found...
+            if (packetClazz == null) {
+                return null;
+            }
+
+            // get the constructor
+            Constructor<? extends NetworkPacket> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
+            if (packetConstructor == null) {
+                return null;
+            }
+
+            // read data...
+            byte[] data = new byte[datalength];
+            packetBuffer.readBytes(data);
+
+            // ... and create a new PacketBuffer
+            PacketBuffer newBuffer = new PacketBuffer(data.length);
+            newBuffer.writeBytes(data);
+            newBuffer.getBuffer().rewind();
+
+            // finally create the packet and return it
+            return packetConstructor.newInstance(packetID, newBuffer);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // //////////////////////////////////////////////////////////
+    //
+    // NetworkPacket
+    //
+    // //////////////////////////////////////////////////////////
+
+    public NetworkPacket extractPacket(ByteBuffer src) {
+        NetworkPacket packet = this.extractNetworkPacket(src);
+        if (packet == null) {
+            packet = this.extractRAWPacket(src);
+        }
+        return packet;
     }
 }

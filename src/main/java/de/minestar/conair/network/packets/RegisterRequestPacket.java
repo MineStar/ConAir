@@ -20,33 +20,36 @@ package de.minestar.conair.network.packets;
 
 import java.io.IOException;
 
-import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
 
-public class ChatPacket extends NetworkPacket {
+public class RegisterRequestPacket extends NetworkPacket {
 
-    private String message;
+    private String clientName;
 
-    public ChatPacket(String message) {
-        this.message = message;
+    public RegisterRequestPacket(String clientName) {
+        this.clientName = clientName;
     }
 
-    public ChatPacket(int packetID, PacketBuffer buffer) throws IOException {
+    public RegisterRequestPacket(int packetID, PacketBuffer buffer) throws IOException {
         super(packetID, buffer);
     }
 
     @Override
     public void onSend(PacketBuffer buffer) {
-        buffer.writeString(this.message);
+        buffer.writeString(this.clientName);
     }
 
     @Override
     public void onReceive(PacketBuffer buffer) {
-        this.message = buffer.readString();
+        this.clientName = buffer.readString();
     }
 
-    public String getMessage() {
-        return message;
+    public String getServerName() {
+        return clientName;
     }
 
+    @Override
+    public boolean isBroadcastPacket() {
+        return false;
+    }
 }

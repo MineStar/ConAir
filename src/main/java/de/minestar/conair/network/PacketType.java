@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import de.minestar.conair.network.packets.NetworkPacket;
+
 public final class PacketType {
 
     private static Map<String, Integer> packetIDMap;

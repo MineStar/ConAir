@@ -30,6 +30,11 @@ import java.util.List;
 import java.util.Set;
 
 import de.minestar.conair.network.ConnectedClient;
+import de.minestar.conair.network.PacketType;
+import de.minestar.conair.network.packets.NetworkPacket;
+import de.minestar.conair.network.packets.RegisterDenyPacket;
+import de.minestar.conair.network.packets.RegisterOKPacket;
+import de.minestar.conair.network.packets.RegisterRequestPacket;
 
 public final class ChatServer implements Runnable {
 
@@ -72,6 +77,22 @@ public final class ChatServer implements Runnable {
             addressWhitelist.add("127.0.0.1");
         }
         this.addressWhitelist = addressWhitelist;
+
+        // register standardpackets
+        this.registerStandardPacketTypes();
+    }
+
+    private final void registerStandardPacketTypes() {
+        this.registerSinglePacket(RegisterRequestPacket.class);
+        this.registerSinglePacket(RegisterOKPacket.class);
+        this.registerSinglePacket(RegisterDenyPacket.class);
+    }
+
+    private final void registerSinglePacket(Class<? extends NetworkPacket> packetClazz) {
+        Integer ID = PacketType.getID(packetClazz);
+        if (ID == null) {
+            PacketType.registerPacket(packetClazz);
+        }
     }
 
     @Override
@@ -184,7 +205,7 @@ public final class ChatServer implements Runnable {
 
         if (packetHandler.isPacketComplete(client.getClientBuffer())) {
             // extract the packet
-            RAWPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
 
             // if we have found a packet, we handle it...
             if (packet != null) {
@@ -197,13 +218,17 @@ public final class ChatServer implements Runnable {
     }
 
     // Handle a single packet
-    private void handlePacket(ConnectedClient src, RAWPacket packet) {
+    private void handlePacket(ConnectedClient src, NetworkPacket packet) {
         // We have a broadcast server - broadcast all packages
-        broadcastPacket(src, packet);
+        if (packet.isBroadcastPacket()) {
+            broadcastPacket(src, packet);
+        } else {
+            System.out.println("Handle packet serverside only: " + packet.getPacketID());
+        }
     }
 
     // Deliver the packet the all other clients
-    private void broadcastPacket(ConnectedClient src, RAWPacket packet) {
+    private void broadcastPacket(ConnectedClient src, NetworkPacket packet) {
         Set<SelectionKey> keys = selector.keys();
 
         // pack the packet

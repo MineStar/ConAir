@@ -16,14 +16,14 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network.server;
+package de.minestar.conair.network.server.packets;
 
 import java.nio.ByteBuffer;
 
-import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketBuffer;
+import de.minestar.conair.network.packets.NetworkPacket;
 
-public final class RAWPacket {
+public final class RAWPacket extends NetworkPacket {
 
     private PacketBuffer dataBuffer;
     private int packetID = -1;
@@ -42,6 +42,19 @@ public final class RAWPacket {
         buffer.writeByteBuffer(this.dataBuffer.getBuffer()); // Content
         buffer.writeInt(0, buffer.getBuffer().position()); // Write size
         buffer.put(NetworkPacket.PACKET_SEPERATOR); // Close packet
+        return true;
+    }
+
+    @Override
+    public void onSend(PacketBuffer buffer) {
+    }
+
+    @Override
+    public void onReceive(PacketBuffer buffer) {
+    }
+
+    @Override
+    public boolean isBroadcastPacket() {
         return true;
     }
 }

@@ -16,9 +16,12 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.network.packets;
 
 import java.io.IOException;
+
+import de.minestar.conair.network.PacketBuffer;
+import de.minestar.conair.network.PacketType;
 
 public abstract class NetworkPacket {
 
@@ -44,7 +47,7 @@ public abstract class NetworkPacket {
         onReceive(buffer);
     }
 
-    protected final boolean pack(PacketBuffer buffer) {
+    public boolean pack(PacketBuffer buffer) {
         Integer packetID = PacketType.getID(this.getClass());
         if (packetID != null) {
             buffer.writeInt(0); // Size
@@ -62,8 +65,8 @@ public abstract class NetworkPacket {
         return packetID;
     }
 
-    public boolean broadcastPacket() {
-        return false;
+    public boolean isBroadcastPacket() {
+        return true;
     }
 
     public abstract void onSend(PacketBuffer buffer);

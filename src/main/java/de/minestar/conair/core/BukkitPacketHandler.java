@@ -23,10 +23,10 @@ import org.bukkit.plugin.Plugin;
 
 import com.bukkit.gemo.FalseBook.Chat.ChatManager;
 
-import de.minestar.conair.network.NetworkPacket;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;
-import de.minestar.conair.network.packets.ChatPacket;
+import de.minestar.conair.network.client.packets.ChatPacket;
+import de.minestar.conair.network.packets.NetworkPacket;
 
 public class BukkitPacketHandler extends ClientPacketHandler {
 
