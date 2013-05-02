@@ -65,6 +65,7 @@ public class PluginManager {
         }
 
         // enable plugins
+        System.out.println("Plugins found: " + this.pluginMap.size());
         this.enablePlugins();
     }
 

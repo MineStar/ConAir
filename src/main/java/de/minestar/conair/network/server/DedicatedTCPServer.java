@@ -33,12 +33,14 @@ public class DedicatedTCPServer {
         try {
             this.port = port;
             this.server = new TCPServer(port, whiteList);
-            this.serverThread = new Thread(this.server);
-            this.serverThread.start();
 
             // load plugins
             this.pluginManager = new PluginManager(this);
             this.pluginManager.loadPlugins();
+
+            // start Thread
+            this.serverThread = new Thread(this.server);
+            this.serverThread.start();
         } catch (Exception e) {
             e.printStackTrace();
             this.stop();
