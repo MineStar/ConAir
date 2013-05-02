@@ -22,17 +22,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import de.minestar.conair.network.server.DedicatedTCPServer;
+
 public class PluginManager {
 
     public static final String PLUGIN_FOLDER = "plugins" + System.getProperty("file.separator");
 
     private PluginLoader pluginLoader;
+    private DedicatedTCPServer dedicatedTCPServer;
 
     private HashMap<String, ServerPlugin> pluginMap;
 
-    public PluginManager() {
+    public PluginManager(DedicatedTCPServer dedicatedTCPServer) {
         this.pluginLoader = new PluginLoader();
         this.pluginMap = new HashMap<String, ServerPlugin>();
+        this.dedicatedTCPServer = dedicatedTCPServer;
     }
 
     public void loadPlugins() {
@@ -63,6 +67,7 @@ public class PluginManager {
         // enable plugins
         this.enablePlugins();
     }
+
     /**
      * Enables all ServerPlugins
      */
@@ -90,7 +95,7 @@ public class PluginManager {
     /**
      * Disables all ServerPlugins
      */
-    private void disablePlugins() {
+    public void disablePlugins() {
         for (ServerPlugin plugin : this.pluginMap.values()) {
             try {
                 // disable the plugin
@@ -103,5 +108,9 @@ public class PluginManager {
             }
         }
         this.pluginMap.clear();
+    }
+
+    public DedicatedTCPServer getDedicatedTCPServer() {
+        return dedicatedTCPServer;
     }
 }

@@ -20,11 +20,14 @@ package de.minestar.conair.network.server;
 
 import java.util.List;
 
+import de.minestar.conair.network.server.api.PluginManager;
+
 public class DedicatedTCPServer {
 
     private int port;
     private TCPServer server;
     private Thread serverThread;
+    private PluginManager pluginManager;
 
     public DedicatedTCPServer(int port, List<String> whiteList) {
         try {
@@ -32,6 +35,10 @@ public class DedicatedTCPServer {
             this.server = new TCPServer(port, whiteList);
             this.serverThread = new Thread(this.server);
             this.serverThread.start();
+
+            // load plugins
+            this.pluginManager = new PluginManager(this);
+            this.pluginManager.loadPlugins();
         } catch (Exception e) {
             e.printStackTrace();
             this.stop();
@@ -41,6 +48,10 @@ public class DedicatedTCPServer {
     @SuppressWarnings("deprecation")
     public void stop() {
         if (this.server != null) {
+            // disable plugins
+            this.pluginManager.disablePlugins();
+
+            // stop the server
             this.server.stop();
             this.server = null;
             if (this.serverThread != null) {
