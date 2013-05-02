@@ -40,6 +40,9 @@ public class PluginManager {
         File pluginFolder = new File(PluginManager.PLUGIN_FOLDER);
         pluginFolder.mkdir();
 
+        // disable old plugins first
+        this.disablePlugins();
+
         // iterate over files...
         for (File jarFile : pluginFolder.listFiles()) {
             if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
@@ -56,17 +59,21 @@ public class PluginManager {
                 }
             }
         }
-    }
 
+        // enable plugins
+        this.enablePlugins();
+    }
     /**
      * Enables all ServerPlugins
      */
-    public void enablePlugins() {
+    private void enablePlugins() {
         ArrayList<ServerPlugin> failedPlugins = new ArrayList<ServerPlugin>();
         for (ServerPlugin plugin : this.pluginMap.values()) {
             try {
                 // enable the plugin
+                System.out.println("Enabling plugin: '" + plugin.getPluginName() + "'");
                 plugin.onEnable();
+                System.out.println("Plugin enabled: " + plugin.getPluginName() + "'");
             } catch (Exception e) {
                 // queue plugin and print stacktrace
                 failedPlugins.add(plugin);
@@ -83,11 +90,13 @@ public class PluginManager {
     /**
      * Disables all ServerPlugins
      */
-    public void disablePlugins() {
+    private void disablePlugins() {
         for (ServerPlugin plugin : this.pluginMap.values()) {
             try {
                 // disable the plugin
+                System.out.println("Disabling plugin: '" + plugin.getPluginName() + "'");
                 plugin.onDisable();
+                System.out.println("Plugin disabled: '" + plugin.getPluginName() + "'");
             } catch (Exception e) {
                 // print stacktrace
                 e.printStackTrace();
