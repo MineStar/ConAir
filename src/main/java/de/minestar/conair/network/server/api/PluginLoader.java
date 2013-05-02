@@ -27,12 +27,14 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import de.minestar.conair.network.server.DedicatedTCPServer;
+
 public class PluginLoader {
 
     protected final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
     protected final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
 
-    public ServerPlugin loadPlugin(File file) {
+    public ServerPlugin loadPlugin(DedicatedTCPServer server, File file) {
         ServerPlugin result = null;
         PluginDescription pluginDescription = null;
 
@@ -66,7 +68,7 @@ public class PluginLoader {
                 Class<? extends ServerPlugin> plugin = jarClass.asSubclass(ServerPlugin.class);
                 Constructor<? extends ServerPlugin> constructor = plugin.getConstructor();
                 result = constructor.newInstance();
-                result.initialize(pluginDescription.getName(), pluginDescription);
+                result.initialize(server, pluginDescription.getName(), pluginDescription);
             } else {
                 return null;
             }

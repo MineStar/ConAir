@@ -20,16 +20,22 @@ package de.minestar.conair.network.server.api;
 
 import java.io.File;
 
+import de.minestar.conair.network.server.DedicatedTCPServer;
+
 public abstract class ServerPlugin {
 
     private String pluginName;
     private File dataFolder;
     private PluginDescription pluginDescription;
+    private DedicatedTCPServer server;
 
     public ServerPlugin() {
     }
 
-    public final void initialize(String pluginName, PluginDescription pluginDescription) {
+    public final void initialize(DedicatedTCPServer server, String pluginName, PluginDescription pluginDescription) {
+        // set server
+        this.server = server;
+
         // set PluginName
         this.pluginName = pluginName;
 
@@ -56,5 +62,9 @@ public abstract class ServerPlugin {
 
     public PluginDescription getPluginDescription() {
         return pluginDescription;
+    }
+
+    public DedicatedTCPServer getServer() {
+        return server;
     }
 }

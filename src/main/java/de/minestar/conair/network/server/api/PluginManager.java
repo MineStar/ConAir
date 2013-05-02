@@ -51,7 +51,7 @@ public class PluginManager {
         for (File jarFile : pluginFolder.listFiles()) {
             if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
                 // retrieve ServerPlugin
-                ServerPlugin plugin = pluginLoader.loadPlugin(jarFile);
+                ServerPlugin plugin = pluginLoader.loadPlugin(this.dedicatedTCPServer, jarFile);
                 if (plugin != null) {
                     // pluginnames MUST be unique!
                     if (this.pluginMap.containsKey(plugin.getPluginName())) {
