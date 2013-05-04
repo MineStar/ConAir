@@ -24,18 +24,28 @@ import de.minestar.conair.network.server.api.PluginManager;
 
 public class DedicatedTCPServer {
 
+    private static final String DEFAULT_PLUGINFOLDER = "plugins" + System.getProperty("file.separator");
+
     private int port;
     private TCPServer server;
     private Thread serverThread;
     private PluginManager pluginManager;
 
     public DedicatedTCPServer(int port, List<String> whiteList) {
+        this(port, whiteList, DEFAULT_PLUGINFOLDER);
+    }
+
+    public DedicatedTCPServer(int port, List<String> whiteList, String pluginFolder) {
         try {
             this.port = port;
             this.server = new TCPServer(port, whiteList);
 
+            if (!pluginFolder.endsWith(System.getProperty("file.separator"))) {
+                pluginFolder += System.getProperty("file.separator");
+            }
+
             // load plugins
-            this.pluginManager = new PluginManager(this);
+            this.pluginManager = new PluginManager(this, pluginFolder);
             this.pluginManager.loadPlugins();
 
             // start Thread

@@ -34,7 +34,7 @@ public class PluginLoader {
     protected final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
     protected final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
 
-    public ServerPlugin loadPlugin(DedicatedTCPServer server, File file) {
+    public ServerPlugin loadPlugin(PluginManager pluginManager, DedicatedTCPServer server, File file) {
         ServerPlugin result = null;
         PluginDescription pluginDescription = null;
 
@@ -68,7 +68,7 @@ public class PluginLoader {
                 Class<? extends ServerPlugin> plugin = jarClass.asSubclass(ServerPlugin.class);
                 Constructor<? extends ServerPlugin> constructor = plugin.getConstructor();
                 result = constructor.newInstance();
-                result.initialize(server, pluginDescription.getName(), pluginDescription);
+                result.initialize(server, pluginDescription.getName(), pluginDescription, pluginManager);
             } else {
                 return null;
             }

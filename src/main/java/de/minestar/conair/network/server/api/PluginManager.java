@@ -26,22 +26,26 @@ import de.minestar.conair.network.server.DedicatedTCPServer;
 
 public class PluginManager {
 
-    public static final String PLUGIN_FOLDER = "plugins" + System.getProperty("file.separator");
-
     private PluginLoader pluginLoader;
     private DedicatedTCPServer dedicatedTCPServer;
+    private final String pluginFolder;
 
     private HashMap<String, ServerPlugin> pluginMap;
 
     public PluginManager(DedicatedTCPServer dedicatedTCPServer) {
+        this(dedicatedTCPServer, "plugins" + System.getProperty("file.separator"));
+    }
+
+    public PluginManager(DedicatedTCPServer dedicatedTCPServer, String pluginFolder) {
         this.pluginLoader = new PluginLoader();
         this.pluginMap = new HashMap<String, ServerPlugin>();
         this.dedicatedTCPServer = dedicatedTCPServer;
+        this.pluginFolder = pluginFolder;
     }
 
     public void loadPlugins() {
         // create PluginFolder
-        File pluginFolder = new File(PluginManager.PLUGIN_FOLDER);
+        File pluginFolder = new File(this.pluginFolder);
         pluginFolder.mkdir();
 
         // disable old plugins first
@@ -51,7 +55,7 @@ public class PluginManager {
         for (File jarFile : pluginFolder.listFiles()) {
             if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
                 // retrieve ServerPlugin
-                ServerPlugin plugin = pluginLoader.loadPlugin(this.dedicatedTCPServer, jarFile);
+                ServerPlugin plugin = pluginLoader.loadPlugin(this, this.dedicatedTCPServer, jarFile);
                 if (plugin != null) {
                     // pluginnames MUST be unique!
                     if (this.pluginMap.containsKey(plugin.getPluginName())) {
@@ -113,5 +117,9 @@ public class PluginManager {
 
     public DedicatedTCPServer getDedicatedTCPServer() {
         return dedicatedTCPServer;
+    }
+
+    public String getPluginFolder() {
+        return pluginFolder;
     }
 }

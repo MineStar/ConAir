@@ -32,7 +32,7 @@ public abstract class ServerPlugin {
     public ServerPlugin() {
     }
 
-    public final void initialize(DedicatedTCPServer server, String pluginName, PluginDescription pluginDescription) {
+    public final void initialize(DedicatedTCPServer server, String pluginName, PluginDescription pluginDescription, PluginManager pluginManager) {
         // set server
         this.server = server;
 
@@ -40,7 +40,7 @@ public abstract class ServerPlugin {
         this.pluginName = pluginName;
 
         // create PluginFolder
-        File pluginFolder = new File(PluginManager.PLUGIN_FOLDER);
+        File pluginFolder = new File(pluginManager.getPluginFolder());
         this.dataFolder = new File(pluginFolder + pluginName + System.getProperty("file.separator"));
         this.dataFolder.mkdirs();
 

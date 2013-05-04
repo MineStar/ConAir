@@ -49,6 +49,7 @@ public class BukkitPacketHandler extends ClientPacketHandler {
             if (!ClientSettings.informChat) {
                 return;
             }
+
             if (!useFBChat) {
                 Bukkit.getServer().broadcastMessage(((ChatPacket) packet).getMessage());
             } else {
