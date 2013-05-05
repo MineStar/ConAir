@@ -21,6 +21,8 @@ package de.minestar.conair.network.server.api;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
 
@@ -31,6 +33,8 @@ public class PluginManager {
     private final String pluginFolder;
 
     private HashMap<String, ServerPlugin> pluginMap;
+
+    private final Map<String, List<EventExecutor>> registeredEvents = new HashMap<String, List<EventExecutor>>();
 
     public PluginManager(DedicatedTCPServer dedicatedTCPServer) {
         this(dedicatedTCPServer, "plugins" + System.getProperty("file.separator"));
@@ -113,6 +117,43 @@ public class PluginManager {
             }
         }
         this.pluginMap.clear();
+    }
+
+    /**
+     * Register events
+     * 
+     * @param eventListener
+     */
+    public final void registerEvents(EventListener eventListener, ServerPlugin serverPlugin) {
+        // catch the eventlist
+        Map<Class<? extends Event>, EventExecutor> executorMap = this.pluginLoader.createEventList(eventListener, serverPlugin);
+
+        // finally register the events
+        for (Map.Entry<Class<? extends Event>, EventExecutor> event : executorMap.entrySet()) {
+            this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), event.getValue());
+        }
+    }
+
+    /**
+     * Register single events
+     * 
+     * @param eventListener
+     * @param serverPlugin
+     * @param clazz
+     * @param executor
+     */
+    private void registerSingleEvent(EventListener eventListener, ServerPlugin serverPlugin, Class<? extends Event> clazz, EventExecutor executor) {
+        // get the current list for the eventclass
+        List<EventExecutor> executorList = this.registeredEvents.get(clazz.getSimpleName());
+
+        // create a new list, if there is none
+        if (executorList == null) {
+            executorList = new ArrayList<EventExecutor>();
+            this.registeredEvents.put(clazz.getSimpleName(), executorList);
+        }
+
+        // add the EventExecutor to the list
+        executorList.add(executor);
     }
 
     public DedicatedTCPServer getDedicatedTCPServer() {

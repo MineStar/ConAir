@@ -113,18 +113,19 @@ public class PluginLoader {
         }
     }
 
-    public void registerListener(EventListener eventListener, ServerPlugin serverPlugin) {
+    public Map<Class<? extends Event>, EventExecutor> createEventList(EventListener eventListener, ServerPlugin serverPlugin) {
+        Map<Class<? extends Event>, EventExecutor> executorMap = new HashMap<Class<? extends Event>, EventExecutor>();
+
         Set<Method> methods;
         // catch methods
         try {
             methods = this.getPublicMethods(eventListener, serverPlugin);
         } catch (NoClassDefFoundError e) {
             System.out.println("Plugin " + serverPlugin.getPluginName() + " failed to register events for " + eventListener.getClass() + ".");
-            return;
+            return executorMap;
         }
 
         // iterate over every method to create our list of EventExecutors...
-        Map<Class<? extends Event>, EventExecutor> executorList = new HashMap<Class<? extends Event>, EventExecutor>();
         for (final Method method : methods) {
             // lookup @RegisterEvent-Annotation
             RegisterEvent registeredEvent = (RegisterEvent) method.getAnnotation(RegisterEvent.class);
@@ -165,17 +166,9 @@ public class PluginLoader {
                 }
             };
 
-            executorList.put(eventClass, executor);
+            executorMap.put(eventClass, executor);
         }
-
-        // finally register the events
-        for (Map.Entry<Class<? extends Event>, EventExecutor> event : executorList.entrySet()) {
-            this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), event.getValue());
-        }
-    }
-
-    private void registerSingleEvent(EventListener eventListener, ServerPlugin serverPlugin, Class<? extends Event> clazz, EventExecutor executor) {
-
+        return executorMap;
     }
 
     private Set<Method> getPublicMethods(EventListener eventListener, ServerPlugin serverPlugin) {

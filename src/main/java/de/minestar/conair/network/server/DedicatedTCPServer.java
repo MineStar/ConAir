@@ -20,7 +20,9 @@ package de.minestar.conair.network.server;
 
 import java.util.List;
 
+import de.minestar.conair.network.server.api.EventListener;
 import de.minestar.conair.network.server.api.PluginManager;
+import de.minestar.conair.network.server.api.ServerPlugin;
 
 public class DedicatedTCPServer {
 
@@ -71,6 +73,10 @@ public class DedicatedTCPServer {
                 this.serverThread = null;
             }
         }
+    }
+
+    public void registerListener(EventListener eventListener, ServerPlugin serverPlugin) {
+        this.pluginManager.registerEvents(eventListener, serverPlugin);
     }
 
     public int getPort() {

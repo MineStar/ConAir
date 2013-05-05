@@ -56,6 +56,10 @@ public abstract class ServerPlugin {
         return pluginName;
     }
 
+    protected final void registerListener(EventListener eventListener) {
+        this.server.registerListener(eventListener, this);
+    }
+
     public File getDataFolder() {
         return dataFolder;
     }
