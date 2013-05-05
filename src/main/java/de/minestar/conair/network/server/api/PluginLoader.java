@@ -21,18 +21,24 @@ package de.minestar.conair.network.server.api;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
+import de.minestar.conair.network.server.api.annotations.RegisterEvent;
+import de.minestar.conair.network.server.api.exceptions.EventException;
 
 public class PluginLoader {
 
-    protected final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
-    protected final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
+    private final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
+    private final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
 
     public ServerPlugin loadPlugin(PluginManager pluginManager, DedicatedTCPServer server, File file) {
         ServerPlugin result = null;
@@ -106,4 +112,87 @@ public class PluginLoader {
             classes.put(name, clazz);
         }
     }
+
+    public void registerListener(EventListener eventListener, ServerPlugin serverPlugin) {
+        Set<Method> methods;
+        // catch methods
+        try {
+            methods = this.getPublicMethods(eventListener, serverPlugin);
+        } catch (NoClassDefFoundError e) {
+            System.out.println("Plugin " + serverPlugin.getPluginName() + " failed to register events for " + eventListener.getClass() + ".");
+            return;
+        }
+
+        // iterate over every method to create our list of EventExecutors...
+        Map<Class<? extends Event>, EventExecutor> executorList = new HashMap<Class<? extends Event>, EventExecutor>();
+        for (final Method method : methods) {
+            // lookup @RegisterEvent-Annotation
+            RegisterEvent registeredEvent = (RegisterEvent) method.getAnnotation(RegisterEvent.class);
+            if (registeredEvent == null) {
+                continue;
+            }
+
+            // check parameterlength
+            if (method.getParameterTypes().length != 1) {
+                System.out.println("Method '" + method.getName() + "' has a wrong argumentcount ( != 1 )!");
+                continue;
+            }
+
+            // check if the first argument is a subtype of Event
+            final Class<?> checkClass = method.getParameterTypes()[0];
+            if (!Event.class.isAssignableFrom(checkClass)) {
+                System.out.println("Argument in method '" + method.getName() + "' is not a valid event!");
+                continue;
+            }
+
+            // set the method accessible
+            final Class<? extends Event> eventClass = checkClass.asSubclass(Event.class);
+            method.setAccessible(true);
+
+            // create the EventExecutor
+            EventExecutor executor = new EventExecutor() {
+                public void execute(EventListener listener, Event event) throws EventException {
+                    try {
+                        if (!eventClass.isAssignableFrom(event.getClass())) {
+                            return;
+                        }
+                        method.invoke(listener, event);
+                    } catch (InvocationTargetException ex) {
+                        throw new EventException(ex.getCause());
+                    } catch (Throwable t) {
+                        throw new EventException(t);
+                    }
+                }
+            };
+
+            executorList.put(eventClass, executor);
+        }
+
+        // finally register the events
+        for (Map.Entry<Class<? extends Event>, EventExecutor> event : executorList.entrySet()) {
+            this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), event.getValue());
+        }
+    }
+
+    private void registerSingleEvent(EventListener eventListener, ServerPlugin serverPlugin, Class<? extends Event> clazz, EventExecutor executor) {
+
+    }
+
+    private Set<Method> getPublicMethods(EventListener eventListener, ServerPlugin serverPlugin) {
+        Set<Method> methods;
+
+        // get all methods
+        Method[] publicMethods = eventListener.getClass().getMethods();
+        methods = new HashSet<Method>(publicMethods.length);
+        for (Method method : publicMethods) {
+            methods.add(method);
+        }
+        // get all declared methods
+        for (Method method : eventListener.getClass().getDeclaredMethods()) {
+            methods.add(method);
+        }
+        // return
+        return methods;
+    }
+
 }
