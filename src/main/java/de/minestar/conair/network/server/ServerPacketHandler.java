@@ -103,9 +103,6 @@ public final class ServerPacketHandler {
 
             // packet not found...
             if (packetClazz == null) {
-                // CREATE THE RAWPACKET
-                System.out.println("Server: Create a RAWPACKET!");
-
                 // read data...
                 byte[] data = new byte[datalength];
                 packetBuffer.readBytes(data);

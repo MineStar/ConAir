@@ -232,12 +232,20 @@ public final class TCPServer implements Runnable {
     private void handlePacket(ConnectedServerClient client, NetworkPacket packet) {
         // We have a broadcast server - broadcast all packages
         if (packet.isBroadcastPacket()) {
-            System.out.println("Broadcasting packet: " + packet.getClass().getSimpleName());
-            broadcastPacket(client, packet);
+            /*
+             * CALL EVENT - BroadcastPacketReceivedEvent
+             */
+            BroadcastPacketReceivedEvent event = new BroadcastPacketReceivedEvent(packet);
+            this.pluginManager.callEvent(event);
+
+            // ignore the packet, if it is cancelled
+            if (!event.isCancelled()) {
+                broadcastPacket(client, packet);
+            }
         } else {
             boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
-                this.pluginManager.callEvent(new BroadcastPacketReceivedEvent(packet));
+                // TODO: call NonBroadcastPacketReceivedEvent
             }
         }
     }
