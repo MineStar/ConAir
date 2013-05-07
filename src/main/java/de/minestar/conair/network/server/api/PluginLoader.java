@@ -112,7 +112,7 @@ public class PluginLoader {
         }
     }
 
-    public Map<Class<? extends Event>, EventExecutor> createEventList(EventListener eventListener, ServerPlugin serverPlugin) {
+    public Map<Class<? extends Event>, EventExecutor> createEventExecutorList(EventListener eventListener, ServerPlugin serverPlugin) {
         Map<Class<? extends Event>, EventExecutor> executorMap = new HashMap<Class<? extends Event>, EventExecutor>();
 
         Set<Method> methods;
@@ -150,7 +150,7 @@ public class PluginLoader {
             method.setAccessible(true);
 
             // create the EventExecutor
-            EventExecutor executor = new EventExecutor(eventListener, method);
+            EventExecutor executor = new EventExecutor(eventListener, method, registeredEvent.priority(), registeredEvent.ignoreCancelled());
             executorMap.put(eventClass, executor);
         }
         return executorMap;

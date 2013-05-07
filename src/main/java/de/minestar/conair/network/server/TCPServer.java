@@ -237,7 +237,6 @@ public final class TCPServer implements Runnable {
         } else {
             boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
-                // TODO: Handle the packet in registered plugins...
                 this.pluginManager.callEvent(new BroadcastPacketReceivedEvent(packet));
             }
         }
@@ -246,9 +245,6 @@ public final class TCPServer implements Runnable {
     // Deliver the packet the all other clients
     private void broadcastPacket(ConnectedServerClient src, NetworkPacket packet) {
         Set<SelectionKey> keys = selector.keys();
-
-        // pack the packet
-        // this.packetHandler.packPacket(packet);
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
@@ -262,8 +258,6 @@ public final class TCPServer implements Runnable {
 
             // add packetdata to clientbuffer
             client.sendPacket(packet);
-
-//            client.addByteBuffer(networkBuffer);
         }
 
         // clear the networkBuffer

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
+import de.minestar.conair.network.server.api.events.Cancellable;
 import de.minestar.conair.network.server.api.events.Event;
 import de.minestar.conair.network.server.api.exceptions.EventException;
 
@@ -128,7 +129,7 @@ public class PluginManager {
      */
     public final void registerEvents(EventListener eventListener, ServerPlugin serverPlugin) {
         // catch the eventlist
-        Map<Class<? extends Event>, EventExecutor> executorMap = this.pluginLoader.createEventList(eventListener, serverPlugin);
+        Map<Class<? extends Event>, EventExecutor> executorMap = this.pluginLoader.createEventExecutorList(eventListener, serverPlugin);
 
         // finally register the events
         for (Map.Entry<Class<? extends Event>, EventExecutor> event : executorMap.entrySet()) {
@@ -175,12 +176,29 @@ public class PluginManager {
             return;
         }
 
-        for (EventExecutor executor : executorList) {
-            try {
-                executor.execute(event);
-            } catch (EventException e) {
-                e.printStackTrace();
-                continue;
+        if (event instanceof Cancellable) {
+            Cancellable cancelEvent = (Cancellable) event;
+            for (EventExecutor executor : executorList) {
+                // ignore cancelled events
+                if (cancelEvent.isCancelled() && executor.isIgnoreCancelled()) {
+                    continue;
+                }
+
+                try {
+                    executor.execute(event);
+                } catch (EventException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+        } else {
+            for (EventExecutor executor : executorList) {
+                try {
+                    executor.execute(event);
+                } catch (EventException e) {
+                    e.printStackTrace();
+                    continue;
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ package de.minestar.conair.network.server.api;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import de.minestar.conair.network.server.api.annotations.Priority;
 import de.minestar.conair.network.server.api.events.Event;
 import de.minestar.conair.network.server.api.exceptions.EventException;
 
@@ -28,10 +29,14 @@ public class EventExecutor {
 
     private final EventListener eventListener;
     private final Method method;
+    private final Priority priority;
+    private final boolean ignoreCancelled;
 
-    public EventExecutor(EventListener eventListener, Method method) {
+    public EventExecutor(EventListener eventListener, Method method, Priority priority, boolean ignoreCancelled) {
         this.eventListener = eventListener;
         this.method = method;
+        this.priority = priority;
+        this.ignoreCancelled = ignoreCancelled;
     }
 
     public void execute(Event event) throws EventException {
@@ -45,5 +50,13 @@ public class EventExecutor {
         } catch (Throwable t) {
             throw new EventException(t);
         }
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public boolean isIgnoreCancelled() {
+        return ignoreCancelled;
     }
 }
