@@ -26,14 +26,22 @@ import de.minestar.conair.network.packets.NetworkPacket;
 import de.minestar.conair.network.packets.RegisterDenyPacket;
 import de.minestar.conair.network.packets.RegisterOKPacket;
 import de.minestar.conair.network.packets.RegisterRequestPacket;
+import de.minestar.conair.network.server.api.PluginManager;
 
 public class ServerSidePacketHandler extends AbstractServerPacketHandler {
 
     private final HashMap<String, ConnectedServerClient> registeredClients;
+    private PluginManager pluginManager;
 
     public ServerSidePacketHandler() {
         this.registeredClients = new HashMap<String, ConnectedServerClient>();
     }
+
+    public void setPluginManager(PluginManager pluginManager) {
+        this.pluginManager = pluginManager;
+    }
+
+    // TODO: HANDLE PACKETS
 
     @Override
     public boolean handlePacket(ConnectedServerClient client, NetworkPacket packet) {

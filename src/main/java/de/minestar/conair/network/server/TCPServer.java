@@ -291,5 +291,6 @@ public final class TCPServer implements Runnable {
 
     public void setPluginManager(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
+        this.serverSidePacketHandler.setPluginManager(pluginManager);
     }
 }
