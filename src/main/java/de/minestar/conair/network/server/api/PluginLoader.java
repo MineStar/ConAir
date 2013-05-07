@@ -23,8 +23,10 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -112,8 +114,8 @@ public class PluginLoader {
         }
     }
 
-    public Map<Class<? extends Event>, EventExecutor> createEventExecutorList(EventListener eventListener, ServerPlugin serverPlugin) {
-        Map<Class<? extends Event>, EventExecutor> executorMap = new HashMap<Class<? extends Event>, EventExecutor>();
+    public Map<Class<? extends Event>, List<EventExecutor>> createEventExecutorList(EventListener eventListener, ServerPlugin serverPlugin) {
+        Map<Class<? extends Event>, List<EventExecutor>> executorMap = new HashMap<Class<? extends Event>, List<EventExecutor>>();
 
         Set<Method> methods;
         // catch methods
@@ -150,8 +152,13 @@ public class PluginLoader {
             method.setAccessible(true);
 
             // create the EventExecutor
+            List<EventExecutor> eventList = executorMap.get(eventClass);
+            if (eventList == null) {
+                eventList = new ArrayList<EventExecutor>();
+                executorMap.put(eventClass, eventList);
+            }
             EventExecutor executor = new EventExecutor(eventListener, method, registeredEvent.priority(), registeredEvent.ignoreCancelled());
-            executorMap.put(eventClass, executor);
+            eventList.add(executor);
         }
         return executorMap;
     }
@@ -165,6 +172,7 @@ public class PluginLoader {
         for (Method method : publicMethods) {
             methods.add(method);
         }
+
         // get all declared methods
         for (Method method : eventListener.getClass().getDeclaredMethods()) {
             methods.add(method);

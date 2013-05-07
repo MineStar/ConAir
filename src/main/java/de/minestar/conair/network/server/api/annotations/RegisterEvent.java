@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Target({java.lang.annotation.ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RegisterEvent {
-    public abstract Priority priority();
+    public abstract Priority priority() default Priority.NORMAL;
 
-    public abstract boolean ignoreCancelled();
+    public abstract boolean ignoreCancelled() default false;
 }

@@ -90,7 +90,7 @@ public class PluginManager {
                 // enable the plugin
                 System.out.println("Enabling plugin: '" + plugin.getPluginName() + "'");
                 plugin.onEnable();
-                System.out.println("Plugin enabled: " + plugin.getPluginName() + "'");
+                System.out.println("Plugin enabled: '" + plugin.getPluginName() + "'");
             } catch (Exception e) {
                 // queue plugin and print stacktrace
                 failedPlugins.add(plugin);
@@ -129,11 +129,13 @@ public class PluginManager {
      */
     public final void registerEvents(EventListener eventListener, ServerPlugin serverPlugin) {
         // catch the eventlist
-        Map<Class<? extends Event>, EventExecutor> executorMap = this.pluginLoader.createEventExecutorList(eventListener, serverPlugin);
+        Map<Class<? extends Event>, List<EventExecutor>> executorMap = this.pluginLoader.createEventExecutorList(eventListener, serverPlugin);
 
         // finally register the events
-        for (Map.Entry<Class<? extends Event>, EventExecutor> event : executorMap.entrySet()) {
-            this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), event.getValue());
+        for (Map.Entry<Class<? extends Event>, List<EventExecutor>> event : executorMap.entrySet()) {
+            for (EventExecutor executor : event.getValue()) {
+                this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), executor);
+            }
         }
     }
 
