@@ -35,6 +35,8 @@ import de.minestar.conair.network.packets.NetworkPacket;
 import de.minestar.conair.network.packets.RegisterDenyPacket;
 import de.minestar.conair.network.packets.RegisterOKPacket;
 import de.minestar.conair.network.packets.RegisterRequestPacket;
+import de.minestar.conair.network.server.api.PluginManager;
+import de.minestar.conair.network.server.api.events.BroadcastPacketReceivedEvent;
 
 public final class TCPServer implements Runnable {
 
@@ -51,6 +53,8 @@ public final class TCPServer implements Runnable {
     private List<String> addressWhitelist;
 
     private ServerSidePacketHandler serverSidePacketHandler;
+
+    private PluginManager pluginManager;
 
     public TCPServer(int port, List<String> addressWhitelist) throws Exception {
         System.out.println("--------------------");
@@ -234,6 +238,7 @@ public final class TCPServer implements Runnable {
             boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
                 // TODO: Handle the packet in registered plugins...
+                this.pluginManager.callEvent(new BroadcastPacketReceivedEvent(packet));
             }
         }
     }
@@ -280,5 +285,9 @@ public final class TCPServer implements Runnable {
                 key.cancel();
             }
         }
+    }
+
+    public void setPluginManager(PluginManager pluginManager) {
+        this.pluginManager = pluginManager;
     }
 }

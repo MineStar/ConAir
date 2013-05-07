@@ -42,10 +42,6 @@ public final class ConnectedServerClient {
         this.packetQueue = new PacketQueue();
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public boolean readFrom(SocketChannel channel) throws Exception {
         int b = 0;
         try {

@@ -50,6 +50,8 @@ public class DedicatedTCPServer {
             this.pluginManager = new PluginManager(this, pluginFolder);
             this.pluginManager.loadPlugins();
 
+            this.server.setPluginManager(this.pluginManager);
+
             // start Thread
             this.serverThread = new Thread(this.server);
             this.serverThread.start();

@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
+import de.minestar.conair.network.server.api.events.Event;
+import de.minestar.conair.network.server.api.exceptions.EventException;
 
 public class PluginManager {
 
@@ -162,5 +164,24 @@ public class PluginManager {
 
     public String getPluginFolder() {
         return pluginFolder;
+    }
+
+    public void callEvent(Event event) {
+        // get the current list for the eventclass
+        List<EventExecutor> executorList = this.registeredEvents.get(event.getClass().getSimpleName());
+
+        // return, if there is no event
+        if (executorList == null) {
+            return;
+        }
+
+        for (EventExecutor executor : executorList) {
+            try {
+                executor.execute(event);
+            } catch (EventException e) {
+                e.printStackTrace();
+                continue;
+            }
+        }
     }
 }

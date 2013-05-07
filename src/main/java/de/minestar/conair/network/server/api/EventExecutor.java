@@ -18,8 +18,32 @@
 
 package de.minestar.conair.network.server.api;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import de.minestar.conair.network.server.api.events.Event;
 import de.minestar.conair.network.server.api.exceptions.EventException;
 
-public abstract interface EventExecutor {
-    public abstract void execute(EventListener eventListener, Event paramEvent) throws EventException;
+public class EventExecutor {
+
+    private final EventListener eventListener;
+    private final Method method;
+
+    public EventExecutor(EventListener eventListener, Method method) {
+        this.eventListener = eventListener;
+        this.method = method;
+    }
+
+    public void execute(Event event) throws EventException {
+        try {
+            if (!Event.class.isAssignableFrom(event.getClass())) {
+                return;
+            }
+            this.method.invoke(this.eventListener, event);
+        } catch (InvocationTargetException ex) {
+            throw new EventException(ex.getCause());
+        } catch (Throwable t) {
+            throw new EventException(t);
+        }
+    }
 }

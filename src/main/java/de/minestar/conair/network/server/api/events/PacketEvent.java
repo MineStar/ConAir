@@ -16,8 +16,23 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.network.server.api;
+package de.minestar.conair.network.server.api.events;
 
-public abstract interface Event {
+import de.minestar.conair.network.packets.NetworkPacket;
 
+public abstract class PacketEvent implements Event {
+
+    private NetworkPacket packet;
+
+    public PacketEvent(final NetworkPacket packet) {
+        this.packet = packet;
+    }
+
+    public NetworkPacket getPacket() {
+        return this.packet;
+    }
+
+    public int getPacketID() {
+        return this.packet.getPacketID();
+    }
 }

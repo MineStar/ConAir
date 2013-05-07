@@ -21,7 +21,6 @@ package de.minestar.conair.network.server.api;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import java.util.jar.JarFile;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
 import de.minestar.conair.network.server.api.annotations.RegisterEvent;
-import de.minestar.conair.network.server.api.exceptions.EventException;
+import de.minestar.conair.network.server.api.events.Event;
 
 public class PluginLoader {
 
@@ -151,21 +150,7 @@ public class PluginLoader {
             method.setAccessible(true);
 
             // create the EventExecutor
-            EventExecutor executor = new EventExecutor() {
-                public void execute(EventListener listener, Event event) throws EventException {
-                    try {
-                        if (!eventClass.isAssignableFrom(event.getClass())) {
-                            return;
-                        }
-                        method.invoke(listener, event);
-                    } catch (InvocationTargetException ex) {
-                        throw new EventException(ex.getCause());
-                    } catch (Throwable t) {
-                        throw new EventException(t);
-                    }
-                }
-            };
-
+            EventExecutor executor = new EventExecutor(eventListener, method);
             executorMap.put(eventClass, executor);
         }
         return executorMap;
