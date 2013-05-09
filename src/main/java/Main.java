@@ -1,4 +1,3 @@
-import de.minestar.conair.core.TestPacketHandler;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
@@ -43,7 +42,6 @@ public class Main {
             client1.stop();
             client2.stop();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

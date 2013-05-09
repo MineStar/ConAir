@@ -16,7 +16,7 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.core;
+
 
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;
