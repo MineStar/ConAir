@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
-			<version>1.5.1-R0.2</version>
+			<version>1.5.2-R0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -40,8 +40,8 @@
 		</dependency>
 		<dependency>
 			<groupId>de.minestar</groupId>
-			<artifactId>FalseBookChat</artifactId>
-			<version>0.97alpha-SNAPSHOT</version>
+			<artifactId>FalseBookCore</artifactId>
+			<version>0.98alpha-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
