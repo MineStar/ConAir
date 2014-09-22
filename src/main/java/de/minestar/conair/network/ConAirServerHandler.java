@@ -32,7 +32,6 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.impl.WrappedPacket;
 import de.minestar.conair.api.packets.HandshakePaket;
 
@@ -52,11 +51,11 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     }
 
     @Override
-    /**
+    /** 
      * Method is invoked, when a client sends a packet to the server
      */
     public void messageReceived(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
-        if (msg.getTargets().contains(Packet.TARGET_SERVER)) {
+        if (msg.getTargets().contains(WrappedPacket.TARGET_SERVER)) {
             // Returns true, if the packet is handled ONLY by the server
             if (handleServerPacket(ctx, msg))
                 return;

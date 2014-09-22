@@ -31,6 +31,4 @@ import java.io.Serializable;
  */
 public interface Packet extends Serializable {
 
-    public static final String TARGET_SERVER = "Server";
-
 }

@@ -1,11 +1,3 @@
-package de.minestar.conair.api.impl;
-
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-
-import de.minestar.conair.api.Packet;
-
 /**
  * The MIT License (MIT)
  * 
@@ -30,7 +22,17 @@ import de.minestar.conair.api.Packet;
  * SOFTWARE.
  */
 
+package de.minestar.conair.api.impl;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+
+import de.minestar.conair.api.Packet;
+
 public class WrappedPacket implements Serializable {
+
+    public static final String TARGET_SERVER = "Server";
 
     private static final long serialVersionUID = 1L;
 
@@ -57,11 +59,6 @@ public class WrappedPacket implements Serializable {
 
     public static WrappedPacket create(Packet packet, String... destination) {
         return new WrappedPacket(packet, Arrays.asList(destination));
-    }
-
-    @Override
-    public String toString() {
-        return "PacketWrapper [packet=" + packet + ", targets=" + targets + "]";
     }
 
 }

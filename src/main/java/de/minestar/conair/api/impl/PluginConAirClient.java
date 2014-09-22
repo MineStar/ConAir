@@ -87,7 +87,7 @@ public class PluginConAirClient implements ConAirClient {
         // bootStrap.option(ChannelOption.SO_KEEPALIVE, true);
         channel = bootStrap.connect(host, port).sync().channel();
         // Register at server with unique name
-        sendPacket(new HandshakePaket(clientName), Packet.TARGET_SERVER);
+        sendPacket(new HandshakePaket(clientName), WrappedPacket.TARGET_SERVER);
         isConnected = true;
     }
 
