@@ -26,10 +26,10 @@ package de.minestar.conair.network;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import de.minestar.conair.api.impl.WrappedPacket;
@@ -54,18 +54,18 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     /** 
      * Method is invoked, when a client sends a packet to the server
      */
-    public void messageReceived(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
-        if (msg.getTargets().contains(WrappedPacket.TARGET_SERVER)) {
+    public void channelRead0(ChannelHandlerContext ctx, WrappedPacket message) throws Exception {
+        if (message.getTargets().contains(WrappedPacket.TARGET_SERVER)) {
             // Returns true, if the packet is handled ONLY by the server
-            if (handleServerPacket(ctx, msg))
+            if (handleServerPacket(ctx, message))
                 return;
         }
         // Wrap the packet and store the source name (maybe useful for target to
         // know, who the source is)
-        WrappedPacket packet = WrappedPacket.create(msg.getPacket(), getClientName(ctx.channel()));
+        WrappedPacket packet = WrappedPacket.rePack(message, getClientName(ctx.channel()));
         // Broadcast packet - except for the channel, which is the sender of the
         // packet
-        if (msg.getTargets().isEmpty()) {
+        if (message.getTargets().isEmpty()) {
             for (Channel target : channels) {
                 if (target != ctx.channel())
                     target.writeAndFlush(packet);
@@ -73,15 +73,10 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         } else {
             // Send packet to designated clients
             for (Channel target : channels) {
-                if (target != ctx.channel() && msg.getTargets().contains(getClientName(target)))
+                if (target != ctx.channel() && message.getTargets().contains(getClientName(target)))
                     target.writeAndFlush(packet);
             }
         }
-    }
-
-    @Override
-    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        super.close(ctx, promise);
     }
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket msg) {
@@ -109,6 +104,9 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (cause instanceof CorruptedFrameException) {
+            System.err.println("Invalid JSON object received!");
+        }
         cause.printStackTrace();
         ctx.close();
     }

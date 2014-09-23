@@ -22,25 +22,24 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.network.codec;
 
-import de.minestar.conair.api.Packet;
+import java.util.List;
 
-public class HandshakePaket implements Packet {
+import com.google.gson.Gson;
 
-    private final String clientName;
+import de.minestar.conair.api.impl.WrappedPacket;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
 
-    public HandshakePaket(String clientName) {
-        this.clientName = clientName;
-    }
+public class JsonDecoder extends MessageToMessageDecoder<String> {
 
-    public String getClientName() {
-        return clientName;
-    }
+    private static final Gson JSON_MAPPER = new Gson();
 
     @Override
-    public String toString() {
-        return "HandshakePaket [clientName=" + clientName + "]";
+    protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
+        WrappedPacket packet = JSON_MAPPER.fromJson(msg, WrappedPacket.class);
+        out.add(packet);
     }
 
 }

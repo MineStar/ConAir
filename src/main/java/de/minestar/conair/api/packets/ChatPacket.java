@@ -28,8 +28,6 @@ import de.minestar.conair.api.Packet;
 
 public class ChatPacket implements Packet {
 
-    private static final long serialVersionUID = 1L;
-
     private final String message;
 
     public ChatPacket(final String message) {

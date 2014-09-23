@@ -22,25 +22,23 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.network;
 
-import de.minestar.conair.api.Packet;
+import static org.junit.Assert.assertEquals;
 
-public class HandshakePaket implements Packet {
+import org.junit.Test;
 
-    private final String clientName;
+import de.minestar.conair.api.impl.WrappedPacket;
+import de.minestar.conair.api.packets.ChatPacket;
 
-    public HandshakePaket(String clientName) {
-        this.clientName = clientName;
-    }
+public class PacketTest {
 
-    public String getClientName() {
-        return clientName;
-    }
-
-    @Override
-    public String toString() {
-        return "HandshakePaket [clientName=" + clientName + "]";
+    @Test
+    public void test() {
+        ChatPacket sentPacket = new ChatPacket("Das Pferd frisst keinen Gurkensalat!");
+        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket);
+        ChatPacket receivedPacket = wrappedPacket.getPacket();
+        assertEquals(sentPacket.getMessage(), receivedPacket.getMessage());
     }
 
 }

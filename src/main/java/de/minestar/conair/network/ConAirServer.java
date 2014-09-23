@@ -32,11 +32,14 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.codec.json.JsonObjectDecoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.CharsetUtil;
+import de.minestar.conair.network.codec.JsonDecoder;
+import de.minestar.conair.network.codec.JsonEncoder;
 
 public class ConAirServer {
 
@@ -65,9 +68,17 @@ public class ConAirServer {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
 
-                // Add object serialization
-                pipeline.addLast(new ObjectEncoder());
-                pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+                // Wait until the buffer contains the complete JSON object
+                pipeline.addLast("frameDecoder", new JsonObjectDecoder());
+                // Decode and encode the buffer bytes arrays to readable strings
+                pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
+                pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
+
+                // Decode and encode the readable JSON strings as WrappedPacket
+                // objects
+                pipeline.addLast("jsonDecoder", new JsonDecoder());
+                pipeline.addLast("jsonEncoder", new JsonEncoder());
+
                 // Add server logic
                 pipeline.addLast(new ConAirServerHandler());
             }
@@ -78,6 +89,9 @@ public class ConAirServer {
     }
 
     public void stop() throws Exception {
+        if (!isRunning) {
+            throw new IllegalStateException("Server isn't running!");
+        }
         this.serverChannel.close().sync();
         bossGroup.shutdownGracefully().sync();
         workerGroup.shutdownGracefully().sync();

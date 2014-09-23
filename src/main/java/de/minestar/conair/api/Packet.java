@@ -24,11 +24,9 @@
 
 package de.minestar.conair.api;
 
-import java.io.Serializable;
-
 /**
  * Abstract class for all packets describing the destination of it.
  */
-public interface Packet extends Serializable {
+public interface Packet {
 
 }

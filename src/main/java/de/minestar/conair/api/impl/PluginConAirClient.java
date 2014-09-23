@@ -35,9 +35,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.codec.json.JsonObjectDecoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +47,8 @@ import java.util.function.BiConsumer;
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.packets.HandshakePaket;
+import de.minestar.conair.network.codec.JsonDecoder;
+import de.minestar.conair.network.codec.JsonEncoder;
 
 public class PluginConAirClient implements ConAirClient {
 
@@ -76,9 +79,17 @@ public class PluginConAirClient implements ConAirClient {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
 
-                // Enable object serialization
-                pipeline.addLast(new ObjectEncoder());
-                pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+                // Wait until the buffer contains the complete JSON object
+                pipeline.addLast("frameDecoder", new JsonObjectDecoder());
+                // Decode and encode the buffer bytes arrays to readable strings
+                pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
+                pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
+
+                // Decode and encode the readable JSON strings as WrappedPacket
+                // objects
+                pipeline.addLast("jsonDecoder", new JsonDecoder());
+                pipeline.addLast("jsonEncoder", new JsonEncoder());
+
                 // And then the logic itself
                 pipeline.addLast(new PluginConAirClientHandler());
             }
@@ -94,7 +105,7 @@ public class PluginConAirClient implements ConAirClient {
     private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         @Override
-        protected void messageReceived(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
             onPacketReceived(msg);
         }
     }
@@ -102,7 +113,6 @@ public class PluginConAirClient implements ConAirClient {
     private void onPacketReceived(WrappedPacket wrappedPacket) {
         Packet packet = wrappedPacket.getPacket();
         // Inform observer
-
         BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
         if (consumer != null) {
             consumer.accept(packet, wrappedPacket.getTargets().get(0));

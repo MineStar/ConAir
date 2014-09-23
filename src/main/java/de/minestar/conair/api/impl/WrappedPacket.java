@@ -24,41 +24,74 @@
 
 package de.minestar.conair.api.impl;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import de.minestar.conair.api.Packet;
 
-public class WrappedPacket implements Serializable {
+public class WrappedPacket {
 
     public static final String TARGET_SERVER = "Server";
+    private static final Gson JSON_MAPPER = new Gson();
 
-    private static final long serialVersionUID = 1L;
-
-    private final Packet packet;
+    private final String packetAsJSON;
+    private final String packetClassName;
     private final List<String> targets;
 
     private WrappedPacket(Packet packet, List<String> targets) {
-        this.packet = packet;
+        this.packetAsJSON = JSON_MAPPER.toJson(packet);
+        // this
+        this.packetClassName = packet.getClass().getName();
         this.targets = targets;
     }
 
+    private WrappedPacket(WrappedPacket wrappedPacket, String source) {
+        this.packetAsJSON = wrappedPacket.packetAsJSON;
+        this.packetClassName = wrappedPacket.packetClassName;
+        this.targets = Arrays.asList(source);
+    }
+
     public boolean is(Class<? extends Packet> clazz) {
-        return clazz.isAssignableFrom(packet.getClass());
+        return packetClassName.equals(clazz.getName());
     }
 
     @SuppressWarnings("unchecked")
     public <T extends Packet> T getPacket() {
-        return (T) packet;
+        T result = null;
+        try {
+            result = (T) JSON_MAPPER.fromJson(packetAsJSON, Class.forName(packetClassName));
+        } catch (JsonSyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public List<String> getTargets() {
         return targets;
     }
 
+    public String getPacketClassName() {
+        return packetClassName;
+    }
+
+    @Override
+    public String toString() {
+        return "WrappedPacket [packetAsJSON=" + packetAsJSON + ", packetClassName=" + packetClassName + ", targets=" + targets + "]";
+    }
+
     public static WrappedPacket create(Packet packet, String... destination) {
         return new WrappedPacket(packet, Arrays.asList(destination));
+    }
+
+    public static WrappedPacket rePack(WrappedPacket packet, String source) {
+        return new WrappedPacket(packet, source);
     }
 
 }
