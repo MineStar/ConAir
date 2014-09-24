@@ -32,18 +32,14 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
-
-import java.util.Optional;
-
 import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.packets.HandshakePacket;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
-    private static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
+    protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
@@ -83,31 +79,11 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     }
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket msg) {
-        // Check, if client was already initialized
-        if (msg.is(HandshakePacket.class)) {
-            Optional<HandshakePacket> result = msg.getPacket();
-            if (!result.isPresent()) {
-                System.err.println("Error while parsing " + msg + " as HandshakePacket!");
-                return true;
-            }
-            HandshakePacket hPacket = result.get();
-            if (!isInitialized(ctx)) {
-                // Mark the client as initialized and assign a client name
-                ctx.channel().attr(KEY_CLIENT_NAME).set(hPacket.getClientName());
-                ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
-            }
-            return true;
-        }
-
         return false;
     }
 
     private String getClientName(Channel channel) {
         return channel.attr(KEY_CLIENT_NAME).get();
-    }
-
-    private boolean isInitialized(ChannelHandlerContext ctx) {
-        return ctx.attr(KEY_IS_INITIALIZED).get() == Boolean.TRUE;
     }
 
     @Override

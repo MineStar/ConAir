@@ -76,7 +76,9 @@ public class ConAirTest {
 
             // Clients are sending packets to everyone in the network
             client1.sendPacket(new ChatPacket("Hi!"));
+            Thread.sleep(50);
             client2.sendPacket(new ChatPacket("Hello!"));
+            Thread.sleep(50);
             client3.sendPacket(new ChatPacket("Moin!"));
 
             Thread.sleep(500); // Just for test

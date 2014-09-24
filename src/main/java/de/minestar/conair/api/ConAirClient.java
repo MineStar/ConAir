@@ -111,7 +111,6 @@ public class ConAirClient {
             }
         });
 
-        // bootStrap.option(ChannelOption.SO_KEEPALIVE, true);
         channel = bootStrap.connect(host, port).sync().channel();
         // Register at server with unique name
         sendPacket(new HandshakePacket(clientName), WrappedPacket.TARGET_SERVER);

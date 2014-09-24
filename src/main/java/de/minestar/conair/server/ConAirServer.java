@@ -79,6 +79,7 @@ public class ConAirServer {
                 pipeline.addLast("jsonDecoder", new JsonDecoder());
                 pipeline.addLast("jsonEncoder", new JsonEncoder());
 
+                pipeline.addLast("handshakeHandler", new ServerHandshakeHandler());
                 // Add server logic
                 pipeline.addLast(new ConAirServerHandler());
             }
