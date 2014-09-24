@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.server;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,8 +32,11 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import de.minestar.conair.api.impl.WrappedPacket;
-import de.minestar.conair.api.packets.HandshakePaket;
+
+import java.util.Optional;
+
+import de.minestar.conair.api.WrappedPacket;
+import de.minestar.conair.api.packets.HandshakePacket;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
@@ -64,7 +67,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         // know, who the source is)
         WrappedPacket packet = WrappedPacket.rePack(message, getClientName(ctx.channel()));
         // Broadcast packet - except for the channel, which is the sender of the
-        // packet
+        // packet and which haven't finished handhake with the server.
         if (message.getTargets().isEmpty()) {
             for (Channel target : channels) {
                 if (target != ctx.channel())
@@ -81,8 +84,13 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket msg) {
         // Check, if client was already initialized
-        if (msg.is(HandshakePaket.class)) {
-            HandshakePaket hPacket = msg.getPacket();
+        if (msg.is(HandshakePacket.class)) {
+            Optional<HandshakePacket> result = msg.getPacket();
+            if (!result.isPresent()) {
+                System.err.println("Error while parsing " + msg + " as HandshakePacket!");
+                return true;
+            }
+            HandshakePacket hPacket = result.get();
             if (!isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
                 ctx.channel().attr(KEY_CLIENT_NAME).set(hPacket.getClientName());

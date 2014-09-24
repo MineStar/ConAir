@@ -22,16 +22,19 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.network.codec;
+package de.minestar.conair.api.codec;
 
 import java.util.List;
 
 import com.google.gson.Gson;
 
-import de.minestar.conair.api.impl.WrappedPacket;
+import de.minestar.conair.api.WrappedPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
+/**
+ * Converts a JSON encoded string to an {@link WrappedPacket}
+ */
 public class JsonDecoder extends MessageToMessageDecoder<String> {
 
     private static final Gson JSON_MAPPER = new Gson();

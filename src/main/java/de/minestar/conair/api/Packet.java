@@ -25,7 +25,7 @@
 package de.minestar.conair.api;
 
 /**
- * Abstract class for all packets describing the destination of it.
+ * Interface to indicate that 
  */
 public interface Packet {
 

@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.network;
 
 import de.minestar.conair.api.Packet;
 
+/**
+ * Demonstration of a possible chat packet
+ */
 public class ChatPacket implements Packet {
 
     private final String message;

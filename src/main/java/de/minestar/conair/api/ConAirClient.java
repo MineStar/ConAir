@@ -24,12 +24,45 @@
 
 package de.minestar.conair.api;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.json.JsonObjectDecoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
-/**
- * Describe what a ConAir client must can.
- */
-public interface ConAirClient {
+import de.minestar.conair.api.codec.JsonDecoder;
+import de.minestar.conair.api.codec.JsonEncoder;
+import de.minestar.conair.api.packets.HandshakePacket;
+
+public class ConAirClient {
+
+    private boolean isConnected;
+
+    private final EventLoopGroup group;
+    private Channel channel;
+
+    private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
+
+    public ConAirClient() {
+        this.isConnected = false;
+        this.group = new NioEventLoopGroup();
+        this.registeredListener = new HashMap<>();
+    }
 
     /**
      * Establish a connection to ConAir server. Must be called before
@@ -45,7 +78,64 @@ public interface ConAirClient {
      * @throws Exception
      *             Something went wrong
      */
-    public void connect(String clientName, String host, int port) throws Exception;
+    public void connect(String clientName, String host, int port) throws Exception {
+        if (isConnected) {
+            throw new IllegalStateException("Client is already connected!");
+        }
+        Bootstrap bootStrap = new Bootstrap();
+        bootStrap.group(group).channel(NioSocketChannel.class);
+        // Add initializer
+        bootStrap.handler(new ChannelInitializer<SocketChannel>() {
+
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+
+                // Wait until the buffer contains the complete JSON object
+                pipeline.addLast("frameDecoder", new JsonObjectDecoder());
+                // Decode and encode the buffer bytes arrays to readable strings
+                pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
+                pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
+
+                // Decode and encode the readable JSON strings as WrappedPacket
+                // objects
+                pipeline.addLast("jsonDecoder", new JsonDecoder());
+                pipeline.addLast("jsonEncoder", new JsonEncoder());
+
+                // And then the logic itself
+                pipeline.addLast(new PluginConAirClientHandler());
+            }
+        });
+
+        // bootStrap.option(ChannelOption.SO_KEEPALIVE, true);
+        channel = bootStrap.connect(host, port).sync().channel();
+        // Register at server with unique name
+        sendPacket(new HandshakePacket(clientName), WrappedPacket.TARGET_SERVER);
+        isConnected = true;
+    }
+
+    private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
+            onPacketReceived(msg);
+        }
+    }
+
+    private void onPacketReceived(WrappedPacket wrappedPacket) {
+        Optional<Packet> result = wrappedPacket.getPacket();
+        if (!result.isPresent()) {
+            System.err.println("Error while parsing " + wrappedPacket + "!");
+        }
+        Packet packet = result.get();
+        // Inform observer
+        BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
+        if (consumer != null) {
+            consumer.accept(packet, wrappedPacket.getTargets().get(0));
+        } else {
+            // Do nothing
+        }
+    }
 
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the
@@ -59,7 +149,11 @@ public interface ConAirClient {
      * @throws Exception
      *             Something went wrong
      */
-    public void sendPacket(Packet packet, String... targets) throws Exception;
+    public void sendPacket(Packet packet, String... targets) throws Exception {
+        ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, targets));
+        if (result != null)
+            result.sync();
+    }
 
     /**
      * Register listener for a Packet type to receive and handle.
@@ -69,7 +163,10 @@ public interface ConAirClient {
      * @param handler
      *            Packet handler for this type
      */
-    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler);
+    @SuppressWarnings("unchecked")
+    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
+        registeredListener.put(packetClass, (BiConsumer<? super Packet, String>) handler);
+    }
 
     /**
      * Disconnects from the ConAir server and close connection.
@@ -77,6 +174,13 @@ public interface ConAirClient {
      * @throws Exception
      *             Something went wrong.
      */
-    public void disconnect() throws Exception;
+    public void disconnect() throws Exception {
+        if (!isConnected) {
+            throw new IllegalStateException("Client is not connected!");
+        }
+        channel.close().sync();
+
+        group.shutdownGracefully().sync();
+    }
 
 }

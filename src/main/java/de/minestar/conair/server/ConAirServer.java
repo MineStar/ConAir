@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.network;
+package de.minestar.conair.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -38,8 +38,8 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
-import de.minestar.conair.network.codec.JsonDecoder;
-import de.minestar.conair.network.codec.JsonEncoder;
+import de.minestar.conair.api.codec.JsonDecoder;
+import de.minestar.conair.api.codec.JsonEncoder;
 
 public class ConAirServer {
 

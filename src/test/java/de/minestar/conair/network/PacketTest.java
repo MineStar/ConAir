@@ -25,19 +25,30 @@
 package de.minestar.conair.network;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Optional;
 
 import org.junit.Test;
 
-import de.minestar.conair.api.impl.WrappedPacket;
-import de.minestar.conair.api.packets.ChatPacket;
+import de.minestar.conair.api.WrappedPacket;
 
+/*
+ * Test for serialization and parsing of packets
+ */
 public class PacketTest {
 
     @Test
     public void test() {
+        // Create test packet
         ChatPacket sentPacket = new ChatPacket("Das Pferd frisst keinen Gurkensalat!");
+        // Serialize packet while wrapping
         WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket);
-        ChatPacket receivedPacket = wrappedPacket.getPacket();
+        // Parse packet
+        Optional<ChatPacket> possibleResult = wrappedPacket.getPacket();
+        assertTrue(possibleResult.isPresent());
+        ChatPacket receivedPacket = possibleResult.get();
+        // Check if messages are equal
         assertEquals(sentPacket.getMessage(), receivedPacket.getMessage());
     }
 

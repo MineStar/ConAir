@@ -25,9 +25,13 @@
 package de.minestar.conair.network;
 
 import de.minestar.conair.api.ConAirClient;
-import de.minestar.conair.api.impl.PluginConAirClient;
-import de.minestar.conair.api.packets.ChatPacket;
+import de.minestar.conair.server.ConAirServer;
 
+/**
+ * Demonstration of the ConAir API starting a server and three clients are
+ * connecting to the server. After the handshake, clients are sending chat
+ * packets.
+ */
 public class ConAirTest {
 
     private static final int PORT = 8977;
@@ -35,37 +39,54 @@ public class ConAirTest {
     public static void main(String[] args) {
         try {
 
+            // Create the server
             ConAirServer server = new ConAirServer();
             server.start(PORT);
             Thread.sleep(500); // Just for test
 
-            ConAirClient client1 = new PluginConAirClient();
+            // Create first client and connect to server
+            ConAirClient client1 = new ConAirClient();
             client1.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
                 onPacketReceive(packet, source);
             });
             client1.connect("Client1", "localhost", PORT); // domain
 
             Thread.sleep(500); // Just for test
-            ConAirClient client2 = new PluginConAirClient();
-            client2.registerPacketListener(ChatPacket.class, (p, source) -> System.out.println("C2 (from " + source + ") " + p.getMessage()));
+
+            // Create second client and connect to server
+            ConAirClient client2 = new ConAirClient();
+            client2.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
+                System.out.println("C2 (from " + source + ") " + packet.getMessage());
+            });
             client2.connect("Client2", "127.0.0.1", PORT); // ipv4
 
             Thread.sleep(500); // Just for test
-            ConAirClient client3 = new PluginConAirClient();
-            client3.registerPacketListener(ChatPacket.class, (p, source) -> System.out.println("C3 (from " + source + ") " + p.getMessage()));
+
+            // Create third client and connect to server
+            ConAirClient client3 = new ConAirClient();
+            client3.registerPacketListener(ChatPacket.class, (packet, source) -> System.out.println("C3 (from " + source + ") " + packet.getMessage()));
             client3.connect("Client3", "::1", PORT); // ipv6
 
             Thread.sleep(500); // Just for test
+
+            // Clients are sending packets to everyone in the network
             client1.sendPacket(new ChatPacket("Hi!"));
             client2.sendPacket(new ChatPacket("Hello!"));
             client3.sendPacket(new ChatPacket("Moin!"));
 
-            Thread.sleep(500);
+            Thread.sleep(500); // Just for test
+
+            // Client 1 talks to client 3
             client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), "Client3");
-            Thread.sleep(50);
+
+            Thread.sleep(50); // Just for test
+
+            // Client 3 responses
             client3.sendPacket(new ChatPacket("Roger Client 1, I hear you loud and clear."), "Client1");
 
-            Thread.sleep(50);
+            Thread.sleep(50); // Just for test
+
+            // Clients are disconnecting, server is shutting down
             client1.disconnect();
             client2.disconnect();
             client3.disconnect();
@@ -77,6 +98,6 @@ public class ConAirTest {
     }
 
     public static void onPacketReceive(ChatPacket packet, String source) {
-        System.out.println("C2 (from " + source + ") " + packet.getMessage());
+        System.out.println("C1 (from " + source + ") " + packet.getMessage());
     }
 }
