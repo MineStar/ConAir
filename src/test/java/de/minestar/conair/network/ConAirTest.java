@@ -67,6 +67,11 @@ public class ConAirTest {
             client3.registerPacketListener(ChatPacket.class, (packet, source) -> System.out.println("C3 (from " + source + ") " + packet.getMessage()));
             client3.connect("Client3", "::1", PORT); // ipv6
 
+            // Create third client and connect to server, This client hasn't a
+            // packet registered!
+            ConAirClient client4 = new ConAirClient();
+            client4.connect("Client4", "::1", PORT); // ipv6
+
             Thread.sleep(500); // Just for test
 
             // Clients are sending packets to everyone in the network

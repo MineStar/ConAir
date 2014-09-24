@@ -41,8 +41,10 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 import de.minestar.conair.api.codec.JsonDecoder;
@@ -56,12 +58,14 @@ public class ConAirClient {
     private final EventLoopGroup group;
     private Channel channel;
 
+    private Set<String> registeredClasses;
     private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
 
     public ConAirClient() {
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
         this.registeredListener = new HashMap<>();
+        this.registeredClasses = new HashSet<>();
     }
 
     /**
@@ -123,20 +127,25 @@ public class ConAirClient {
     }
 
     private void onPacketReceived(WrappedPacket wrappedPacket) {
+        if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
+            // TODO: Write debug logger
+            // The packet isn't for this client
+            return;
+        }
         Optional<Packet> result = wrappedPacket.getPacket();
         if (!result.isPresent()) {
             System.err.println("Error while parsing " + wrappedPacket + "!");
+            return;
         }
         Packet packet = result.get();
         // Inform observer
         BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
         if (consumer != null) {
-            consumer.accept(packet, wrappedPacket.getTargets().get(0));
+            consumer.accept(packet, wrappedPacket.getSource());
         } else {
             // Do nothing
         }
     }
-
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the
      * targets. If targets are empty, the packet will be broadcasted to every
@@ -166,6 +175,7 @@ public class ConAirClient {
     @SuppressWarnings("unchecked")
     public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
         registeredListener.put(packetClass, (BiConsumer<? super Packet, String>) handler);
+        registeredClasses.add(packetClass.getName());
     }
 
     /**

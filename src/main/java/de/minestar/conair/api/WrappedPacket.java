@@ -124,6 +124,13 @@ public class WrappedPacket {
     }
 
     /**
+     * @return The complete name of the encapsulated class name
+     */
+    public String getPacketClassName() {
+        return packetClassName;
+    }
+
+    /**
      * Shortcut for <code>getTargets().get(0)</code> with an additional check,
      * if the list contains only one element. Otherwise it will return an empty
      * string.
