@@ -95,6 +95,7 @@ public class ConAirTest {
             client1.disconnect();
             client2.disconnect();
             client3.disconnect();
+            client4.disconnect();
             server.stop();
 
         } catch (Exception e) {
