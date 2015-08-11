@@ -22,6 +22,6 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public abstract class AbstractServerPacketHandler {
 
-    public abstract boolean handlePacket(ConnectedServerClient client, NetworkPacket packet);
+    public abstract <P extends NetworkPacket> boolean handlePacket(ConnectedServerClient client, P packet);
 
 }

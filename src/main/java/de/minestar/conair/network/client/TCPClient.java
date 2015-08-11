@@ -82,7 +82,7 @@ public final class TCPClient implements Runnable {
         this.registerSinglePacket(RegisterDenyPacket.class);
     }
 
-    private final void registerSinglePacket(Class<? extends NetworkPacket> packetClazz) {
+    private final <P extends NetworkPacket> void registerSinglePacket(Class<P> packetClazz) {
         Integer ID = PacketType.getID(packetClazz);
         if (ID == null) {
             PacketType.registerPacket(packetClazz);
@@ -171,9 +171,8 @@ public final class TCPClient implements Runnable {
     /*
      * HANDLING
      */
-    private void handlePacket(NetworkPacket packet) {
+    private <P extends NetworkPacket> void handlePacket(P packet) {
         if (!this.clientSidePacketHandler.handlePacket(packet)) {
-            System.out.println(this.clientName + " is handling packet: " + packet.getClass().getSimpleName());
             this.packetHandler.handlePacket(packet);
         }
     }
@@ -181,7 +180,7 @@ public final class TCPClient implements Runnable {
     /*
      * QUEUEING
      */
-    public final void sendPacket(NetworkPacket packet) {
+    public final <P extends NetworkPacket> void sendPacket(P packet) {
         this.packetHandler.sendPacket(packet);
     }
 

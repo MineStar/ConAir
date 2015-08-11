@@ -16,15 +16,16 @@ public final class PacketType {
         packetClassMap = new HashMap<Integer, Class<? extends NetworkPacket>>();
     }
 
-    public static Integer getID(Class<? extends NetworkPacket> packetClazz) {
+    public static <P extends NetworkPacket> Integer getID(Class<P> packetClazz) {
         return packetIDMap.get(packetClazz.getName());
     }
 
-    public static Class<? extends NetworkPacket> getClassByID(int ID) {
-        return packetClassMap.get(ID);
+    @SuppressWarnings("unchecked")
+    public static <P extends NetworkPacket> Class<P> getClassByID(int ID) {
+        return (Class<P>) packetClassMap.get(ID);
     }
 
-    public static boolean registerPacket(Class<? extends NetworkPacket> packetClazz) {
+    public static <P extends NetworkPacket> boolean registerPacket(Class<P> packetClazz) {
         try {
             int ID = getUniqueID(packetClazz.getName());
             if (packetClassMap.containsKey(ID)) {
@@ -40,7 +41,7 @@ public final class PacketType {
         }
     }
 
-    public static boolean unregisterPacket(Class<? extends NetworkPacket> packet) {
+    public static <P extends NetworkPacket> boolean unregisterPacket(Class<P> packet) {
         int ID = getUniqueID(packet.getName());
         if (!packetClassMap.containsKey(ID)) {
             throw new RuntimeException("NetworkPacket '" + packet.getSimpleName() + "' is not registered!");

@@ -52,7 +52,7 @@ public final class ConnectedServerClient {
         return b != -1;
     }
 
-    public void sendPacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> void sendPacket(P packet) {
         this.packetQueue.addUnsafePacket(packet);
         boolean wasEmpty = this.packetQueue.getSize() == 1;
         // the queue was empty, so we send the first packet
@@ -63,15 +63,6 @@ public final class ConnectedServerClient {
             }
         }
     }
-
-//    private void addByteBuffer(ByteBuffer buffer) {
-//        if (!this.dataToSend) {
-//            this.outBuffer.getBuffer().put(buffer);
-//            this.outBuffer.getBuffer().flip();
-//            buffer.rewind();
-//            this.dataToSend = true;
-//        }
-//    }
 
     public boolean hasDataToSend() {
         return dataToSend;

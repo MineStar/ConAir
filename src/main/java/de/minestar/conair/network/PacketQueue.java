@@ -34,14 +34,14 @@ public final class PacketQueue {
         this.active = false;
     }
 
-    public boolean addUnsafePacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> boolean addUnsafePacket(P packet) {
         synchronized (this.packetQueue) {
             this.packetQueue.add(packet);
             return true;
         }
     }
 
-    public boolean addPacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> boolean addPacket(P packet) {
         synchronized (this.packetQueue) {
             if (PacketType.getID(packet.getClass()) != null) {
                 this.packetQueue.add(packet);

@@ -73,7 +73,7 @@ public class DedicatedTCPClient {
         return port;
     }
 
-    public void sendPacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> void sendPacket(P packet) {
         this.client.sendPacket(packet);
     }
 }

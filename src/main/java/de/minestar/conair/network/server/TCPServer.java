@@ -97,7 +97,7 @@ public final class TCPServer implements Runnable {
         this.registerSinglePacket(RegisterDenyPacket.class);
     }
 
-    private final void registerSinglePacket(Class<? extends NetworkPacket> packetClazz) {
+    private final <P extends NetworkPacket> void registerSinglePacket(Class<P> packetClazz) {
         Integer ID = PacketType.getID(packetClazz);
         if (ID == null) {
             PacketType.registerPacket(packetClazz);
@@ -106,7 +106,6 @@ public final class TCPServer implements Runnable {
 
     @Override
     public void run() {
-
         System.out.println("Server started!");
         while (isRunning) {
             try {
@@ -229,7 +228,7 @@ public final class TCPServer implements Runnable {
     }
 
     // Handle a single packet
-    private void handlePacket(ConnectedServerClient client, NetworkPacket packet) {
+    private <P extends NetworkPacket> void handlePacket(ConnectedServerClient client, P packet) {
         // We have a broadcast server - broadcast all packages
         if (packet.isBroadcastPacket()) {
             /*
@@ -245,13 +244,13 @@ public final class TCPServer implements Runnable {
         } else {
             boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
-                // TODO: call NonBroadcastPacketReceivedEvent
+                // TODO: call NonBroadcastPacketReceivedEvent on ServerSide
             }
         }
     }
 
     // Deliver the packet the all other clients
-    private void broadcastPacket(ConnectedServerClient src, NetworkPacket packet) {
+    private <P extends NetworkPacket> void broadcastPacket(ConnectedServerClient src, P packet) {
         Set<SelectionKey> keys = selector.keys();
 
         for (SelectionKey key : keys) {

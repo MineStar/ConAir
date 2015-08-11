@@ -50,7 +50,7 @@ public abstract class ClientPacketHandler {
         return (buffer.get(len) == NetworkPacket.PACKET_SEPERATOR);
     }
 
-    public final boolean sendPacket(NetworkPacket packet) {
+    public final <P extends NetworkPacket> boolean sendPacket(P packet) {
         if (!this.packetQueue.addPacket(packet)) {
             System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
             return false;
@@ -59,7 +59,7 @@ public abstract class ClientPacketHandler {
         }
     }
 
-    public final NetworkPacket extractPacket(ByteBuffer src) {
+    public final <P extends NetworkPacket> P extractPacket(ByteBuffer src) {
         src.rewind();
         int len = src.getInt();
         int limit = src.limit();
@@ -72,7 +72,7 @@ public abstract class ClientPacketHandler {
         return createPacket(len);
     }
 
-    private final NetworkPacket createPacket(int datalength) {
+    private final <P extends NetworkPacket> P createPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
             // One integer is 4 bytes long
@@ -80,7 +80,7 @@ public abstract class ClientPacketHandler {
 
             // get packettype
             int packetID = packetBuffer.readInt();
-            Class<? extends NetworkPacket> packetClazz = PacketType.getClassByID(packetID);
+            Class<P> packetClazz = PacketType.getClassByID(packetID);
 
             // packet not found...
             if (packetClazz == null) {
@@ -88,7 +88,7 @@ public abstract class ClientPacketHandler {
             }
 
             // get the constructor
-            Constructor<? extends NetworkPacket> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
+            Constructor<P> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
             if (packetConstructor == null) {
                 return null;
             }
@@ -121,5 +121,5 @@ public abstract class ClientPacketHandler {
     /*
      * HANDLE THE PACKET
      */
-    public abstract void handlePacket(NetworkPacket packet);
+    public abstract <P extends NetworkPacket> void handlePacket(P packet);
 }

@@ -56,7 +56,7 @@ public final class ServerPacketHandler {
         return (buffer.get(len) == PACKET_SEPERATOR);
     }
 
-    public boolean packPacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> boolean packPacket(P packet) {
         packetBuffer.clear();
         boolean result = packet.pack(packetBuffer);
         packetBuffer.getBuffer().flip();
@@ -69,7 +69,7 @@ public final class ServerPacketHandler {
     //
     // //////////////////////////////////////////////////////////
 
-    public final NetworkPacket extractPacket(ByteBuffer src) {
+    public final <P extends NetworkPacket> P extractPacket(ByteBuffer src) {
         src.rewind();
         int len = src.getInt();
         int limit = src.limit();
@@ -81,7 +81,7 @@ public final class ServerPacketHandler {
         src.compact();
 
         // create packet
-        NetworkPacket packet = createPacket(len);
+        P packet = createPacket(len);
 
         // reset
         src.rewind();
@@ -91,7 +91,8 @@ public final class ServerPacketHandler {
         return packet;
     }
 
-    private final NetworkPacket createPacket(int datalength) {
+    @SuppressWarnings("unchecked")
+    private final <P extends NetworkPacket> P createPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
             // One integer is 4 bytes long
@@ -99,7 +100,7 @@ public final class ServerPacketHandler {
 
             // get packettype
             int packetID = packetBuffer.readInt();
-            Class<? extends NetworkPacket> packetClazz = PacketType.getClassByID(packetID);
+            Class<P> packetClazz = PacketType.getClassByID(packetID);
 
             // packet not found...
             if (packetClazz == null) {
@@ -113,11 +114,11 @@ public final class ServerPacketHandler {
                 newBuffer.getBuffer().rewind();
 
                 // finally create the packet and return it
-                return new RAWPacket(packetID, newBuffer.getBuffer());
+                return (P) new RAWPacket(packetID, newBuffer.getBuffer());
             }
 
             // get the constructor
-            Constructor<? extends NetworkPacket> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
+            Constructor<P> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
             if (packetConstructor == null) {
                 return null;
             }

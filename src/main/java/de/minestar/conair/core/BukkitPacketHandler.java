@@ -44,7 +44,7 @@ public class BukkitPacketHandler extends ClientPacketHandler {
     }
 
     @Override
-    public void handlePacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> void handlePacket(P packet) {
         if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
             if (!ClientSettings.informChat) {
                 return;

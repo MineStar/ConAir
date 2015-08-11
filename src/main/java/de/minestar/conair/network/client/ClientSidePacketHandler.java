@@ -32,7 +32,7 @@ public class ClientSidePacketHandler extends AbstractClientPacketHandler {
     }
 
     @Override
-    public boolean handlePacket(NetworkPacket packet) {
+    public <P extends NetworkPacket> boolean handlePacket(P packet) {
         if (packet.getPacketID() == PacketType.getID(RegisterOKPacket.class)) {
             this.handleRegisterOKPacket((RegisterOKPacket) packet);
             return true;
