@@ -37,6 +37,7 @@ import de.minestar.conair.network.packets.RegisterOKPacket;
 import de.minestar.conair.network.packets.RegisterRequestPacket;
 import de.minestar.conair.network.server.api.PluginManager;
 import de.minestar.conair.network.server.api.events.BroadcastPacketReceivedEvent;
+import de.minestar.conair.network.server.api.events.ServerSidePacketReceivedEvent;
 
 public final class TCPServer implements Runnable {
 
@@ -155,11 +156,11 @@ public final class TCPServer implements Runnable {
         System.out.println("Server stopped!");
         System.out.println("--------------------");
     }
+
     /*
      * ACCEPTING
      */
-
-    public void onClientAccept() throws Exception {
+    private void onClientAccept() throws Exception {
         // accept new client
         SocketChannel clientSocket = _serverSocket.accept();
 
@@ -191,7 +192,7 @@ public final class TCPServer implements Runnable {
     /*
      * READING
      */
-    public void onClientRead(SelectionKey key) throws Exception {
+    private void onClientRead(SelectionKey key) throws Exception {
         if (!(key.channel() instanceof SocketChannel)) {
             return;
         }
@@ -237,7 +238,8 @@ public final class TCPServer implements Runnable {
         } else {
             boolean result = _serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
-                // TODO: call NonBroadcastPacketReceivedEvent on ServerSide
+                // call PacketReceivedEvent on ServerSide
+                _pluginManager.callEvent(new ServerSidePacketReceivedEvent(client, packet));
             }
         }
     }

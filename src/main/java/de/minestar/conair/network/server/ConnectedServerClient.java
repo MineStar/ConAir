@@ -40,7 +40,7 @@ public final class ConnectedServerClient {
         _packetQueue = new PacketQueue();
     }
 
-    public boolean readFrom(SocketChannel channel) throws Exception {
+    boolean readFrom(SocketChannel channel) throws Exception {
         int b = 0;
         try {
             b = channel.read(_inBuffer.getBuffer());

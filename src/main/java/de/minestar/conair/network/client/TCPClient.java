@@ -169,7 +169,7 @@ public final class TCPClient implements Runnable {
     /*
      * READING
      */
-    public final void onClientRead() throws Exception {
+    private final void onClientRead() throws Exception {
         // When readfrom fails the client has disconnected
         if (!_client.readFrom(_socketChannel)) {
             _isRunning = false;
