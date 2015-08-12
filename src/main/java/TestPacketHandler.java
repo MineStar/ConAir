@@ -25,4 +25,20 @@ public class TestPacketHandler extends ClientPacketHandler {
         System.out.println(packet.getMessage());
     }
 
+//    public void handleResourcePacket(ResourcePacket packet) {
+//        System.out.println("packet received...");
+//        File file = new File(packet.getFileName());
+//        if (file.exists()) {
+//            file.delete();
+//        }
+//
+//        try {
+//            ByteArrayOutputStream bos = new ByteArrayOutputStream(packet.getData().length);
+//            bos.write(packet.getData());
+//            bos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
 }

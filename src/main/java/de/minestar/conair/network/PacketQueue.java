@@ -71,7 +71,7 @@ public final class PacketQueue {
     }
 
     public boolean packPacket(PacketBuffer packetBuffer) {
-        if (this.isActive()) {
+        if (isActive()) {
             packetBuffer.clear();
             boolean result = _activePacket.pack(packetBuffer);
             packetBuffer.getBuffer().flip();

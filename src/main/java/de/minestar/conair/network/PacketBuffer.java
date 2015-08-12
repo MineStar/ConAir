@@ -34,7 +34,7 @@ public final class PacketBuffer {
     }
 
     public PacketBuffer() {
-        this(4096);
+        this(32 * 1000);
     }
 
     public PacketBuffer clear() {

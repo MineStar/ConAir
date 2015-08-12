@@ -125,8 +125,12 @@ public abstract class NetworkPacket {
             buffer.writeString((String) value);
             return true;
         }
+
         // arrays should always be stored as xml
         if (value.getClass().isArray()) {
+            System.out.println("capacity: " + buffer.getBuffer().capacity());
+            System.out.println("len: " + convertObjectToString(value).length());
+            System.out.println("rem: " + buffer.getBuffer().remaining());
             buffer.writeString(convertObjectToString(value));
             return true;
         }

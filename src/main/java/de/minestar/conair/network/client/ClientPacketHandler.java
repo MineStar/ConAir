@@ -35,7 +35,7 @@ public abstract class ClientPacketHandler {
 
     public ClientPacketHandler() {
         _packetQueue = new PacketQueue();
-        _packetBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4096));
+        _packetBuffer = new PacketBuffer();
     }
 
     final boolean isPacketComplete(ByteBuffer buffer) {

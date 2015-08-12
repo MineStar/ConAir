@@ -25,22 +25,22 @@ import java.nio.channels.SocketChannel;
 public final class ConnectedClient {
 
     private final ByteBuffer _inBuffer = ByteBuffer.allocateDirect(32 * 1024);
-    private final ByteBuffer _outBuffer = ByteBuffer.allocateDirect(4 * 1024);
+    private final ByteBuffer _outBuffer = ByteBuffer.allocateDirect(32 * 1024);
 
-    private boolean dataToSend = false;
+    private boolean _dataToSend = false;
 
-    private String name;
+    private String _name;
 
     public ConnectedClient(String name) {
-        this.name = name;
+        _name = name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        _name = name;
     }
 
     public String getName() {
-        return name;
+        return _name;
     }
 
     boolean readFrom(SocketChannel channel) throws Exception {
@@ -54,16 +54,16 @@ public final class ConnectedClient {
     }
 
     void addByteBuffer(ByteBuffer buffer) {
-        if (!this.dataToSend) {
+        if (!_dataToSend) {
             _outBuffer.put(buffer);
             _outBuffer.flip();
             buffer.rewind();
-            this.dataToSend = true;
+            _dataToSend = true;
         }
     }
 
     boolean hasDataToSend() {
-        return dataToSend;
+        return _dataToSend;
     }
 
     boolean write(SocketChannel channel) throws IOException {
@@ -74,7 +74,7 @@ public final class ConnectedClient {
             return false;
         }
         if (b == 0) {
-            dataToSend = false;
+            _dataToSend = false;
             _outBuffer.clear();
         }
         return b != -1;

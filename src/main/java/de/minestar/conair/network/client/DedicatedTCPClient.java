@@ -47,6 +47,7 @@ public class DedicatedTCPClient {
             throw e;
         }
     }
+
     @SuppressWarnings("deprecation")
     public void stop() {
         if (_client != null) {
