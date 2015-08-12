@@ -50,7 +50,7 @@ public final class TCPServer implements Runnable {
     private ServerSidePacketHandler _serverSidePacketHandler;
     private PluginManager _pluginManager;
 
-    public TCPServer(int port, List<String> addressWhitelist) throws Exception {
+    public TCPServer(int port, List<String> addressWhitelist) throws IOException {
         System.out.println("--------------------");
         System.out.println("Starting server on port " + port + "...");
 

@@ -18,6 +18,7 @@
 
 package de.minestar.conair.network.server;
 
+import java.io.IOException;
 import java.util.List;
 
 import de.minestar.conair.network.server.api.EventListener;
@@ -33,11 +34,15 @@ public class DedicatedTCPServer {
     private Thread _serverThread;
     private PluginManager _pluginManager;
 
-    public DedicatedTCPServer(int port, List<String> whiteList) {
+    public DedicatedTCPServer(int port) throws IOException {
+        this(port, null);
+    }
+
+    public DedicatedTCPServer(int port, List<String> whiteList) throws IOException {
         this(port, whiteList, DEFAULT_PLUGINFOLDER);
     }
 
-    public DedicatedTCPServer(int port, List<String> whiteList, String pluginFolder) {
+    public DedicatedTCPServer(int port, List<String> whiteList, String pluginFolder) throws IOException {
         try {
             _port = port;
             _server = new TCPServer(port, whiteList);
@@ -56,8 +61,8 @@ public class DedicatedTCPServer {
             _serverThread = new Thread(_server);
             _serverThread.start();
         } catch (Exception e) {
-            e.printStackTrace();
             stop();
+            throw e;
         }
     }
 

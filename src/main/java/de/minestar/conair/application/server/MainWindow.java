@@ -190,7 +190,7 @@ public class MainWindow extends JFrame {
                 port = -1;
                 break;
             }
-            input = input.replace(" ", "");
+            input = input.replaceAll(" ", "");
             try {
                 port = Integer.valueOf(input);
                 inputCorrect = true;
