@@ -142,19 +142,21 @@ public final class TCPServer implements Runnable {
      * STOPPING
      */
     public void stop() {
-        _isRunning = false;
-        System.out.println("--------------------");
-        System.out.println("Stopping server...");
-        try {
-            _selector.close();
-            _serverSocket.socket().close();
-            _serverSocket.socket().getChannel().close();
-            _serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (_isRunning) {
+            _isRunning = false;
+            System.out.println("--------------------");
+            System.out.println("Stopping server...");
+            try {
+                _selector.close();
+                _serverSocket.socket().close();
+                _serverSocket.socket().getChannel().close();
+                _serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Server stopped!");
+            System.out.println("--------------------");
         }
-        System.out.println("Server stopped!");
-        System.out.println("--------------------");
     }
 
     /*
