@@ -25,10 +25,10 @@ import de.minestar.conair.network.packets.RegisterOKPacket;
 
 public class ClientSidePacketHandler extends AbstractClientPacketHandler {
 
-    private final TCPClient client;
+    private final TCPClient _client;
 
     public ClientSidePacketHandler(TCPClient client) {
-        this.client = client;
+        this._client = client;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class ClientSidePacketHandler extends AbstractClientPacketHandler {
 
     private void handleRegisterDenyPacket(RegisterDenyPacket packet) {
         System.out.println("Server denied connection! Disconnecting...");
-        this.client.stop();
+        _client.stop();
     }
 
     private void handleRegisterOKPacket(RegisterOKPacket packet) {

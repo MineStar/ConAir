@@ -22,20 +22,20 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public abstract class CancellablePacketEvent extends PacketEvent implements Cancellable {
 
-    private boolean cancelled;
+    private boolean _cancelled;
 
     public CancellablePacketEvent(final NetworkPacket packet) {
         super(packet);
-        this.cancelled = false;
+        _cancelled = false;
     }
 
     @Override
     public boolean isCancelled() {
-        return this.cancelled;
+        return _cancelled;
     }
 
     @Override
     public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
+        _cancelled = cancelled;
     }
 }

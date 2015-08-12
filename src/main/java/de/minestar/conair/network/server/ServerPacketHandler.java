@@ -28,12 +28,12 @@ import de.minestar.conair.network.server.packets.RAWPacket;
 
 public final class ServerPacketHandler {
 
-    protected final PacketBuffer packetBuffer;
+    protected final PacketBuffer _packetBuffer;
 
     public static final byte PACKET_SEPERATOR = 3;
 
     public ServerPacketHandler(ByteBuffer buffer) {
-        this.packetBuffer = new PacketBuffer(buffer);
+        _packetBuffer = new PacketBuffer(buffer);
     }
 
     // //////////////////////////////////////////////////////////
@@ -57,9 +57,9 @@ public final class ServerPacketHandler {
     }
 
     public <P extends NetworkPacket> boolean packPacket(P packet) {
-        packetBuffer.clear();
-        boolean result = packet.pack(packetBuffer);
-        packetBuffer.getBuffer().flip();
+        _packetBuffer.clear();
+        boolean result = packet.pack(_packetBuffer);
+        _packetBuffer.getBuffer().flip();
         return result;
     }
 
@@ -74,9 +74,9 @@ public final class ServerPacketHandler {
         int len = src.getInt();
         int limit = src.limit();
         src.limit(len);
-        packetBuffer.clear();
-        packetBuffer.writeByteBuffer(src);
-        packetBuffer.getBuffer().flip();
+        _packetBuffer.clear();
+        _packetBuffer.writeByteBuffer(src);
+        _packetBuffer.getBuffer().flip();
         src.limit(limit);
         src.compact();
 
@@ -85,7 +85,7 @@ public final class ServerPacketHandler {
 
         // reset
         src.rewind();
-        packetBuffer.clear();
+        _packetBuffer.clear();
 
         // return
         return packet;
@@ -99,14 +99,14 @@ public final class ServerPacketHandler {
             datalength -= 8;
 
             // get packettype
-            int packetID = packetBuffer.readInt();
+            int packetID = _packetBuffer.readInt();
             Class<P> packetClazz = PacketType.getClassByID(packetID);
 
             // packet not found...
             if (packetClazz == null) {
                 // read data...
                 byte[] data = new byte[datalength];
-                packetBuffer.readBytes(data);
+                _packetBuffer.readBytes(data);
 
                 // ... and create a new PacketBuffer
                 PacketBuffer newBuffer = new PacketBuffer(data.length);
@@ -125,7 +125,7 @@ public final class ServerPacketHandler {
 
             // read data...
             byte[] data = new byte[datalength];
-            packetBuffer.readBytes(data);
+            _packetBuffer.readBytes(data);
 
             // ... and create a new PacketBuffer
             PacketBuffer newBuffer = new PacketBuffer(data.length);

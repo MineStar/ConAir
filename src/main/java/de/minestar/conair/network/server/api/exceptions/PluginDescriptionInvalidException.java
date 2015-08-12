@@ -22,14 +22,14 @@ public class PluginDescriptionInvalidException extends Exception {
 
     private static final long serialVersionUID = -7840086881453856345L;
 
-    private final String message;
+    private final String _message;
 
     public PluginDescriptionInvalidException(String message) {
-        this.message = message;
+        _message = message;
     }
 
     @Override
     public String getMessage() {
-        return this.message;
+        return _message;
     }
 }

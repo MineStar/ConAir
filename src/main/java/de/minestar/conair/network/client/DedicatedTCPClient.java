@@ -22,58 +22,58 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public class DedicatedTCPClient {
 
-    private Thread clientThread;
-    private TCPClient client;
+    private Thread _clientThread;
+    private TCPClient _client;
 
-    private String clientName;
-    private ClientPacketHandler packetHandler;
-    private String host;
-    private int port;
+    private String _clientName;
+    private ClientPacketHandler _packetHandler;
+    private String _host;
+    private int _port;
 
     public DedicatedTCPClient(String clientName, ClientPacketHandler packetHandler, String host, int port) {
         try {
-            this.clientName = clientName;
-            this.packetHandler = packetHandler;
-            this.host = host;
-            this.port = port;
+            _clientName = clientName;
+            _packetHandler = packetHandler;
+            _host = host;
+            _port = port;
 
-            this.client = new TCPClient(clientName, packetHandler, host, port);
-            this.clientThread = new Thread(this.client);
-            this.clientThread.start();
+            _client = new TCPClient(clientName, packetHandler, host, port);
+            _clientThread = new Thread(_client);
+            _clientThread.start();
         } catch (Exception e) {
             e.printStackTrace();
-            this.stop();
+            stop();
         }
     }
     @SuppressWarnings("deprecation")
     public void stop() {
-        if (this.client != null) {
-            this.client.stop();
-            this.client = null;
-            if (this.clientThread != null) {
-                this.clientThread.stop();
-                this.clientThread = null;
+        if (_client != null) {
+            _client.stop();
+            _client = null;
+            if (_clientThread != null) {
+                _clientThread.stop();
+                _clientThread = null;
             }
         }
     }
 
     public String getClientName() {
-        return clientName;
+        return _clientName;
     }
 
     public ClientPacketHandler getPacketHandler() {
-        return packetHandler;
+        return _packetHandler;
     }
 
     public String getHost() {
-        return host;
+        return _host;
     }
 
     public int getPort() {
-        return port;
+        return _port;
     }
 
     public <P extends NetworkPacket> void sendPacket(P packet) {
-        this.client.sendPacket(packet);
+        _client.sendPacket(packet);
     }
 }

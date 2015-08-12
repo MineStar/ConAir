@@ -34,52 +34,46 @@ import de.minestar.conair.network.packets.RegisterRequestPacket;
 
 public final class TCPClient implements Runnable {
 
-    private Selector selector;
-
-    private SocketChannel socketChannel;
-
-    private ConnectedClient client;
-
-    private boolean isRunning;
-
-    private ClientPacketHandler packetHandler;
-
-    private final String clientName;
-
-    private ClientSidePacketHandler clientSidePacketHandler;
+    private Selector _selector;
+    private SocketChannel _socketChannel;
+    private ConnectedClient _client;
+    private boolean _isRunning;
+    private final String _clientName;
+    private ClientPacketHandler _packetHandler;
+    private ClientSidePacketHandler _clientSidePacketHandler;
 
     public TCPClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
-        this.clientName = name;
+        _clientName = name;
 
-        this.packetHandler = packetHandler;
+        _packetHandler = packetHandler;
 
-        this.selector = Selector.open();
+        _selector = Selector.open();
 
         // Create Connection to the server
-        this.socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
+        _socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
 
         // Non-Blocking for Selector activity
-        this.socketChannel.configureBlocking(false);
-        this.socketChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        _socketChannel.configureBlocking(false);
+        _socketChannel.register(_selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 
-        this.isRunning = true;
+        _isRunning = true;
 
-        this.client = new ConnectedClient("localhost");
+        _client = new ConnectedClient("localhost");
 
         // create ClientSidePacketHandler
-        this.clientSidePacketHandler = new ClientSidePacketHandler(this);
+        _clientSidePacketHandler = new ClientSidePacketHandler(this);
 
         // register standardpackets
-        this.registerStandardPacketTypes();
+        registerStandardPacketTypes();
 
         // send RegisterRequestPacket
-        this.sendPacket(new RegisterRequestPacket(this.clientName));
+        sendPacket(new RegisterRequestPacket(_clientName));
     }
 
     private final void registerStandardPacketTypes() {
-        this.registerSinglePacket(RegisterRequestPacket.class);
-        this.registerSinglePacket(RegisterOKPacket.class);
-        this.registerSinglePacket(RegisterDenyPacket.class);
+        registerSinglePacket(RegisterRequestPacket.class);
+        registerSinglePacket(RegisterOKPacket.class);
+        registerSinglePacket(RegisterDenyPacket.class);
     }
 
     private final <P extends NetworkPacket> void registerSinglePacket(Class<P> packetClazz) {
@@ -95,8 +89,8 @@ public final class TCPClient implements Runnable {
     @Override
     public final void run() {
         try {
-            while (isRunning) {
-                int rdyChannels = selector.select();
+            while (_isRunning) {
+                int rdyChannels = _selector.select();
 
                 // No channel want something
                 if (rdyChannels == 0) {
@@ -104,7 +98,7 @@ public final class TCPClient implements Runnable {
                 }
 
                 // Iterate over all channel which want something
-                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                Iterator<SelectionKey> it = _selector.selectedKeys().iterator();
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
                     // client want to send something
@@ -124,7 +118,7 @@ public final class TCPClient implements Runnable {
             if (!(e instanceof CancelledKeyException)) {
                 e.printStackTrace();
             }
-            isRunning = false;
+            _isRunning = false;
         }
     }
 
@@ -133,9 +127,9 @@ public final class TCPClient implements Runnable {
      */
     public final void stop() {
         try {
-            this.isRunning = false;
-            System.out.println("Stopping client '" + this.clientName + "' ...");
-            this.socketChannel.socket().close();
+            _isRunning = false;
+            System.out.println("Stopping client '" + _clientName + "' ...");
+            _socketChannel.socket().close();
             System.out.println("Client stopped!");
         } catch (IOException e) {
             e.printStackTrace();
@@ -147,24 +141,24 @@ public final class TCPClient implements Runnable {
      */
     public final void onClientRead() throws Exception {
         // When readfrom fails the client has disconnected
-        if (!client.readFrom(this.socketChannel)) {
-            isRunning = false;
+        if (!_client.readFrom(_socketChannel)) {
+            _isRunning = false;
             return;
         }
 
-        if (packetHandler.isPacketComplete(client.getClientBuffer())) {
+        if (_packetHandler.isPacketComplete(_client.getClientBuffer())) {
             // extract the packet
-            NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            NetworkPacket packet = _packetHandler.extractPacket(_client.getClientBuffer());
 
             // if we have found a packet, we handle it...
             if (packet != null) {
-                this.handlePacket(packet);
+                handlePacket(packet);
             }
 
             // clear the clientBuffer
-            client.getClientBuffer().clear();
+            _client.getClientBuffer().clear();
         } else {
-            System.out.println("Packet incomplete: " + client.getClientBuffer());
+            System.out.println("Packet incomplete: " + _client.getClientBuffer());
         }
     }
 
@@ -172,8 +166,8 @@ public final class TCPClient implements Runnable {
      * HANDLING
      */
     private <P extends NetworkPacket> void handlePacket(P packet) {
-        if (!this.clientSidePacketHandler.handlePacket(packet)) {
-            this.packetHandler.handlePacket(packet);
+        if (!_clientSidePacketHandler.handlePacket(packet)) {
+            _packetHandler.handlePacket(packet);
         }
     }
 
@@ -181,22 +175,22 @@ public final class TCPClient implements Runnable {
      * QUEUEING
      */
     public final <P extends NetworkPacket> void sendPacket(P packet) {
-        this.packetHandler.sendPacket(packet);
+        _packetHandler.sendPacket(packet);
     }
 
     /*
      * WRITING
      */
     private final void onClientWrite() throws Exception {
-        if (client.hasDataToSend()) {
+        if (_client.hasDataToSend()) {
             // If write fails the client has disconnected
-            if (!client.write(socketChannel)) {
-                this.stop();
+            if (!_client.write(_socketChannel)) {
+                stop();
                 return;
             }
         } else {
-            if (!client.hasDataToSend()) {
-                this.packetHandler.updateQueue(client);
+            if (!_client.hasDataToSend()) {
+                _packetHandler.updateQueue(_client);
             }
         }
     }

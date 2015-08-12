@@ -28,10 +28,10 @@ public class DedicatedTCPServer {
 
     private static final String DEFAULT_PLUGINFOLDER = "plugins" + System.getProperty("file.separator");
 
-    private int port;
-    private TCPServer server;
-    private Thread serverThread;
-    private PluginManager pluginManager;
+    private int _port;
+    private TCPServer _server;
+    private Thread _serverThread;
+    private PluginManager _pluginManager;
 
     public DedicatedTCPServer(int port, List<String> whiteList) {
         this(port, whiteList, DEFAULT_PLUGINFOLDER);
@@ -39,49 +39,49 @@ public class DedicatedTCPServer {
 
     public DedicatedTCPServer(int port, List<String> whiteList, String pluginFolder) {
         try {
-            this.port = port;
-            this.server = new TCPServer(port, whiteList);
+            _port = port;
+            _server = new TCPServer(port, whiteList);
 
             if (!pluginFolder.endsWith(System.getProperty("file.separator"))) {
                 pluginFolder += System.getProperty("file.separator");
             }
 
             // load plugins
-            this.pluginManager = new PluginManager(this, pluginFolder);
-            this.pluginManager.loadPlugins();
+            _pluginManager = new PluginManager(this, pluginFolder);
+            _pluginManager.loadPlugins();
 
-            this.server.setPluginManager(this.pluginManager);
+            _server.setPluginManager(_pluginManager);
 
             // start Thread
-            this.serverThread = new Thread(this.server);
-            this.serverThread.start();
+            _serverThread = new Thread(_server);
+            _serverThread.start();
         } catch (Exception e) {
             e.printStackTrace();
-            this.stop();
+            stop();
         }
     }
 
     @SuppressWarnings("deprecation")
     public void stop() {
-        if (this.server != null) {
+        if (_server != null) {
             // disable plugins
-            this.pluginManager.disablePlugins();
+            _pluginManager.disablePlugins();
 
             // stop the server
-            this.server.stop();
-            this.server = null;
-            if (this.serverThread != null) {
-                this.serverThread.stop();
-                this.serverThread = null;
+            _server.stop();
+            _server = null;
+            if (_serverThread != null) {
+                _serverThread.stop();
+                _serverThread = null;
             }
         }
     }
 
     public void registerListener(EventListener eventListener, ServerPlugin serverPlugin) {
-        this.pluginManager.registerEvents(eventListener, serverPlugin);
+        _pluginManager.registerEvents(eventListener, serverPlugin);
     }
 
     public int getPort() {
-        return port;
+        return _port;
     }
 }

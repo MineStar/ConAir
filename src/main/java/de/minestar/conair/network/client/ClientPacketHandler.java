@@ -28,12 +28,12 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public abstract class ClientPacketHandler {
 
-    private final PacketBuffer packetBuffer;
-    private final PacketQueue packetQueue;
+    private final PacketBuffer _packetBuffer;
+    private final PacketQueue _packetQueue;
 
     public ClientPacketHandler() {
-        this.packetQueue = new PacketQueue();
-        this.packetBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4096));
+        _packetQueue = new PacketQueue();
+        _packetBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4096));
     }
 
     protected final boolean isPacketComplete(ByteBuffer buffer) {
@@ -51,11 +51,11 @@ public abstract class ClientPacketHandler {
     }
 
     public final <P extends NetworkPacket> boolean sendPacket(P packet) {
-        if (!this.packetQueue.addPacket(packet)) {
+        if (!_packetQueue.addPacket(packet)) {
             System.out.println("ERROR: Packet '" + packet.getClass().getSimpleName() + "' is not registered!");
             return false;
         } else {
-            return this.packetQueue.getSize() == 1;
+            return _packetQueue.getSize() == 1;
         }
     }
 
@@ -64,9 +64,9 @@ public abstract class ClientPacketHandler {
         int len = src.getInt();
         int limit = src.limit();
         src.limit(len);
-        packetBuffer.clear();
-        packetBuffer.writeByteBuffer(src);
-        packetBuffer.getBuffer().flip();
+        _packetBuffer.clear();
+        _packetBuffer.writeByteBuffer(src);
+        _packetBuffer.getBuffer().flip();
         src.limit(limit);
         src.compact();
         return createPacket(len);
@@ -79,7 +79,7 @@ public abstract class ClientPacketHandler {
             datalength -= 8;
 
             // get packettype
-            int packetID = packetBuffer.readInt();
+            int packetID = _packetBuffer.readInt();
             Class<P> packetClazz = PacketType.getClassByID(packetID);
 
             // packet not found...
@@ -95,7 +95,7 @@ public abstract class ClientPacketHandler {
 
             // read data...
             byte[] data = new byte[datalength];
-            packetBuffer.readBytes(data);
+            _packetBuffer.readBytes(data);
 
             // ... and create a new PacketBuffer
             PacketBuffer newBuffer = new PacketBuffer(data.length);
@@ -110,9 +110,9 @@ public abstract class ClientPacketHandler {
     }
 
     protected final boolean updateQueue(ConnectedClient client) {
-        if (this.packetQueue.updateQueue()) {
-            this.packetQueue.packPacket(this.packetBuffer);
-            client.addByteBuffer(packetBuffer.getBuffer());
+        if (_packetQueue.updateQueue()) {
+            _packetQueue.packPacket(_packetBuffer);
+            client.addByteBuffer(_packetBuffer.getBuffer());
             return true;
         }
         return false;

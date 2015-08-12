@@ -25,12 +25,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class PluginClassLoader extends URLClassLoader {
-    private final PluginLoader loader;
-    private final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
+    private final PluginLoader _loader;
+    private final Map<String, Class<?>> _classes = new HashMap<String, Class<?>>();
 
     public PluginClassLoader(PluginLoader loader, URL[] urls, ClassLoader parent) {
         super(urls, parent);
-        this.loader = loader;
+        _loader = loader;
     }
 
     protected Class<?> findClass(String name) throws ClassNotFoundException {
@@ -38,24 +38,24 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     protected Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        Class<?> result = classes.get(name);
+        Class<?> result = _classes.get(name);
         if (result == null) {
             if (checkGlobal) {
-                result = loader.getClassByName(name);
+                result = _loader.getClassByName(name);
             }
             if (result == null) {
                 result = super.findClass(name);
 
                 if (result != null) {
-                    loader.setClass(name, result);
+                    _loader.setClass(name, result);
                 }
             }
-            classes.put(name, result);
+            _classes.put(name, result);
         }
         return result;
     }
 
     public Set<String> getClasses() {
-        return this.classes.keySet();
+        return _classes.keySet();
     }
 }

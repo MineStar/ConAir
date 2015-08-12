@@ -31,13 +31,13 @@ public enum Priority {
 
     MONITOR(5);
 
-    private final int ID;
+    private final int _id;
 
     private Priority(int slot) {
-        this.ID = slot;
+        _id = slot;
     }
 
     public int getID() {
-        return this.ID;
+        return _id;
     }
 }

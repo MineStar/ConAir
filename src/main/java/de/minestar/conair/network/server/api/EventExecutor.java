@@ -27,16 +27,16 @@ import de.minestar.conair.network.server.api.exceptions.EventException;
 
 public class EventExecutor {
 
-    private final EventListener eventListener;
-    private final Method method;
-    private final Priority priority;
-    private final boolean ignoreCancelled;
+    private final EventListener _eventListener;
+    private final Method _method;
+    private final Priority _priority;
+    private final boolean _ignoreCancelled;
 
     public EventExecutor(EventListener eventListener, Method method, Priority priority, boolean ignoreCancelled) {
-        this.eventListener = eventListener;
-        this.method = method;
-        this.priority = priority;
-        this.ignoreCancelled = ignoreCancelled;
+        _eventListener = eventListener;
+        _method = method;
+        _priority = priority;
+        _ignoreCancelled = ignoreCancelled;
     }
 
     public void execute(Event event) throws EventException {
@@ -44,7 +44,7 @@ public class EventExecutor {
             if (!Event.class.isAssignableFrom(event.getClass())) {
                 return;
             }
-            this.method.invoke(this.eventListener, event);
+            _method.invoke(_eventListener, event);
         } catch (InvocationTargetException ex) {
             throw new EventException(ex.getCause());
         } catch (Throwable t) {
@@ -53,10 +53,10 @@ public class EventExecutor {
     }
 
     public Priority getPriority() {
-        return priority;
+        return _priority;
     }
 
     public boolean isIgnoreCancelled() {
-        return ignoreCancelled;
+        return _ignoreCancelled;
     }
 }

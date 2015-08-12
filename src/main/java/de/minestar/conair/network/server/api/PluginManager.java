@@ -31,53 +31,52 @@ import de.minestar.conair.network.server.api.exceptions.EventException;
 
 public class PluginManager {
 
-    private PluginLoader pluginLoader;
-    private DedicatedTCPServer dedicatedTCPServer;
-    private final String pluginFolder;
+    private PluginLoader _pluginLoader;
+    private DedicatedTCPServer _dedicatedTCPServer;
+    private final String _pluginFolder;
 
-    private HashMap<String, ServerPlugin> pluginMap;
-
-    private final Map<String, List<EventExecutor>> registeredEvents = new HashMap<String, List<EventExecutor>>();
+    private HashMap<String, ServerPlugin> _pluginMap;
+    private final Map<String, List<EventExecutor>> _registeredEvents = new HashMap<String, List<EventExecutor>>();
 
     public PluginManager(DedicatedTCPServer dedicatedTCPServer) {
         this(dedicatedTCPServer, "plugins" + System.getProperty("file.separator"));
     }
 
     public PluginManager(DedicatedTCPServer dedicatedTCPServer, String pluginFolder) {
-        this.pluginLoader = new PluginLoader();
-        this.pluginMap = new HashMap<String, ServerPlugin>();
-        this.dedicatedTCPServer = dedicatedTCPServer;
-        this.pluginFolder = pluginFolder;
+        _pluginLoader = new PluginLoader();
+        _pluginMap = new HashMap<String, ServerPlugin>();
+        _dedicatedTCPServer = dedicatedTCPServer;
+        _pluginFolder = pluginFolder;
     }
 
     public void loadPlugins() {
         // create PluginFolder
-        File pluginFolder = new File(this.pluginFolder);
+        File pluginFolder = new File(_pluginFolder);
         pluginFolder.mkdir();
 
         // disable old plugins first
-        this.disablePlugins();
+        disablePlugins();
 
         // iterate over files...
         for (File jarFile : pluginFolder.listFiles()) {
             if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
                 // retrieve ServerPlugin
-                ServerPlugin plugin = pluginLoader.loadPlugin(this, this.dedicatedTCPServer, jarFile);
+                ServerPlugin plugin = _pluginLoader.loadPlugin(this, _dedicatedTCPServer, jarFile);
                 if (plugin != null) {
                     // pluginnames MUST be unique!
-                    if (this.pluginMap.containsKey(plugin.getPluginName())) {
+                    if (_pluginMap.containsKey(plugin.getPluginName())) {
                         System.out.println("A plugin named '" + plugin.getPluginName() + "' is already registered! Ignoring '" + jarFile.getName() + "'...");
                         continue;
                     } else {
-                        this.pluginMap.put(plugin.getPluginName(), plugin);
+                        _pluginMap.put(plugin.getPluginName(), plugin);
                     }
                 }
             }
         }
 
         // enable plugins
-        System.out.println("Plugins found: " + this.pluginMap.size());
-        this.enablePlugins();
+        System.out.println("Plugins found: " + _pluginMap.size());
+        enablePlugins();
     }
 
     /**
@@ -85,7 +84,7 @@ public class PluginManager {
      */
     private void enablePlugins() {
         ArrayList<ServerPlugin> failedPlugins = new ArrayList<ServerPlugin>();
-        for (ServerPlugin plugin : this.pluginMap.values()) {
+        for (ServerPlugin plugin : _pluginMap.values()) {
             try {
                 // enable the plugin
                 System.out.println("Enabling plugin: '" + plugin.getPluginName() + "'");
@@ -100,7 +99,7 @@ public class PluginManager {
 
         // remove all failed pluginsFS
         for (ServerPlugin plugin : failedPlugins) {
-            this.pluginMap.remove(plugin.getPluginName());
+            _pluginMap.remove(plugin.getPluginName());
         }
     }
 
@@ -108,7 +107,7 @@ public class PluginManager {
      * Disables all ServerPlugins
      */
     public void disablePlugins() {
-        for (ServerPlugin plugin : this.pluginMap.values()) {
+        for (ServerPlugin plugin : _pluginMap.values()) {
             try {
                 // disable the plugin
                 System.out.println("Disabling plugin: '" + plugin.getPluginName() + "'");
@@ -119,7 +118,7 @@ public class PluginManager {
                 e.printStackTrace();
             }
         }
-        this.pluginMap.clear();
+        _pluginMap.clear();
     }
 
     /**
@@ -129,12 +128,12 @@ public class PluginManager {
      */
     public final void registerEvents(EventListener eventListener, ServerPlugin serverPlugin) {
         // catch the eventlist
-        Map<Class<? extends Event>, List<EventExecutor>> executorMap = this.pluginLoader.createEventExecutorList(eventListener, serverPlugin);
+        Map<Class<? extends Event>, List<EventExecutor>> executorMap = _pluginLoader.createEventExecutorList(eventListener, serverPlugin);
 
         // finally register the events
         for (Map.Entry<Class<? extends Event>, List<EventExecutor>> event : executorMap.entrySet()) {
             for (EventExecutor executor : event.getValue()) {
-                this.registerSingleEvent(eventListener, serverPlugin, event.getKey(), executor);
+                registerSingleEvent(eventListener, serverPlugin, event.getKey(), executor);
             }
         }
     }
@@ -149,12 +148,12 @@ public class PluginManager {
      */
     private void registerSingleEvent(EventListener eventListener, ServerPlugin serverPlugin, Class<? extends Event> clazz, EventExecutor executor) {
         // get the current list for the eventclass
-        List<EventExecutor> executorList = this.registeredEvents.get(clazz.getSimpleName());
+        List<EventExecutor> executorList = _registeredEvents.get(clazz.getSimpleName());
 
         // create a new list, if there is none
         if (executorList == null) {
             executorList = new ArrayList<EventExecutor>();
-            this.registeredEvents.put(clazz.getSimpleName(), executorList);
+            _registeredEvents.put(clazz.getSimpleName(), executorList);
         }
 
         // add the EventExecutor to the list
@@ -162,16 +161,16 @@ public class PluginManager {
     }
 
     public DedicatedTCPServer getDedicatedTCPServer() {
-        return dedicatedTCPServer;
+        return _dedicatedTCPServer;
     }
 
     public String getPluginFolder() {
-        return pluginFolder;
+        return _pluginFolder;
     }
 
     public void callEvent(Event event) {
         // get the current list for the eventclass
-        List<EventExecutor> executorList = this.registeredEvents.get(event.getClass().getSimpleName());
+        List<EventExecutor> executorList = _registeredEvents.get(event.getClass().getSimpleName());
 
         // return, if there is no event
         if (executorList == null) {

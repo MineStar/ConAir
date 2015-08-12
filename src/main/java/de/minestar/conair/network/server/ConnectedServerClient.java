@@ -28,24 +28,22 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class ConnectedServerClient {
 
-    private final PacketBuffer inBuffer = new PacketBuffer(ByteBuffer.allocateDirect(32 * 1024));
-    private final PacketBuffer outBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4 * 1024));
+    private final PacketBuffer _inBuffer = new PacketBuffer(ByteBuffer.allocateDirect(32 * 1024));
+    private final PacketBuffer _outBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4 * 1024));
 
-    private boolean dataToSend = false;
-
-    private String name;
-
-    private final PacketQueue packetQueue;
+    private String _name;
+    private boolean _dataToSend = false;
+    private final PacketQueue _packetQueue;
 
     public ConnectedServerClient(String name) {
-        this.name = name;
-        this.packetQueue = new PacketQueue();
+        _name = name;
+        _packetQueue = new PacketQueue();
     }
 
     public boolean readFrom(SocketChannel channel) throws Exception {
         int b = 0;
         try {
-            b = channel.read(inBuffer.getBuffer());
+            b = channel.read(_inBuffer.getBuffer());
         } catch (IOException e) {
             return false;
         }
@@ -53,47 +51,46 @@ public final class ConnectedServerClient {
     }
 
     public <P extends NetworkPacket> void sendPacket(P packet) {
-        this.packetQueue.addUnsafePacket(packet);
-        boolean wasEmpty = this.packetQueue.getSize() == 1;
+        _packetQueue.addUnsafePacket(packet);
+        boolean wasEmpty = _packetQueue.getSize() == 1;
         // the queue was empty, so we send the first packet
         if (wasEmpty) {
-            if (this.packetQueue.updateQueue()) {
-                this.packetQueue.packPacket(this.outBuffer);
-                this.dataToSend = true;
+            if (_packetQueue.updateQueue()) {
+                _packetQueue.packPacket(_outBuffer);
+                _dataToSend = true;
             }
         }
     }
 
     public boolean hasDataToSend() {
-        return dataToSend;
+        return _dataToSend;
     }
 
     public boolean write(SocketChannel channel) throws IOException {
         int b = 0;
         try {
-            b = channel.write(outBuffer.getBuffer());
+            b = channel.write(_outBuffer.getBuffer());
         } catch (IOException e) {
             return false;
         }
         if (b == 0) {
-            dataToSend = false;
-            this.outBuffer.clear();
+            _dataToSend = false;
+            _outBuffer.clear();
 
-            if (this.packetQueue.updateQueue()) {
-                this.packetQueue.packPacket(this.outBuffer);
-
-                this.dataToSend = true;
+            if (_packetQueue.updateQueue()) {
+                _packetQueue.packPacket(_outBuffer);
+                _dataToSend = true;
             }
         }
         return b != -1;
     }
 
     public String getName() {
-        return name;
+        return _name;
     }
 
     public ByteBuffer getClientBuffer() {
-        return inBuffer.getBuffer();
+        return _inBuffer.getBuffer();
     }
 
 }

@@ -30,39 +30,39 @@ import de.minestar.conair.network.server.api.PluginManager;
 
 public class ServerSidePacketHandler extends AbstractServerPacketHandler {
 
-    private final HashMap<String, ConnectedServerClient> registeredClients;
-    private PluginManager pluginManager;
+    private final HashMap<String, ConnectedServerClient> _registeredClients;
+    private PluginManager _pluginManager;
 
     public ServerSidePacketHandler() {
-        this.registeredClients = new HashMap<String, ConnectedServerClient>();
+        _registeredClients = new HashMap<String, ConnectedServerClient>();
     }
 
     public void setPluginManager(PluginManager pluginManager) {
-        this.pluginManager = pluginManager;
+        _pluginManager = pluginManager;
     }
 
     public PluginManager getPluginManager() {
-        return pluginManager;
+        return _pluginManager;
     }
 
     @Override
     public <P extends NetworkPacket> boolean handlePacket(ConnectedServerClient client, P packet) {
         if (packet.getPacketID() == PacketType.getID(RegisterRequestPacket.class)) {
-            this.handleRegisterRequestPacket(client, (RegisterRequestPacket) packet);
+            handleRegisterRequestPacket(client, (RegisterRequestPacket) packet);
             return true;
         }
         return false;
     }
 
     private void registerClient(ConnectedServerClient client, String clientName) {
-        this.registeredClients.put(clientName, client);
+        _registeredClients.put(clientName, client);
     }
 
     public void unregisterClient(ConnectedServerClient client) {
         String toRemoveClient = null;
 
         // find the client
-        for (Map.Entry<String, ConnectedServerClient> entry : this.registeredClients.entrySet()) {
+        for (Map.Entry<String, ConnectedServerClient> entry : _registeredClients.entrySet()) {
             if (entry.getValue().getName().equalsIgnoreCase(client.getName())) {
                 toRemoveClient = entry.getKey();
                 break;
@@ -71,17 +71,17 @@ public class ServerSidePacketHandler extends AbstractServerPacketHandler {
 
         // remove the client, if we have found one
         if (toRemoveClient != null) {
-            this.registeredClients.remove(toRemoveClient);
+            _registeredClients.remove(toRemoveClient);
         }
     }
 
     public boolean isClientRegistered(String clientName) {
-        return this.registeredClients.containsKey(clientName);
+        return _registeredClients.containsKey(clientName);
     }
 
     private void handleRegisterRequestPacket(ConnectedServerClient client, RegisterRequestPacket packet) {
-        if (!this.isClientRegistered(packet.getClientName())) {
-            this.registerClient(client, packet.getClientName());
+        if (!isClientRegistered(packet.getClientName())) {
+            registerClient(client, packet.getClientName());
             client.sendPacket(new RegisterOKPacket(packet.getClientName()));
         } else {
             System.out.println("Client '" + packet.getClientName() + "' is already registered!");

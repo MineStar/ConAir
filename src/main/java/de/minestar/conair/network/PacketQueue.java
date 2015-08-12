@@ -24,27 +24,27 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class PacketQueue {
 
-    private ConcurrentLinkedQueue<NetworkPacket> packetQueue;
-    private NetworkPacket activePacket;
-    private boolean active;
+    private ConcurrentLinkedQueue<NetworkPacket> _packetQueue;
+    private NetworkPacket _activePacket;
+    private boolean _active;
 
     public PacketQueue() {
-        this.packetQueue = new ConcurrentLinkedQueue<NetworkPacket>();
-        this.activePacket = null;
-        this.active = false;
+        _packetQueue = new ConcurrentLinkedQueue<NetworkPacket>();
+        _activePacket = null;
+        _active = false;
     }
 
     public <P extends NetworkPacket> boolean addUnsafePacket(P packet) {
-        synchronized (this.packetQueue) {
-            this.packetQueue.add(packet);
+        synchronized (_packetQueue) {
+            _packetQueue.add(packet);
             return true;
         }
     }
 
     public <P extends NetworkPacket> boolean addPacket(P packet) {
-        synchronized (this.packetQueue) {
+        synchronized (_packetQueue) {
             if (PacketType.getID(packet.getClass()) != null) {
-                this.packetQueue.add(packet);
+                _packetQueue.add(packet);
                 return true;
             }
             return false;
@@ -52,28 +52,28 @@ public final class PacketQueue {
     }
 
     public boolean updateQueue() {
-        synchronized (this.packetQueue) {
-            if (this.packetQueue.isEmpty()) {
+        synchronized (_packetQueue) {
+            if (_packetQueue.isEmpty()) {
                 return false;
             }
-            this.activePacket = this.packetQueue.poll();
-            this.active = (this.activePacket != null);
-            return this.active;
+            _activePacket = _packetQueue.poll();
+            _active = (_activePacket != null);
+            return _active;
         }
     }
 
     public boolean isActive() {
-        return active;
+        return _active;
     }
 
     public NetworkPacket getActivePacket() {
-        return activePacket;
+        return _activePacket;
     }
 
     public boolean packPacket(PacketBuffer packetBuffer) {
         if (this.isActive()) {
             packetBuffer.clear();
-            boolean result = this.activePacket.pack(packetBuffer);
+            boolean result = _activePacket.pack(packetBuffer);
             packetBuffer.getBuffer().flip();
             return result;
         }
@@ -81,7 +81,7 @@ public final class PacketQueue {
     }
 
     public int getSize() {
-        return this.packetQueue.size();
+        return _packetQueue.size();
     }
 
 }

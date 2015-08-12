@@ -22,17 +22,17 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public abstract class PacketEvent implements Event {
 
-    private NetworkPacket packet;
+    private NetworkPacket _packet;
 
     public PacketEvent(final NetworkPacket packet) {
-        this.packet = packet;
+        _packet = packet;
     }
 
     public NetworkPacket getPacket() {
-        return this.packet;
+        return _packet;
     }
 
     public int getPacketID() {
-        return this.packet.getPacketID();
+        return _packet.getPacketID();
     }
 }

@@ -40,41 +40,34 @@ import de.minestar.conair.network.server.api.events.BroadcastPacketReceivedEvent
 
 public final class TCPServer implements Runnable {
 
-    private final ByteBuffer networkBuffer;
-
-    private Selector selector;
-
-    private ServerSocketChannel serverSocket;
-
-    private boolean isRunning;
-
-    private ServerPacketHandler packetHandler;
-
-    private List<String> addressWhitelist;
-
-    private ServerSidePacketHandler serverSidePacketHandler;
-
-    private PluginManager pluginManager;
+    private final ByteBuffer _networkBuffer;
+    private Selector _selector;
+    private ServerSocketChannel _serverSocket;
+    private boolean _isRunning;
+    private List<String> _addressWhitelist;
+    private ServerPacketHandler _packetHandler;
+    private ServerSidePacketHandler _serverSidePacketHandler;
+    private PluginManager _pluginManager;
 
     public TCPServer(int port, List<String> addressWhitelist) throws Exception {
         System.out.println("--------------------");
         System.out.println("Starting server on port " + port + "...");
 
-        this.networkBuffer = ByteBuffer.allocateDirect(8 * 1024);
+        _networkBuffer = ByteBuffer.allocateDirect(8 * 1024);
 
-        this.packetHandler = new ServerPacketHandler(networkBuffer);
+        _packetHandler = new ServerPacketHandler(_networkBuffer);
 
-        this.selector = Selector.open();
+        _selector = Selector.open();
 
         // Listening on the port
-        serverSocket = ServerSocketChannel.open();
-        serverSocket.socket().bind(new InetSocketAddress(port));
+        _serverSocket = ServerSocketChannel.open();
+        _serverSocket.socket().bind(new InetSocketAddress(port));
 
         // Non-Blocking for Selector activity
-        serverSocket.configureBlocking(false);
-        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        _serverSocket.configureBlocking(false);
+        _serverSocket.register(_selector, SelectionKey.OP_ACCEPT);
 
-        isRunning = true;
+        _isRunning = true;
 
         if (addressWhitelist == null) {
             addressWhitelist = new ArrayList<String>();
@@ -82,19 +75,19 @@ public final class TCPServer implements Runnable {
         if (addressWhitelist.isEmpty()) {
             addressWhitelist.add("127.0.0.1");
         }
-        this.addressWhitelist = addressWhitelist;
+        _addressWhitelist = addressWhitelist;
 
         // register standardpackets
-        this.registerStandardPacketTypes();
+        registerStandardPacketTypes();
 
         // create ServerSidePacketHandler
-        this.serverSidePacketHandler = new ServerSidePacketHandler();
+        _serverSidePacketHandler = new ServerSidePacketHandler();
     }
 
     private final void registerStandardPacketTypes() {
-        this.registerSinglePacket(RegisterRequestPacket.class);
-        this.registerSinglePacket(RegisterOKPacket.class);
-        this.registerSinglePacket(RegisterDenyPacket.class);
+        registerSinglePacket(RegisterRequestPacket.class);
+        registerSinglePacket(RegisterOKPacket.class);
+        registerSinglePacket(RegisterDenyPacket.class);
     }
 
     private final <P extends NetworkPacket> void registerSinglePacket(Class<P> packetClazz) {
@@ -107,16 +100,16 @@ public final class TCPServer implements Runnable {
     @Override
     public void run() {
         System.out.println("Server started!");
-        while (isRunning) {
+        while (_isRunning) {
             try {
-                int rdyChannels = selector.select();
+                int rdyChannels = _selector.select();
                 // No channel want something
                 if (rdyChannels == 0) {
                     continue;
                 }
 
                 // Iterate over all channel which want something
-                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                Iterator<SelectionKey> it = _selector.selectedKeys().iterator();
                 while (it.hasNext()) {
                     SelectionKey key = it.next();
                     // New client wants to connect
@@ -148,14 +141,14 @@ public final class TCPServer implements Runnable {
      * STOPPING
      */
     public void stop() {
-        this.isRunning = false;
+        _isRunning = false;
         System.out.println("--------------------");
         System.out.println("Stopping server...");
         try {
-            this.selector.close();
-            this.serverSocket.socket().close();
-            this.serverSocket.socket().getChannel().close();
-            this.serverSocket.close();
+            _selector.close();
+            _serverSocket.socket().close();
+            _serverSocket.socket().getChannel().close();
+            _serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -168,7 +161,7 @@ public final class TCPServer implements Runnable {
 
     public void onClientAccept() throws Exception {
         // accept new client
-        SocketChannel clientSocket = serverSocket.accept();
+        SocketChannel clientSocket = _serverSocket.accept();
 
         // Is client allowed to connect?
         String address = clientSocket.getRemoteAddress().toString();
@@ -183,7 +176,7 @@ public final class TCPServer implements Runnable {
         }
 
         // Client is not allowed to connect - refuse connection
-        if (!addressWhitelist.contains(address)) {
+        if (!_addressWhitelist.contains(address)) {
             clientSocket.close();
             System.out.println("Client is not whitelisted: " + address);
             return;
@@ -191,7 +184,7 @@ public final class TCPServer implements Runnable {
 
         address = address + ":" + clientSocket.socket().getPort();
         clientSocket.configureBlocking(false);
-        clientSocket.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedServerClient(address));
+        clientSocket.register(_selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE).attach(new ConnectedServerClient(address));
         System.out.println("Client connected from: " + address);
     }
 
@@ -209,13 +202,13 @@ public final class TCPServer implements Runnable {
         // When readfrom fails the client has disconnected
         if (!client.readFrom(channel)) {
             key.cancel();
-            this.serverSidePacketHandler.unregisterClient(client);
+            _serverSidePacketHandler.unregisterClient(client);
             System.out.println("Client '" + client.getName() + "' disconnected!");
         }
 
-        if (packetHandler.isPacketComplete(client.getClientBuffer())) {
+        if (_packetHandler.isPacketComplete(client.getClientBuffer())) {
             // extract the packet
-            NetworkPacket packet = packetHandler.extractPacket(client.getClientBuffer());
+            NetworkPacket packet = _packetHandler.extractPacket(client.getClientBuffer());
 
             // if we have found a packet, we handle it...
             if (packet != null) {
@@ -235,14 +228,14 @@ public final class TCPServer implements Runnable {
              * CALL EVENT - BroadcastPacketReceivedEvent
              */
             BroadcastPacketReceivedEvent event = new BroadcastPacketReceivedEvent(packet);
-            this.pluginManager.callEvent(event);
+            _pluginManager.callEvent(event);
 
             // ignore the packet, if it is cancelled
             if (!event.isCancelled()) {
                 broadcastPacket(client, packet);
             }
         } else {
-            boolean result = this.serverSidePacketHandler.handlePacket(client, packet);
+            boolean result = _serverSidePacketHandler.handlePacket(client, packet);
             if (!result) {
                 // TODO: call NonBroadcastPacketReceivedEvent on ServerSide
             }
@@ -251,7 +244,7 @@ public final class TCPServer implements Runnable {
 
     // Deliver the packet the all other clients
     private <P extends NetworkPacket> void broadcastPacket(ConnectedServerClient src, P packet) {
-        Set<SelectionKey> keys = selector.keys();
+        Set<SelectionKey> keys = _selector.keys();
 
         for (SelectionKey key : keys) {
             if (!(key.channel() instanceof SocketChannel))
@@ -268,7 +261,7 @@ public final class TCPServer implements Runnable {
         }
 
         // clear the networkBuffer
-        networkBuffer.clear();
+        _networkBuffer.clear();
     }
 
     /*
@@ -289,7 +282,7 @@ public final class TCPServer implements Runnable {
     }
 
     public void setPluginManager(PluginManager pluginManager) {
-        this.pluginManager = pluginManager;
-        this.serverSidePacketHandler.setPluginManager(pluginManager);
+        _pluginManager = pluginManager;
+        _serverSidePacketHandler.setPluginManager(pluginManager);
     }
 }

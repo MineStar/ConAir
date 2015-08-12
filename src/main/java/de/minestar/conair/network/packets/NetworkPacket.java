@@ -56,12 +56,12 @@ public abstract class NetworkPacket {
      * @throws IllegalArgumentException
      */
     public NetworkPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
-        this._packetID = packetID;
+        _packetID = packetID;
         onReceive(buffer);
     }
 
     public boolean pack(PacketBuffer buffer) {
-        Integer packetID = PacketType.getID(this.getClass());
+        Integer packetID = PacketType.getID(getClass());
         if (packetID != null) {
             buffer.writeInt(0); // Size
             buffer.writeInt(packetID); // Type

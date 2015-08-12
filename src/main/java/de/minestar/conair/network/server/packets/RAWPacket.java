@@ -25,21 +25,20 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class RAWPacket extends NetworkPacket {
 
-    private transient PacketBuffer dataBuffer;
-    private transient int packetID = -1;
+    private transient PacketBuffer _dataBuffer;
+    private transient int _packetID = -1;
 
     public RAWPacket(int packetID, ByteBuffer buffer) {
-        this.packetID = packetID;
-        this.dataBuffer = new PacketBuffer(buffer.capacity());
-        this.dataBuffer.writeByteBuffer(buffer);
-        this.dataBuffer.getBuffer().flip();
+        _packetID = packetID;
+        _dataBuffer = new PacketBuffer(buffer.capacity());
+        _dataBuffer.writeByteBuffer(buffer);
+        _dataBuffer.getBuffer().flip();
     }
 
     public final boolean pack(PacketBuffer buffer) {
         buffer.writeInt(0); // Size
-        buffer.writeInt(packetID); // Type
-
-        buffer.writeByteBuffer(this.dataBuffer.getBuffer()); // Content
+        buffer.writeInt(_packetID); // Type
+        buffer.writeByteBuffer(_dataBuffer.getBuffer()); // Content
         buffer.writeInt(0, buffer.getBuffer().position()); // Write size
         buffer.put(NetworkPacket.PACKET_SEPERATOR); // Close packet
         return true;

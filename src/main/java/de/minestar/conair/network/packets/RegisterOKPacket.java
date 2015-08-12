@@ -24,10 +24,10 @@ import de.minestar.conair.network.PacketBuffer;
 
 public class RegisterOKPacket extends NetworkPacket {
 
-    private String clientName;
+    private String _clientName;
 
     public RegisterOKPacket(String clientName) {
-        this.clientName = clientName;
+        _clientName = clientName;
     }
 
     public RegisterOKPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
@@ -35,7 +35,7 @@ public class RegisterOKPacket extends NetworkPacket {
     }
 
     public String getClientName() {
-        return clientName;
+        return _clientName;
     }
 
     @Override

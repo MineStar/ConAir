@@ -38,8 +38,8 @@ import de.minestar.conair.network.server.api.events.Event;
 
 public class PluginLoader {
 
-    private final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
-    private final Map<String, PluginClassLoader> loaders = new HashMap<String, PluginClassLoader>();
+    private final Map<String, Class<?>> _classes = new HashMap<String, Class<?>>();
+    private final Map<String, PluginClassLoader> _loaders = new HashMap<String, PluginClassLoader>();
 
     public ServerPlugin loadPlugin(PluginManager pluginManager, DedicatedTCPServer server, File file) {
         ServerPlugin result = null;
@@ -83,18 +83,18 @@ public class PluginLoader {
             e.printStackTrace();
             return null;
         }
-        loaders.put(pluginDescription.getName(), classLoader);
+        _loaders.put(pluginDescription.getName(), classLoader);
         return result;
     }
 
     public Class<?> getClassByName(final String name) {
-        Class<?> cachedClass = classes.get(name);
+        Class<?> cachedClass = _classes.get(name);
 
         if (cachedClass != null) {
             return cachedClass;
         } else {
-            for (String current : loaders.keySet()) {
-                PluginClassLoader loader = loaders.get(current);
+            for (String current : _loaders.keySet()) {
+                PluginClassLoader loader = _loaders.get(current);
 
                 try {
                     cachedClass = loader.findClass(name, false);
@@ -109,8 +109,8 @@ public class PluginLoader {
     }
 
     public void setClass(final String name, final Class<?> clazz) {
-        if (!classes.containsKey(name)) {
-            classes.put(name, clazz);
+        if (!_classes.containsKey(name)) {
+            _classes.put(name, clazz);
         }
     }
 
@@ -120,7 +120,7 @@ public class PluginLoader {
         Set<Method> methods;
         // catch methods
         try {
-            methods = this.getPublicMethods(eventListener, serverPlugin);
+            methods = getPublicMethods(eventListener, serverPlugin);
         } catch (NoClassDefFoundError e) {
             System.out.println("Plugin " + serverPlugin.getPluginName() + " failed to register events for " + eventListener.getClass() + ".");
             return executorMap;

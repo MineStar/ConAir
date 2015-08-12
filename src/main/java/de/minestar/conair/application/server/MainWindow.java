@@ -42,34 +42,33 @@ public class MainWindow extends JFrame {
 
     private static final long serialVersionUID = -7283677754732177328L;
 
-    private JButton startServer, stopServer;
-    private JTextArea textArea;
-    private JScrollPane scrollPane;
-    private boolean serverRunning = false;
-
-    private DedicatedTCPServer server;
+    private JButton _startServer, _stopServer;
+    private JTextArea _textArea;
+    private JScrollPane _scrollPane;
+    private boolean _serverRunning = false;
+    private DedicatedTCPServer _server;
 
     public MainWindow() {
         MainWindow.INSTANCE = this;
 
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel contentPanel = new JPanel();
         setContentPane(contentPanel);
 
         // set layout
-        this.setLayout(null);
+        setLayout(null);
 
         // set Windowname
-        this.setTitle("ConAir - Server");
+        setTitle("ConAir - Server");
 
         // create GUI
-        this.createGUI();
+        createGUI();
 
         // update
         pack();
         setVisible(true);
 
-        this.setSize(435, 290);
+        setSize(435, 290);
 
         // Get the size of the screen
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -83,11 +82,11 @@ public class MainWindow extends JFrame {
         // Move the window
         setLocation(x, y);
 
-        this.addComponentListener(new WindowComponentListener());
-        this.resizeComponents();
+        addComponentListener(new WindowComponentListener());
+        resizeComponents();
 
         // redirect SYSO to TextArea
-        MessageConsole mc = new MessageConsole(this.textArea);
+        MessageConsole mc = new MessageConsole(_textArea);
         mc.redirectOut();
         mc.redirectErr(Color.RED, null);
         mc.setMessageLines(1000);
@@ -97,55 +96,55 @@ public class MainWindow extends JFrame {
 
     private void resizeComponents() {
         // START SERVER
-        int buttonSize = (int) ((this.getSize().getWidth() - 45) / 2);
+        int buttonSize = (int) ((getSize().getWidth() - 45) / 2);
 
-        startServer.setSize(buttonSize, 25);
-        startServer.setLocation(10, 10);
+        _startServer.setSize(buttonSize, 25);
+        _startServer.setLocation(10, 10);
 
         // STOP SERVER
-        stopServer.setSize(buttonSize, 25);
-        stopServer.setLocation(10 + buttonSize + 10, 10);
+        _stopServer.setSize(buttonSize, 25);
+        _stopServer.setLocation(10 + buttonSize + 10, 10);
 
         // TEXTAREA
-        scrollPane.setSize((int) this.getSize().getWidth() - 35, (int) this.getSize().getHeight() - 90);
+        _scrollPane.setSize((int) getSize().getWidth() - 35, (int) getSize().getHeight() - 90);
 
-        scrollPane.revalidate();
+        _scrollPane.revalidate();
         revalidate();
     }
 
     private void createGUI() {
         // START SERVER
-        startServer = new JButton("Start Server");
-        startServer.setSize(200, 25);
-        startServer.setLocation(10, 10);
-        startServer.setEnabled(true);
-        startServer.addActionListener(new StartButtonListener());
-        this.getContentPane().add(startServer);
+        _startServer = new JButton("Start Server");
+        _startServer.setSize(200, 25);
+        _startServer.setLocation(10, 10);
+        _startServer.setEnabled(true);
+        _startServer.addActionListener(new StartButtonListener());
+        getContentPane().add(_startServer);
 
         // STOP SERVER
-        stopServer = new JButton("Stop Server");
-        stopServer.setSize(200, 25);
-        stopServer.setLocation(220, 10);
-        stopServer.setEnabled(false);
-        stopServer.addActionListener(new StopButtonListener());
-        this.getContentPane().add(stopServer);
+        _stopServer = new JButton("Stop Server");
+        _stopServer.setSize(200, 25);
+        _stopServer.setLocation(220, 10);
+        _stopServer.setEnabled(false);
+        _stopServer.addActionListener(new StopButtonListener());
+        getContentPane().add(_stopServer);
 
         // TEXTAREA
-        textArea = new JTextArea();
-        textArea.setEditable(false);
-        scrollPane = new JScrollPane(textArea);
-        scrollPane.setSize(410, 205);
-        scrollPane.setLocation(10, 45);
-        this.getContentPane().add(scrollPane);
+        _textArea = new JTextArea();
+        _textArea.setEditable(false);
+        _scrollPane = new JScrollPane(_textArea);
+        _scrollPane.setSize(410, 205);
+        _scrollPane.setLocation(10, 45);
+        getContentPane().add(_scrollPane);
     }
 
     private void createServer(int port) {
         try {
-            if (this.server == null) {
-                MainWindow.INSTANCE.startServer.setEnabled(false);
-                MainWindow.INSTANCE.stopServer.setEnabled(true);
-                MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
-                server = new DedicatedTCPServer(port, new ArrayList<String>());
+            if (_server == null) {
+                MainWindow.INSTANCE._startServer.setEnabled(false);
+                MainWindow.INSTANCE._stopServer.setEnabled(true);
+                MainWindow.INSTANCE._serverRunning = !MainWindow.INSTANCE._serverRunning;
+                _server = new DedicatedTCPServer(port, new ArrayList<String>());
             } else {
                 System.out.println("ERROR : Server is already running!");
             }
@@ -156,12 +155,12 @@ public class MainWindow extends JFrame {
 
     }
     private void destroyServer() {
-        MainWindow.INSTANCE.stopServer.setEnabled(false);
-        MainWindow.INSTANCE.startServer.setEnabled(true);
-        MainWindow.INSTANCE.serverRunning = !MainWindow.INSTANCE.serverRunning;
-        if (this.server != null) {
-            this.server.stop();
-            this.server = null;
+        MainWindow.INSTANCE._stopServer.setEnabled(false);
+        MainWindow.INSTANCE._startServer.setEnabled(true);
+        MainWindow.INSTANCE._serverRunning = !MainWindow.INSTANCE._serverRunning;
+        if (_server != null) {
+            _server.stop();
+            _server = null;
         }
     }
 

@@ -24,28 +24,28 @@ import de.minestar.conair.network.server.DedicatedTCPServer;
 
 public abstract class ServerPlugin {
 
-    private String pluginName;
-    private File dataFolder;
-    private PluginDescription pluginDescription;
-    private DedicatedTCPServer server;
+    private String _pluginName;
+    private File _dataFolder;
+    private PluginDescription _pluginDescription;
+    private DedicatedTCPServer _server;
 
     public ServerPlugin() {
     }
 
     public final void initialize(DedicatedTCPServer server, String pluginName, PluginDescription pluginDescription, PluginManager pluginManager) {
         // set server
-        this.server = server;
+        _server = server;
 
         // set PluginName
-        this.pluginName = pluginName;
+        _pluginName = pluginName;
 
         // create PluginFolder
         File pluginFolder = new File(pluginManager.getPluginFolder());
-        this.dataFolder = new File(pluginFolder + pluginName + System.getProperty("file.separator"));
-        this.dataFolder.mkdirs();
+        _dataFolder = new File(pluginFolder + pluginName + System.getProperty("file.separator"));
+        _dataFolder.mkdirs();
 
         // set PluginDescription
-        this.pluginDescription = pluginDescription;
+        _pluginDescription = pluginDescription;
     }
 
     public abstract void onEnable();
@@ -53,22 +53,22 @@ public abstract class ServerPlugin {
     public abstract void onDisable();
 
     public String getPluginName() {
-        return pluginName;
+        return _pluginName;
     }
 
     protected final void registerListener(EventListener eventListener) {
-        this.server.registerListener(eventListener, this);
+        _server.registerListener(eventListener, this);
     }
 
     public File getDataFolder() {
-        return dataFolder;
+        return _dataFolder;
     }
 
     public PluginDescription getPluginDescription() {
-        return pluginDescription;
+        return _pluginDescription;
     }
 
     public DedicatedTCPServer getServer() {
-        return server;
+        return _server;
     }
 }

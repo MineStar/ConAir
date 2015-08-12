@@ -25,10 +25,10 @@ import java.io.InputStreamReader;
 import de.minestar.conair.network.server.api.exceptions.PluginDescriptionInvalidException;
 
 public class PluginDescription {
-    private String name = null, main = null, version = null;
+    private String _name = null, _main = null, _version = null;
 
     public PluginDescription(InputStream inputStream) throws PluginDescriptionInvalidException {
-        this.loadFile(new BufferedReader(new InputStreamReader(inputStream)));
+        loadFile(new BufferedReader(new InputStreamReader(inputStream)));
     }
 
     private void loadFile(BufferedReader bufferedReader) throws PluginDescriptionInvalidException {
@@ -51,20 +51,20 @@ public class PluginDescription {
 
                 // save the var
                 if (split[0].toLowerCase().startsWith("name")) {
-                    this.name = split[1];
+                    _name = split[1];
                 } else if (split[0].toLowerCase().startsWith("main")) {
-                    this.main = split[1];
+                    _main = split[1];
                 } else if (split[0].toLowerCase().startsWith("version")) {
-                    this.version = split[1];
+                    _version = split[1];
                 }
             }
             // close and validate
             bufferedReader.close();
 
-            if (this.version == null) {
-                this.version = "0.0.0";
+            if (_version == null) {
+                _version = "0.0.0";
             }
-            if (this.name == null || this.main == null) {
+            if (_name == null || _main == null) {
                 throw new PluginDescriptionInvalidException("PluginDescription is incomplete!");
             }
         } catch (Exception e) {
@@ -73,14 +73,14 @@ public class PluginDescription {
     }
 
     public String getName() {
-        return name;
+        return _name;
     }
 
     public String getMain() {
-        return main;
+        return _main;
     }
 
     public String getVersion() {
-        return version;
+        return _version;
     }
 }

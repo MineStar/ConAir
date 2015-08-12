@@ -22,27 +22,27 @@ public class EventException extends Exception {
 
     private static final long serialVersionUID = 8780413669728435313L;
 
-    private final Throwable cause;
+    private final Throwable _cause;
 
     public EventException(Throwable throwable) {
-        this.cause = throwable;
+        _cause = throwable;
     }
 
     public EventException() {
-        this.cause = null;
+        _cause = null;
     }
 
     public EventException(Throwable cause, String message) {
         super(message);
-        this.cause = cause;
+        _cause = cause;
     }
 
     public EventException(String message) {
         super(message);
-        this.cause = null;
+        _cause = null;
     }
 
     public Throwable getCause() {
-        return this.cause;
+        return _cause;
     }
 }

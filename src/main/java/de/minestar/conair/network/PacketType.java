@@ -8,31 +8,31 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class PacketType {
 
-    private static Map<String, Integer> packetIDMap;
-    private static Map<Integer, Class<? extends NetworkPacket>> packetClassMap;
+    private static Map<String, Integer> PACKET_ID_MAP;
+    private static Map<Integer, Class<? extends NetworkPacket>> PACKET_CLASS_MAP;
 
     static {
-        packetIDMap = new HashMap<String, Integer>();
-        packetClassMap = new HashMap<Integer, Class<? extends NetworkPacket>>();
+        PACKET_ID_MAP = new HashMap<String, Integer>();
+        PACKET_CLASS_MAP = new HashMap<Integer, Class<? extends NetworkPacket>>();
     }
 
     public static <P extends NetworkPacket> Integer getID(Class<P> packetClazz) {
-        return packetIDMap.get(packetClazz.getName());
+        return PACKET_ID_MAP.get(packetClazz.getName());
     }
 
     @SuppressWarnings("unchecked")
     public static <P extends NetworkPacket> Class<P> getClassByID(int ID) {
-        return (Class<P>) packetClassMap.get(ID);
+        return (Class<P>) PACKET_CLASS_MAP.get(ID);
     }
 
     public static <P extends NetworkPacket> boolean registerPacket(Class<P> packetClazz) {
         try {
             int ID = getUniqueID(packetClazz.getName());
-            if (packetClassMap.containsKey(ID)) {
+            if (PACKET_CLASS_MAP.containsKey(ID)) {
                 throw new RuntimeException("NetworkPacket '" + packetClazz.getSimpleName() + "' is already registered!");
             }
-            packetIDMap.put(packetClazz.getName(), ID);
-            packetClassMap.put(ID, packetClazz);
+            PACKET_ID_MAP.put(packetClazz.getName(), ID);
+            PACKET_CLASS_MAP.put(ID, packetClazz);
             System.out.println("Registering '" + packetClazz.getSimpleName() + "' , ID: " + ID);
             return true;
         } catch (RuntimeException e) {
@@ -43,11 +43,11 @@ public final class PacketType {
 
     public static <P extends NetworkPacket> boolean unregisterPacket(Class<P> packet) {
         int ID = getUniqueID(packet.getName());
-        if (!packetClassMap.containsKey(ID)) {
+        if (!PACKET_CLASS_MAP.containsKey(ID)) {
             throw new RuntimeException("NetworkPacket '" + packet.getSimpleName() + "' is not registered!");
         }
-        packetIDMap.remove(packet.getName());
-        packetClassMap.remove(ID);
+        PACKET_ID_MAP.remove(packet.getName());
+        PACKET_CLASS_MAP.remove(ID);
         return true;
     }
 
