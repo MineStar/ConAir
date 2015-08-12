@@ -39,7 +39,11 @@ public final class ConnectedClient {
         this.name = name;
     }
 
-    public boolean readFrom(SocketChannel channel) throws Exception {
+    public String getName() {
+        return name;
+    }
+
+    boolean readFrom(SocketChannel channel) throws Exception {
         int b = 0;
         try {
             b = channel.read(_inBuffer);
@@ -49,7 +53,7 @@ public final class ConnectedClient {
         return b != -1;
     }
 
-    public void addByteBuffer(ByteBuffer buffer) {
+    void addByteBuffer(ByteBuffer buffer) {
         if (!this.dataToSend) {
             _outBuffer.put(buffer);
             _outBuffer.flip();
@@ -58,11 +62,11 @@ public final class ConnectedClient {
         }
     }
 
-    public boolean hasDataToSend() {
+    boolean hasDataToSend() {
         return dataToSend;
     }
 
-    public boolean write(SocketChannel channel) throws IOException {
+    boolean write(SocketChannel channel) throws IOException {
         int b = 0;
         try {
             b = channel.write(_outBuffer);
@@ -76,11 +80,7 @@ public final class ConnectedClient {
         return b != -1;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public ByteBuffer getClientBuffer() {
+    ByteBuffer getClientBuffer() {
         return _inBuffer;
     }
 

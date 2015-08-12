@@ -40,16 +40,6 @@ public final class ConnectedServerClient {
         _packetQueue = new PacketQueue();
     }
 
-    boolean readFrom(SocketChannel channel) throws Exception {
-        int b = 0;
-        try {
-            b = channel.read(_inBuffer.getBuffer());
-        } catch (IOException e) {
-            return false;
-        }
-        return b != -1;
-    }
-
     public <P extends NetworkPacket> void sendPacket(P packet) {
         _packetQueue.addUnsafePacket(packet);
         boolean wasEmpty = _packetQueue.getSize() == 1;
@@ -61,12 +51,25 @@ public final class ConnectedServerClient {
             }
         }
     }
+    public String getName() {
+        return _name;
+    }
 
-    public boolean hasDataToSend() {
+    boolean hasDataToSend() {
         return _dataToSend;
     }
 
-    public boolean write(SocketChannel channel) throws IOException {
+    boolean readFrom(SocketChannel channel) throws Exception {
+        int b = 0;
+        try {
+            b = channel.read(_inBuffer.getBuffer());
+        } catch (IOException e) {
+            return false;
+        }
+        return b != -1;
+    }
+
+    boolean write(SocketChannel channel) throws IOException {
         int b = 0;
         try {
             b = channel.write(_outBuffer.getBuffer());
@@ -85,11 +88,7 @@ public final class ConnectedServerClient {
         return b != -1;
     }
 
-    public String getName() {
-        return _name;
-    }
-
-    public ByteBuffer getClientBuffer() {
+    ByteBuffer getClientBuffer() {
         return _inBuffer.getBuffer();
     }
 

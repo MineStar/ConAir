@@ -38,7 +38,7 @@ public abstract class ClientPacketHandler {
         _packetBuffer = new PacketBuffer(ByteBuffer.allocateDirect(4096));
     }
 
-    protected final boolean isPacketComplete(ByteBuffer buffer) {
+    final boolean isPacketComplete(ByteBuffer buffer) {
         buffer.flip();
         int len = 0;
         if (buffer.hasRemaining()) {
@@ -61,7 +61,7 @@ public abstract class ClientPacketHandler {
         }
     }
 
-    public final <P extends NetworkPacket> P extractPacket(ByteBuffer src) {
+    final <P extends NetworkPacket> P extractPacket(ByteBuffer src) {
         src.rewind();
         int len = src.getInt();
         int limit = src.limit();
@@ -120,7 +120,7 @@ public abstract class ClientPacketHandler {
         }
     }
 
-    protected final boolean updateQueue(ConnectedClient client) {
+    final boolean updateQueue(ConnectedClient client) {
         if (_packetQueue.updateQueue()) {
             _packetQueue.packPacket(_packetBuffer);
             client.addByteBuffer(_packetBuffer.getBuffer());
