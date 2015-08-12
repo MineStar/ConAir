@@ -33,6 +33,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import de.minestar.conair.network.server.DedicatedTCPServer;
 
@@ -183,7 +185,7 @@ public class MainWindow extends JFrame {
 
         boolean inputCorrect = false;
         while (!inputCorrect) {
-            String input = JOptionPane.showInputDialog(null, "Enter port: ", "Enter port please...", 1);
+            String input = JOptionPane.showInputDialog(null, "Enter port: ", "Enter port please...", JOptionPane.QUESTION_MESSAGE);
             if (input == null) {
                 port = -1;
                 break;
@@ -243,7 +245,8 @@ public class MainWindow extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         new MainWindow();
     }
 
