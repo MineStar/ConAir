@@ -24,7 +24,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import de.minestar.conair.listener.ChatListener;
+import de.minestar.conair.bukkit.listener.ChatListener;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;

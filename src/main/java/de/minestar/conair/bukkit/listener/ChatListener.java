@@ -16,7 +16,7 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.listener;
+package de.minestar.conair.bukkit.listener;
 
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
