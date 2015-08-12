@@ -35,7 +35,11 @@ public class DedicatedTCPServer {
     private PluginManager _pluginManager;
 
     public DedicatedTCPServer(int port) throws IOException {
-        this(port, null);
+        this(port, DEFAULT_PLUGINFOLDER);
+    }
+
+    public DedicatedTCPServer(int port, String pluginFolder) throws IOException {
+        this(port, null, pluginFolder);
     }
 
     public DedicatedTCPServer(int port, List<String> whiteList) throws IOException {
