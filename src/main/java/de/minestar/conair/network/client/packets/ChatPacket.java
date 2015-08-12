@@ -18,9 +18,6 @@
 
 package de.minestar.conair.network.client.packets;
 
-import java.io.IOException;
-
-import de.minestar.conair.network.PacketBuffer;
 import de.minestar.conair.network.packets.NetworkPacket;
 
 public class ChatPacket extends NetworkPacket {
@@ -29,10 +26,6 @@ public class ChatPacket extends NetworkPacket {
 
     public ChatPacket(String message) {
         this.message = message;
-    }
-
-    public ChatPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
-        super(packetID, buffer);
     }
 
     public String getMessage() {

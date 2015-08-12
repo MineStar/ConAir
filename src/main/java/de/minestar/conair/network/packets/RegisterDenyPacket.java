@@ -18,20 +18,12 @@
 
 package de.minestar.conair.network.packets;
 
-import java.io.IOException;
-
-import de.minestar.conair.network.PacketBuffer;
-
 public class RegisterDenyPacket extends NetworkPacket {
 
     private String _clientName;
 
     public RegisterDenyPacket(String clientName) {
         _clientName = clientName;
-    }
-
-    public RegisterDenyPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
-        super(packetID, buffer);
     }
 
     public String getClientName() {

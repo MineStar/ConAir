@@ -18,13 +18,15 @@
 
 package de.minestar.conair.network.server;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.PacketBuffer;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.NetworkPacket;
 import de.minestar.conair.network.server.packets.RAWPacket;
+import de.minestar.conair.network.utils.Unsafe;
 
 public final class ServerPacketHandler {
 
@@ -91,7 +93,7 @@ public final class ServerPacketHandler {
         return packet;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "restriction"})
     private final <P extends NetworkPacket> P createPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
@@ -100,6 +102,7 @@ public final class ServerPacketHandler {
 
             // get packettype
             int packetID = _packetBuffer.readInt();
+
             Class<P> packetClazz = PacketType.getClassByID(packetID);
 
             // packet not found...
@@ -118,10 +121,11 @@ public final class ServerPacketHandler {
             }
 
             // get the constructor
-            Constructor<P> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
-            if (packetConstructor == null) {
-                return null;
-            }
+            P instance = (P) Unsafe.get().allocateInstance(packetClazz);
+            Field packetIdField = instance.getClass().getSuperclass().getDeclaredField("_packetID");
+            packetIdField.setAccessible(true);
+            packetIdField.set(instance, packetID);
+            packetIdField.setAccessible(false);
 
             // read data...
             byte[] data = new byte[datalength];
@@ -132,8 +136,14 @@ public final class ServerPacketHandler {
             newBuffer.writeBytes(data);
             newBuffer.getBuffer().rewind();
 
+            // call the onReceive-Method
+            Method method = instance.getClass().getSuperclass().getDeclaredMethod("onReceive", PacketBuffer.class);
+            method.setAccessible(true);
+            method.invoke(instance, newBuffer);
+            method.setAccessible(false);
+
             // finally create the packet and return it
-            return packetConstructor.newInstance(packetID, newBuffer);
+            return instance;
         } catch (Exception e) {
             return null;
         }

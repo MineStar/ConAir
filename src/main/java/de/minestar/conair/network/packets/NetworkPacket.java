@@ -18,7 +18,6 @@
 
 package de.minestar.conair.network.packets;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -39,26 +38,6 @@ public abstract class NetworkPacket {
     public static final byte PACKET_SEPERATOR = 3;
 
     protected int _packetID = -1;
-
-    /**
-     * Empty constructor. Used for creation of packets to be sent.
-     */
-    protected NetworkPacket() {
-    }
-
-    /**
-     * Constructor used for received packets.
-     * 
-     * @param packetID
-     * @param buffer
-     * @throws IOException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
-     */
-    public NetworkPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
-        _packetID = packetID;
-        onReceive(buffer);
-    }
 
     public boolean pack(PacketBuffer buffer) {
         Integer packetID = PacketType.getID(getClass());
@@ -182,6 +161,8 @@ public abstract class NetworkPacket {
         return stringBuilder.toString();
     }
 
+    @SuppressWarnings("unused")
+    // USED VIA REFLECTIONS
     private final void onReceive(PacketBuffer buffer) throws IllegalArgumentException, IllegalAccessException {
         final Collection<Field> fields = getFields();
         for (final Field field : fields) {

@@ -18,13 +18,15 @@
 
 package de.minestar.conair.network.client;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 import de.minestar.conair.network.PacketBuffer;
 import de.minestar.conair.network.PacketQueue;
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.NetworkPacket;
+import de.minestar.conair.network.utils.Unsafe;
 
 public abstract class ClientPacketHandler {
 
@@ -72,6 +74,7 @@ public abstract class ClientPacketHandler {
         return createPacket(len);
     }
 
+    @SuppressWarnings({"restriction", "unchecked"})
     private final <P extends NetworkPacket> P createPacket(int datalength) {
         try {
             // reduce the datalength, because we read two integers first.
@@ -88,10 +91,11 @@ public abstract class ClientPacketHandler {
             }
 
             // get the constructor
-            Constructor<P> packetConstructor = packetClazz.getDeclaredConstructor(int.class, PacketBuffer.class);
-            if (packetConstructor == null) {
-                return null;
-            }
+            P instance = (P) Unsafe.get().allocateInstance(packetClazz);
+            Field packetIdField = instance.getClass().getSuperclass().getDeclaredField("_packetID");
+            packetIdField.setAccessible(true);
+            packetIdField.set(instance, packetID);
+            packetIdField.setAccessible(false);
 
             // read data...
             byte[] data = new byte[datalength];
@@ -102,9 +106,16 @@ public abstract class ClientPacketHandler {
             newBuffer.writeBytes(data);
             newBuffer.getBuffer().rewind();
 
-            // finally create the packet and return it
-            return packetConstructor.newInstance(packetID, newBuffer);
+            // call the onReceive-Method
+            Method method = instance.getClass().getSuperclass().getDeclaredMethod("onReceive", PacketBuffer.class);
+            method.setAccessible(true);
+            method.invoke(instance, newBuffer);
+            method.setAccessible(false);
+
+            // return the instance
+            return instance;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
