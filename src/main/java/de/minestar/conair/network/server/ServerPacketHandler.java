@@ -145,6 +145,7 @@ public final class ServerPacketHandler {
             // finally create the packet and return it
             return instance;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
