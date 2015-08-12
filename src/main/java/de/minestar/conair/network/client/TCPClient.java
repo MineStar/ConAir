@@ -52,7 +52,7 @@ public final class TCPClient implements Runnable {
     private Map<Class<? extends NetworkPacket>, Method> _methodMap;
     private Set<Class<? extends NetworkPacket>> _searchedMethods;
 
-    public TCPClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
+    public TCPClient(String name, ClientPacketHandler packetHandler, String host, int port) throws IOException {
         _clientName = name;
 
         _packetHandler = packetHandler;
@@ -157,13 +157,15 @@ public final class TCPClient implements Runnable {
      * STOPPING
      */
     public final void stop() {
-        try {
-            _isRunning = false;
-            System.out.println("Stopping client '" + _clientName + "' ...");
-            _socketChannel.socket().close();
-            System.out.println("Client stopped!");
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (_isRunning) {
+            try {
+                _isRunning = false;
+                System.out.println("Stopping client '" + _clientName + "' ...");
+                _socketChannel.socket().close();
+                System.out.println("Client stopped!");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

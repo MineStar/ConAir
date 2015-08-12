@@ -18,6 +18,8 @@
 
 package de.minestar.conair.network.client;
 
+import java.io.IOException;
+
 import de.minestar.conair.network.packets.NetworkPacket;
 
 public class DedicatedTCPClient {
@@ -30,7 +32,7 @@ public class DedicatedTCPClient {
     private String _host;
     private int _port;
 
-    public DedicatedTCPClient(String clientName, ClientPacketHandler packetHandler, String host, int port) {
+    public DedicatedTCPClient(String clientName, ClientPacketHandler packetHandler, String host, int port) throws IOException {
         try {
             _clientName = clientName;
             _packetHandler = packetHandler;
@@ -40,9 +42,9 @@ public class DedicatedTCPClient {
             _client = new TCPClient(clientName, packetHandler, host, port);
             _clientThread = new Thread(_client);
             _clientThread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
             stop();
+            throw e;
         }
     }
     @SuppressWarnings("deprecation")
