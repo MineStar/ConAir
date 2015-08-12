@@ -31,18 +31,8 @@ public class ChatPacket extends NetworkPacket {
         this.message = message;
     }
 
-    public ChatPacket(int packetID, PacketBuffer buffer) throws IOException {
+    public ChatPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
         super(packetID, buffer);
-    }
-
-    @Override
-    public void onSend(PacketBuffer buffer) {
-        buffer.writeString(this.message);
-    }
-
-    @Override
-    public void onReceive(PacketBuffer buffer) {
-        this.message = buffer.readString();
     }
 
     public String getMessage() {

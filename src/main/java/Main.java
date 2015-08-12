@@ -34,10 +34,10 @@ public class Main {
             Thread.sleep(500);
 
             for (int i = 1; i <= 5; i++) {
-                client1.sendPacket(new ChatPacket("Hello World from '" + client1.getClientName() + "' -> " + i));
+                client1.sendPacket(new ChatPacket("Hello Client2 #" + i));
+                client2.sendPacket(new ChatPacket("Hi Client1 #" + i));
+                Thread.sleep(100);
             }
-
-            Thread.sleep(1000);
 
             client1.stop();
             client2.stop();

@@ -93,6 +93,11 @@ public final class PacketBuffer {
         return this.buffer.get(position);
     }
 
+    public PacketBuffer writeByte(byte b) {
+        this.buffer.put(b);
+        return this;
+    }
+
     public PacketBuffer writeByte(int position, byte b) {
         this.buffer.put(position, b);
         return this;

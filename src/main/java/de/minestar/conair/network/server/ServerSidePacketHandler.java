@@ -41,6 +41,10 @@ public class ServerSidePacketHandler extends AbstractServerPacketHandler {
         this.pluginManager = pluginManager;
     }
 
+    public PluginManager getPluginManager() {
+        return pluginManager;
+    }
+
     @Override
     public <P extends NetworkPacket> boolean handlePacket(ConnectedServerClient client, P packet) {
         if (packet.getPacketID() == PacketType.getID(RegisterRequestPacket.class)) {

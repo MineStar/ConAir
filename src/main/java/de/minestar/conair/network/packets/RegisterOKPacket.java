@@ -30,18 +30,8 @@ public class RegisterOKPacket extends NetworkPacket {
         this.clientName = clientName;
     }
 
-    public RegisterOKPacket(int packetID, PacketBuffer buffer) throws IOException {
+    public RegisterOKPacket(int packetID, PacketBuffer buffer) throws IOException, IllegalArgumentException, IllegalAccessException {
         super(packetID, buffer);
-    }
-
-    @Override
-    public void onSend(PacketBuffer buffer) {
-        buffer.writeString(this.clientName);
-    }
-
-    @Override
-    public void onReceive(PacketBuffer buffer) {
-        this.clientName = buffer.readString();
     }
 
     public String getClientName() {

@@ -27,7 +27,7 @@ public class TestPacketHandler extends ClientPacketHandler {
     public void handlePacket(NetworkPacket packet) {
         if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
 
-            System.out.println("Received:" + ((ChatPacket) packet).getMessage());
+            System.out.println(((ChatPacket) packet).getMessage());
             return;
         }
     }

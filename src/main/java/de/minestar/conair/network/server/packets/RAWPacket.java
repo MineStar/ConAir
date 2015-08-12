@@ -25,8 +25,8 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class RAWPacket extends NetworkPacket {
 
-    private PacketBuffer dataBuffer;
-    private int packetID = -1;
+    private transient PacketBuffer dataBuffer;
+    private transient int packetID = -1;
 
     public RAWPacket(int packetID, ByteBuffer buffer) {
         this.packetID = packetID;
@@ -43,14 +43,6 @@ public final class RAWPacket extends NetworkPacket {
         buffer.writeInt(0, buffer.getBuffer().position()); // Write size
         buffer.put(NetworkPacket.PACKET_SEPERATOR); // Close packet
         return true;
-    }
-
-    @Override
-    public void onSend(PacketBuffer buffer) {
-    }
-
-    @Override
-    public void onReceive(PacketBuffer buffer) {
     }
 
     @Override
