@@ -91,7 +91,7 @@ public abstract class NetworkPacket {
         final Field[] declaredFields = getClass().getDeclaredFields();
         final Map<String, Field> map = new TreeMap<String, Field>();
         for (final Field field : declaredFields) {
-            if (field.getModifiers() == Modifier.TRANSIENT || field.getModifiers() == Modifier.VOLATILE) {
+            if (Modifier.isTransient(field.getModifiers()) || Modifier.isVolatile(field.getModifiers())) {
                 continue;
             }
             map.put(field.getName(), field);

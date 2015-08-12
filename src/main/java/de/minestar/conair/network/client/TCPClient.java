@@ -21,6 +21,7 @@ package de.minestar.conair.network.client;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
@@ -88,7 +89,7 @@ public final class TCPClient implements Runnable {
         }
         final Method[] declaredMethods = _packetHandler.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
-            if (method.getParameterCount() != 1) {
+            if (method.getParameterCount() != 1 || Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
             if (method.getParameterTypes()[0].equals(packetClass)) {
