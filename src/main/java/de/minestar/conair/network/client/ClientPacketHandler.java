@@ -117,9 +117,4 @@ public abstract class ClientPacketHandler {
         }
         return false;
     }
-
-    /*
-     * HANDLE THE PACKET
-     */
-    public abstract <P extends NetworkPacket> void handlePacket(P packet);
 }

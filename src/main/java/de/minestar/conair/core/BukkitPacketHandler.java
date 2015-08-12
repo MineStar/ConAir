@@ -23,10 +23,8 @@ import org.bukkit.plugin.Plugin;
 
 import com.bukkit.gemo.FalseBook.Chat.ChatManager;
 
-import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;
 import de.minestar.conair.network.client.packets.ChatPacket;
-import de.minestar.conair.network.packets.NetworkPacket;
 
 public class BukkitPacketHandler extends ClientPacketHandler {
 
@@ -43,19 +41,15 @@ public class BukkitPacketHandler extends ClientPacketHandler {
         }
     }
 
-    @Override
-    public <P extends NetworkPacket> void handlePacket(P packet) {
-        if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
-            if (!ClientSettings.informChat) {
-                return;
-            }
-
-            if (!useFBChat) {
-                Bukkit.getServer().broadcastMessage(((ChatPacket) packet).getMessage());
-            } else {
-                ChatManager.broadcast(((ChatPacket) packet).getMessage());
-            }
+    public void handleChatPacket(ChatPacket packet) {
+        if (!ClientSettings.informChat) {
             return;
+        }
+
+        if (!useFBChat) {
+            Bukkit.getServer().broadcastMessage(packet.getMessage());
+        } else {
+            ChatManager.broadcast(packet.getMessage());
         }
     }
 }

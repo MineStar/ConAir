@@ -16,19 +16,13 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.client.ClientPacketHandler;
 import de.minestar.conair.network.client.packets.ChatPacket;
-import de.minestar.conair.network.packets.NetworkPacket;
 
 public class TestPacketHandler extends ClientPacketHandler {
 
-    @Override
-    public void handlePacket(NetworkPacket packet) {
-        if (packet.getPacketID() == PacketType.getID(ChatPacket.class)) {
-
-            System.out.println(((ChatPacket) packet).getMessage());
-            return;
-        }
+    public void handleChatPacket(ChatPacket packet) {
+        System.out.println(packet.getMessage());
     }
+
 }

@@ -19,12 +19,18 @@
 package de.minestar.conair.network.client;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import de.minestar.conair.network.PacketType;
 import de.minestar.conair.network.packets.NetworkPacket;
@@ -41,6 +47,9 @@ public final class TCPClient implements Runnable {
     private final String _clientName;
     private ClientPacketHandler _packetHandler;
     private ClientSidePacketHandler _clientSidePacketHandler;
+
+    private Map<Class<? extends NetworkPacket>, Method> _methodMap;
+    private Set<Class<? extends NetworkPacket>> _searchedMethods;
 
     public TCPClient(String name, ClientPacketHandler packetHandler, String host, int port) throws Exception {
         _clientName = name;
@@ -60,6 +69,9 @@ public final class TCPClient implements Runnable {
 
         _client = new ConnectedClient("localhost");
 
+        _methodMap = new HashMap<Class<? extends NetworkPacket>, Method>();
+        _searchedMethods = new HashSet<Class<? extends NetworkPacket>>();
+
         // create ClientSidePacketHandler
         _clientSidePacketHandler = new ClientSidePacketHandler(this);
 
@@ -68,6 +80,24 @@ public final class TCPClient implements Runnable {
 
         // send RegisterRequestPacket
         sendPacket(new RegisterRequestPacket(_clientName));
+    }
+
+    private final <P extends NetworkPacket> Method searchMethod(Class<P> packetClass) {
+        if (_searchedMethods.contains(packetClass)) {
+            return _methodMap.get(packetClass);
+        }
+        final Method[] declaredMethods = _packetHandler.getClass().getDeclaredMethods();
+        for (final Method method : declaredMethods) {
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
+            if (method.getParameterTypes()[0].equals(packetClass)) {
+                _methodMap.put(packetClass, method);
+                return method;
+            }
+        }
+        _searchedMethods.add(packetClass);
+        return null;
     }
 
     private final void registerStandardPacketTypes() {
@@ -167,7 +197,16 @@ public final class TCPClient implements Runnable {
      */
     private <P extends NetworkPacket> void handlePacket(P packet) {
         if (!_clientSidePacketHandler.handlePacket(packet)) {
-            _packetHandler.handlePacket(packet);
+            Method method = searchMethod(packet.getClass());
+            if (method != null) {
+                method.setAccessible(true);
+                try {
+                    method.invoke(_packetHandler, packet);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+                method.setAccessible(false);
+            }
         }
     }
 
