@@ -16,7 +16,7 @@
  * along with ConAir.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.core;
+package de.minestar.conair.bukkit;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;

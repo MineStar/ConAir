@@ -26,7 +26,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import de.minestar.conair.core.ClientSettings;
+import de.minestar.conair.bukkit.ClientSettings;
 import de.minestar.conair.network.client.DedicatedTCPClient;
 import de.minestar.conair.network.client.packets.ChatPacket;
 
