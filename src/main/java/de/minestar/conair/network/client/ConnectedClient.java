@@ -24,8 +24,8 @@ import java.nio.channels.SocketChannel;
 
 public final class ConnectedClient {
 
-    private final ByteBuffer _inBuffer = ByteBuffer.allocateDirect(32 * 1024);
-    private final ByteBuffer _outBuffer = ByteBuffer.allocateDirect(32 * 1024);
+    private final ByteBuffer _inBuffer = ByteBuffer.allocateDirect(128 * 1024);
+    private final ByteBuffer _outBuffer = ByteBuffer.allocateDirect(128 * 1024);
 
     private boolean _dataToSend = false;
 

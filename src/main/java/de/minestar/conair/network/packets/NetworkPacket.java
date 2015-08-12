@@ -101,6 +101,10 @@ public abstract class NetworkPacket {
             buffer.writeByte((byte) value);
             return true;
         }
+        if (value.getClass().equals(byte[].class) || value.getClass().equals(Byte[].class)) {
+            buffer.writeByteArray((byte[]) value);
+            return true;
+        }
         if (value.getClass().equals(short.class) || value.getClass().equals(Short.class)) {
             buffer.writeShort((short) value);
             return true;
@@ -183,6 +187,10 @@ public abstract class NetworkPacket {
         }
         if (clazz.equals(byte.class) || clazz.equals(Byte.class)) {
             field.set(this, buffer.readByte());
+            return true;
+        }
+        if (clazz.equals(byte[].class) || clazz.equals(Byte[].class)) {
+            field.set(this, buffer.readByteArray());
             return true;
         }
         if (clazz.equals(short.class) || clazz.equals(Short.class)) {

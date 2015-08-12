@@ -54,7 +54,7 @@ public final class TCPServer implements Runnable {
         System.out.println("--------------------");
         System.out.println("Starting server on port " + port + "...");
 
-        _networkBuffer = ByteBuffer.allocateDirect(32 * 1024);
+        _networkBuffer = ByteBuffer.allocateDirect(128 * 1024);
 
         _packetHandler = new ServerPacketHandler(_networkBuffer);
 

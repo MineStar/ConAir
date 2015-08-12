@@ -28,8 +28,8 @@ import de.minestar.conair.network.packets.NetworkPacket;
 
 public final class ConnectedServerClient {
 
-    private final PacketBuffer _inBuffer = new PacketBuffer(ByteBuffer.allocateDirect(32 * 1024));
-    private final PacketBuffer _outBuffer = new PacketBuffer(ByteBuffer.allocateDirect(32 * 1024));
+    private final PacketBuffer _inBuffer = new PacketBuffer(ByteBuffer.allocateDirect(128 * 1024));
+    private final PacketBuffer _outBuffer = new PacketBuffer(ByteBuffer.allocateDirect(128 * 1024));
 
     private String _name;
     private boolean _dataToSend = false;

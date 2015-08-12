@@ -34,7 +34,7 @@ public final class PacketBuffer {
     }
 
     public PacketBuffer() {
-        this(32 * 1000);
+        this(128 * 1000);
     }
 
     public PacketBuffer clear() {
@@ -76,6 +76,22 @@ public final class PacketBuffer {
 
     public PacketBuffer writeBytes(byte[] src, int offset, int length) {
         _buffer.put(src, offset, length);
+        return this;
+    }
+
+    public byte[] readByteArray() {
+        final byte[] dest = new byte[readInt()];
+        for (int i = 0; i < dest.length; i++) {
+            dest[i] = readByte();
+        }
+        return dest;
+    }
+
+    public PacketBuffer writeByteArray(byte[] src) {
+        writeInt(src.length);
+        for (final byte b : src) {
+            put(b);
+        }
         return this;
     }
 
