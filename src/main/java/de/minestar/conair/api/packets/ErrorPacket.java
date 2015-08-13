@@ -27,16 +27,12 @@ package de.minestar.conair.api.packets;
 import de.minestar.conair.api.Packet;
 
 /**
- * Error packet, sent to client if an error occurs. For example, the client want
- * to broadcast a packet, but hasn't make a handshake with the server. See
- * {@link HandshakePacket}
+ * Error packet, sent to client if an error occurs. For example, the client want to broadcast a packet, but hasn't make a handshake with the server. See {@link HandshakePacket}
  */
 public class ErrorPacket implements Packet {
 
     public enum ErrorType {
-        GENERAL,
-        DUPLICATE_HANDSHAKE,
-        NO_HANDSHAKE;
+        GENERAL, DUPLICATE_HANDSHAKE, NO_HANDSHAKE;
     }
 
     private final ErrorType type;

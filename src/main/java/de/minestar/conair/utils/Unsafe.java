@@ -21,7 +21,8 @@ import java.lang.reflect.Field;
 
 public class Unsafe {
 
-    @SuppressWarnings("restriction") private static sun.misc.Unsafe _unsafe;
+    @SuppressWarnings("restriction")
+    private static sun.misc.Unsafe _unsafe;
 
     /**
      * Get the {@link Unsafe}.

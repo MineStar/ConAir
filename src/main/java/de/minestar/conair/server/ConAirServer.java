@@ -24,8 +24,6 @@
 
 package de.minestar.conair.server;
 
-import java.util.function.BiConsumer;
-
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -40,9 +38,14 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
-import de.minestar.conair.api.Packet;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
+import de.minestar.conair.api.event.Listener;
 
 public class ConAirServer {
 
@@ -52,11 +55,13 @@ public class ConAirServer {
 
     private boolean isRunning;
     private ConAirServerHandler packetHandler;
+    private Map<String, Listener> listenerMap;
 
     public ConAirServer() {
         this.isRunning = false;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
+        this.listenerMap = Collections.synchronizedMap(new HashMap<>());
     }
 
     public void start(final int port) throws Exception {
@@ -86,7 +91,10 @@ public class ConAirServer {
                 pipeline.addLast("handshakeHandler", new ServerHandshakeHandler());
 
                 // Add server logic
-                packetHandler = new ConAirServerHandler();
+                ConAirServer.this.packetHandler = new ConAirServerHandler();
+                for (final Listener listener : ConAirServer.this.listenerMap.values()) {
+                    ConAirServer.this.packetHandler.registerPacketListener(listener);
+                }
                 pipeline.addLast(packetHandler);
             }
         });
@@ -103,11 +111,10 @@ public class ConAirServer {
      * @param handler
      *            Packet handler for this type
      */
-    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
-        if (this.packetHandler != null) {
-            this.packetHandler.registerPacketListener(packetClass, handler);
-        } else {
-            throw new RuntimeException("Cannot register packet. Server is not started yet!");
+    public <L extends Listener> void registerPacketListener(L listener) {
+        this.listenerMap.put(listener.getClass().toString(), listener);
+        if (isRunning && this.packetHandler != null) {
+            this.packetHandler.registerPacketListener(listener);
         }
     }
 

@@ -40,15 +40,19 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
+import de.minestar.conair.api.event.EventExecutor;
+import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.packets.HandshakePacket;
 
 public class ConAirClient {
@@ -59,15 +63,15 @@ public class ConAirClient {
     private Channel channel;
 
     private Set<String> registeredClasses;
-    private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
+    private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
     private String clientName;
 
     public ConAirClient(String clientName) {
         this.clientName = clientName;
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
-        this.registeredListener = new HashMap<>();
-        this.registeredClasses = new HashSet<>();
+        this.registeredListener = Collections.synchronizedMap(new HashMap<>());
+        this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
     }
 
     public String getClientName() {
@@ -75,12 +79,10 @@ public class ConAirClient {
     }
 
     /**
-     * Establish a connection to ConAir server. Must be called before
-     * {@link #sendPacket(Packet)} can get used.
+     * Establish a connection to ConAir server. Must be called before {@link #sendPacket(Packet)} can get used.
      * 
      * @param clientName
-     *            The unique name of this client to identify itself in the
-     *            ConAir network, for example "Main" or "ModServer"
+     *            The unique name of this client to identify itself in the ConAir network, for example "Main" or "ModServer"
      * @param host
      *            The address of the ConAir server as an IP or domain.
      * @param port
@@ -127,8 +129,8 @@ public class ConAirClient {
     private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
-            onPacketReceived(msg);
+        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
+            onPacketReceived(wrappedPacket);
         }
     }
 
@@ -142,17 +144,18 @@ public class ConAirClient {
             System.err.println("Error while parsing " + wrappedPacket + "!");
             return;
         }
-        // Inform observer
+        // Inform listener
         Packet packet = result.get();
-        BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
-        if (consumer != null) {
-            consumer.accept(packet, wrappedPacket.getSource());
+        Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
+        if (map != null) {
+            for (final EventExecutor executor : map.values()) {
+                executor.execute(wrappedPacket.getSource(), packet);
+            }
         }
     }
+
     /**
-     * Send a packet to the ConAir server, who will deliver the packet to the
-     * targets. If targets are empty, the packet will be broadcasted to every
-     * registered client, but not this client.
+     * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
      * 
      * @param packet
      *            The data to send.
@@ -162,23 +165,36 @@ public class ConAirClient {
      *             Something went wrong
      */
     public void sendPacket(Packet packet, String... targets) throws Exception {
-        ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, targets));
+        ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, clientName, targets));
         if (result != null)
             result.sync();
     }
 
-    /**
-     * Register listener for a Packet type to receive and handle.
-     * 
-     * @param packetClass
-     *            The class of the packet this listener registers to
-     * @param handler
-     *            Packet handler for this type
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
-        registeredListener.put(packetClass, (BiConsumer<? super Packet, String>) handler);
-        registeredClasses.add(packetClass.getName());
+    public <L extends Listener> void registerPacketListener(L listener) {
+        final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
+        for (final Method method : declaredMethods) {
+            // ignore static methods & we need exactly two params
+            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 2) {
+                continue;
+            }
+
+            // accept the filter if it is true
+            if (String.class.isAssignableFrom(method.getParameterTypes()[0]) && Packet.class.isAssignableFrom(method.getParameterTypes()[1])) {
+                @SuppressWarnings("unchecked")
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[1];
+
+                // register the packet class
+                registeredClasses.add(packetClass.getName());
+
+                // register the EventExecutor
+                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                if (map == null) {
+                    map = Collections.synchronizedMap(new HashMap<>());
+                    registeredListener.put(packetClass, map);
+                }
+                map.put(listener.getClass(), new EventExecutor(listener, method));
+            }
+        }
     }
 
     /**

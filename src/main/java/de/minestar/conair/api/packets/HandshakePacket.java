@@ -27,9 +27,7 @@ package de.minestar.conair.api.packets;
 import de.minestar.conair.api.Packet;
 
 /**
- * After the connection to the server is established, the client MUST send this
- * packet to server to get into the network. Otherwise no packet will be
- * broadcasted.
+ * After the connection to the server is established, the client MUST send this packet to server to get into the network. Otherwise no packet will be broadcasted.
  */
 public class HandshakePacket implements Packet {
 

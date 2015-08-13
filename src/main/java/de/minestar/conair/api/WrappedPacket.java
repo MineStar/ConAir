@@ -40,8 +40,7 @@ import de.minestar.conair.utils.BufferUtils;
 import de.minestar.conair.utils.Unsafe;
 
 /**
- * Packet with additional information about the target of the packet. Contains a
- * serialized version of the packet (currently as JSON string)
+ * Packet with additional information about the target of the packet. Contains a serialized version of the packet (currently as JSON string)
  */
 public class WrappedPacket {
 
@@ -49,24 +48,24 @@ public class WrappedPacket {
     private final String packetClassName;
 
     private final List<String> targets;
+    private final String source;
 
     /**
-     * Used when client is sending a packet to the network. Wraps the packet,
-     * stores its content as JSON and add target information to the packet.
+     * Used when client is sending a packet to the network. Wraps the packet, stores its content as JSON and add target information to the packet.
      * 
      * @param packet
      *            The packet to wrap. Will be serialized as JSON.
      * @param targets
      *            The target clients in the network.
      */
-    private WrappedPacket(Packet packet, List<String> targets) {
+    private WrappedPacket(Packet packet, String source, List<String> targets) {
         try {
             this.packetAsJSON = encodePacket(packet);
         } catch (IOException e) {
             e.printStackTrace();
             this.packetAsJSON = "";
         }
-
+        this.source = source;
         this.packetClassName = packet.getClass().getName();
         this.targets = targets;
     }
@@ -94,18 +93,18 @@ public class WrappedPacket {
     }
 
     /**
-     * Used when server is sending the packet to a client in the network. The
-     * server set the target field as the packets source.
+     * Used when server is sending the packet to a client in the network. The server set the target field as the packets source.
      * 
      * @param wrappedPacket
      *            The wrapped packet, will stay unmodified.
-     * @param source
+     * @param target
      *            The source of the packet.
      */
-    private WrappedPacket(final WrappedPacket wrappedPacket, String source) {
+    private WrappedPacket(final WrappedPacket wrappedPacket, String source, String target) {
         this.packetAsJSON = wrappedPacket.packetAsJSON;
         this.packetClassName = wrappedPacket.packetClassName;
-        this.targets = Arrays.asList(source);
+        this.source = source;
+        this.targets = Arrays.asList(target);
     }
 
     /**
@@ -113,8 +112,7 @@ public class WrappedPacket {
      * 
      * @param clazz
      *            The class
-     * @return <code>true</code> if, and only if, this packet class name is
-     *         equals to {@link Class#getName()}
+     * @return <code>true</code> if, and only if, this packet class name is equals to {@link Class#getName()}
      */
     public boolean is(Class<? extends Packet> clazz) {
         return packetClassName.equals(clazz.getName());
@@ -159,10 +157,7 @@ public class WrappedPacket {
     }
 
     /**
-     * Get a list of targets. If the packet is received from ConAir server, use
-     * {@link #getSource()} as an easier way to receive the packets source.
-     * Otherwise, the list will contain all (or no one for a broadcast) targeted
-     * clients.
+     * Get a list of targets. If the packet is received from ConAir server, use {@link #getSource()} as an easier way to receive the packets source. Otherwise, the list will contain all (or no one for a broadcast) targeted clients.
      * 
      * @return Empty list for broadcast or targeted client names.
      */
@@ -178,14 +173,13 @@ public class WrappedPacket {
     }
 
     /**
-     * Shortcut for <code>getTargets().get(0)</code> with an additional check,
-     * if the list contains only one element. Otherwise it will return an empty
-     * string.
+     * Shortcut for <code>getTargets().get(0)</code> with an additional check, if the list contains only one element. Otherwise it will return an empty string.
      * 
      * @return
      */
     public String getSource() {
-        return targets.size() == 1 ? targets.get(0) : "";
+//        return targets.size() == 1 ? targets.get(0) : "";
+        return source;
     }
 
     @Override
@@ -202,13 +196,12 @@ public class WrappedPacket {
      *            List of targets.
      * @return A wrapped packet, ready to send to server.
      */
-    public static WrappedPacket create(Packet packet, String... targets) {
-        return new WrappedPacket(packet, Arrays.asList(targets));
+    public static WrappedPacket create(Packet packet, String source, String... targets) {
+        return new WrappedPacket(packet, source, Arrays.asList(targets));
     }
 
     /**
-     * Change target list to single source entry. See
-     * {@link #WrappedPacket(WrappedPacket, String)} for description.
+     * Change target list to single source entry. See {@link #WrappedPacket(WrappedPacket, String)} for description.
      * 
      * @param packet
      *            Packet to wrap. Will not be modified.
@@ -216,8 +209,8 @@ public class WrappedPacket {
      *            The source of the packet.
      * @return A wrapped packet, ready to send to clients.
      */
-    public static WrappedPacket rePack(final WrappedPacket packet, String source) {
-        return new WrappedPacket(packet, source);
+    public static WrappedPacket rePack(final WrappedPacket packet, String source, String target) {
+        return new WrappedPacket(packet, source, target);
     }
 
 }

@@ -30,12 +30,11 @@ import java.nio.file.Paths;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
+import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.server.ConAirServer;
 
 /**
- * Demonstration of the ConAir API starting a server and three clients are
- * connecting to the server. After the handshake, clients are sending chat
- * packets.
+ * Demonstration of the ConAir API starting a server and three clients are connecting to the server. After the handshake, clients are sending chat packets.
  */
 public class ConAirTest {
 
@@ -47,39 +46,27 @@ public class ConAirTest {
             // Create the server
             ConAirServer server = new ConAirServer();
             server.start(PORT);
-            server.registerPacketListener(ResourcePacket.class, (ResourcePacket packet, String source) -> {
-                System.out.println("ResourcePacket: " + packet.toString());
-                try {
-                    new File("rec.jpg").createNewFile();
-                    Files.write(Paths.get("rec.jpg"), packet.getData());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+            server.registerPacketListener(new TestListener("S"));
+
             Thread.sleep(500); // Just for test
 
             // Create first client and connect to server
             ConAirClient client1 = new ConAirClient("Client1");
-            client1.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
-                onPacketReceive(packet, source);
-            });
+            client1.registerPacketListener(new TestListener("C1"));
             client1.connect("localhost", PORT); // domain
 
             Thread.sleep(500); // Just for test
 
             // Create second client and connect to server
             ConAirClient client2 = new ConAirClient("Client2");
-            client2.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
-                System.out.println("C2 (from " + source + ") " + packet.getMessage());
-            });
-
+            client2.registerPacketListener(new TestListener("C2"));
             client2.connect("127.0.0.1", PORT); // ipv4
 
             Thread.sleep(500); // Just for test
 
             // Create third client and connect to server
             ConAirClient client3 = new ConAirClient("Client3");
-            client3.registerPacketListener(ChatPacket.class, (packet, source) -> System.out.println("C3 (from " + source + ") " + packet.getMessage()));
+            client3.registerPacketListener(new TestListener("C3"));
             client3.connect("::1", PORT); // ipv6
 
             // Create third client and connect to server, This client hasn't a
@@ -110,8 +97,9 @@ public class ConAirTest {
 
             // send a resourcepacket
             client1.sendPacket(new ResourcePacket(new File("send.jpg")), ConAir.SERVER);
+            client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
 
-            Thread.sleep(1000); // Just for test
+            // Thread.sleep(1000); // Just for test
 
             // Clients are disconnecting, server is shutting down
             System.out.println("Shutting down...");
@@ -126,6 +114,30 @@ public class ConAirTest {
             e.printStackTrace();
         }
     }
+
+    public static class TestListener implements Listener {
+
+        private String name;
+
+        public TestListener(String n) {
+            name = n;
+        }
+
+        public void onChatPacket(String source, ChatPacket packet) {
+            System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
+        }
+
+        public void onResourcePacket(String source, ResourcePacket packet) {
+            System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
+            try {
+                new File("rec.jpg").createNewFile();
+                Files.write(Paths.get("rec.jpg"), packet.getData());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void onPacketReceive(ChatPacket packet, String source) {
         System.out.println("C1 (from " + source + ") " + packet.getMessage());
     }

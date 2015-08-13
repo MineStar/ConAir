@@ -24,13 +24,6 @@
 
 package de.minestar.conair.server;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -39,19 +32,36 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.WrappedPacket;
+import de.minestar.conair.api.event.EventExecutor;
+import de.minestar.conair.api.event.Listener;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private Set<String> registeredClasses;
-    private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
+    private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
 
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
     protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
+
+    public ConAirServerHandler() {
+        this.registeredListener = Collections.synchronizedMap(new HashMap<>());
+        this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
+    }
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
@@ -59,9 +69,6 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         channels.add(ctx.channel());
         // Mark channel as not initialized - waiting for handshake
         ctx.channel().attr(KEY_IS_INITIALIZED).getAndSet(Boolean.FALSE);
-
-        this.registeredListener = new HashMap<>();
-        this.registeredClasses = new HashSet<>();
     }
 
     @Override
@@ -77,7 +84,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
         // Wrap the packet and store the source name (maybe useful for target to
         // know, who the source is)
-        WrappedPacket packet = WrappedPacket.rePack(wrappedPacket, getClientName(ctx.channel()));
+        WrappedPacket packet = WrappedPacket.rePack(wrappedPacket, wrappedPacket.getSource(), getClientName(ctx.channel()));
         // Broadcast packet - except for the channel, which is the sender of the
         // packet and which haven't finished handhake with the server.
         if (wrappedPacket.getTargets().isEmpty()) {
@@ -97,6 +104,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     }
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
+        System.out.println("from: " + wrappedPacket.getSource());
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
             return false;
@@ -106,11 +114,13 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
             System.err.println("Error while parsing " + wrappedPacket + "!");
             return true;
         }
-        // Inform observer
+        // Inform listener
         Packet packet = result.get();
-        BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
-        if (consumer != null) {
-            consumer.accept(packet, wrappedPacket.getSource());
+        Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
+        if (map != null) {
+            for (final EventExecutor executor : map.values()) {
+                executor.execute(wrappedPacket.getSource(), packet);
+            }
         }
         return true;
     }
@@ -119,18 +129,31 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         return channel.attr(KEY_CLIENT_NAME).get();
     }
 
-    /**
-     * Register listener for a Packet type to receive and handle.
-     * 
-     * @param packetClass
-     *            The class of the packet this listener registers to
-     * @param handler
-     *            Packet handler for this type
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
-        registeredListener.put(packetClass, (BiConsumer<? super Packet, String>) handler);
-        registeredClasses.add(packetClass.getName());
+    public <L extends Listener> void registerPacketListener(L listener) {
+        final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
+        for (final Method method : declaredMethods) {
+            // ignore static methods & we need exactly two params
+            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 2) {
+                continue;
+            }
+
+            // accept the filter if it is true
+            if (String.class.isAssignableFrom(method.getParameterTypes()[0]) && Packet.class.isAssignableFrom(method.getParameterTypes()[1])) {
+                @SuppressWarnings("unchecked")
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[1];
+
+                // register the packet class
+                registeredClasses.add(packetClass.getName());
+
+                // register the EventExecutor
+                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                if (map == null) {
+                    map = Collections.synchronizedMap(new HashMap<>());
+                    registeredListener.put(packetClass, map);
+                }
+                map.put(listener.getClass(), new EventExecutor(listener, method));
+            }
+        }
     }
 
     @Override
