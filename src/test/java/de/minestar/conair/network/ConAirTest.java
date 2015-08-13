@@ -24,6 +24,10 @@
 
 package de.minestar.conair.network;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.server.ConAirServer;
 
@@ -45,32 +49,42 @@ public class ConAirTest {
             Thread.sleep(500); // Just for test
 
             // Create first client and connect to server
-            ConAirClient client1 = new ConAirClient();
+            ConAirClient client1 = new ConAirClient("Client1");
             client1.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
                 onPacketReceive(packet, source);
             });
-            client1.connect("Client1", "localhost", PORT); // domain
+            client1.connect("localhost", PORT); // domain
 
             Thread.sleep(500); // Just for test
 
             // Create second client and connect to server
-            ConAirClient client2 = new ConAirClient();
+            ConAirClient client2 = new ConAirClient("Client2");
             client2.registerPacketListener(ChatPacket.class, (ChatPacket packet, String source) -> {
                 System.out.println("C2 (from " + source + ") " + packet.getMessage());
             });
-            client2.connect("Client2", "127.0.0.1", PORT); // ipv4
+
+            client2.registerPacketListener(ResourcePacket.class, (ResourcePacket packet, String source) -> {
+                System.out.println("ResourcePacket: " + packet.toString());
+                try {
+                    new File("rec.jpg").createNewFile();
+                    Files.write(Paths.get("rec.jpg"), packet.getData());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            client2.connect("127.0.0.1", PORT); // ipv4
 
             Thread.sleep(500); // Just for test
 
             // Create third client and connect to server
-            ConAirClient client3 = new ConAirClient();
+            ConAirClient client3 = new ConAirClient("Client3");
             client3.registerPacketListener(ChatPacket.class, (packet, source) -> System.out.println("C3 (from " + source + ") " + packet.getMessage()));
-            client3.connect("Client3", "::1", PORT); // ipv6
+            client3.connect("::1", PORT); // ipv6
 
             // Create third client and connect to server, This client hasn't a
             // packet registered!
-            ConAirClient client4 = new ConAirClient();
-            client4.connect("Client4", "::1", PORT); // ipv6
+            ConAirClient client4 = new ConAirClient("Client4");
+            client4.connect("::1", PORT); // ipv6
 
             Thread.sleep(500); // Just for test
 
@@ -93,18 +107,24 @@ public class ConAirTest {
 
             Thread.sleep(50); // Just for test
 
+            // send a resourcepacket
+            client1.sendPacket(new ResourcePacket(new File("send.jpg")), "Client2");
+
+            Thread.sleep(1000); // Just for test
+
             // Clients are disconnecting, server is shutting down
+            System.out.println("Shutting down...");
             client1.disconnect();
             client2.disconnect();
             client3.disconnect();
             client4.disconnect();
             server.stop();
 
+            System.out.println("Test ended!");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     public static void onPacketReceive(ChatPacket packet, String source) {
         System.out.println("C1 (from " + source + ") " + packet.getMessage());
     }

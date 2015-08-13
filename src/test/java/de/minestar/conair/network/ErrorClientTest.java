@@ -79,7 +79,7 @@ public class ErrorClientTest {
     @Test
     public void test() throws Exception {
         ErrorClient client = new ErrorClient();
-        client.connect("error1", "localhost", PORT);
+        client.connect("localhost", PORT);
         // Create an exception
         client.sendPacket(new ChatPacket("Need a handhake? lol, not interested!"));
     }
@@ -93,12 +93,13 @@ public class ErrorClientTest {
         private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
 
         public ErrorClient() {
+            super("ERRORCLIENT");
             this.group = new NioEventLoopGroup();
             this.registeredListener = new HashMap<>();
             this.registeredClasses = new HashSet<>();
         }
 
-        public void connect(String clientName, String host, int port) throws Exception {
+        public void connect(String host, int port) throws Exception {
             Bootstrap bootStrap = new Bootstrap();
             bootStrap.group(group).channel(NioSocketChannel.class);
             // Add initializer

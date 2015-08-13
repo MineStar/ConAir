@@ -60,12 +60,18 @@ public class ConAirClient {
 
     private Set<String> registeredClasses;
     private Map<Class<? extends Packet>, BiConsumer<? super Packet, String>> registeredListener;
+    private String clientName;
 
-    public ConAirClient() {
+    public ConAirClient(String clientName) {
+        this.clientName = clientName;
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
         this.registeredListener = new HashMap<>();
         this.registeredClasses = new HashSet<>();
+    }
+
+    public String getClientName() {
+        return clientName;
     }
 
     /**
@@ -82,7 +88,7 @@ public class ConAirClient {
      * @throws Exception
      *             Something went wrong
      */
-    public void connect(String clientName, String host, int port) throws Exception {
+    public void connect(String host, int port) throws Exception {
         if (isConnected) {
             throw new IllegalStateException("Client is already connected!");
         }
@@ -96,7 +102,8 @@ public class ConAirClient {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // Wait until the buffer contains the complete JSON object
-                pipeline.addLast("frameDecoder", new JsonObjectDecoder());
+                // max 10 MB
+                pipeline.addLast("frameDecoder", new JsonObjectDecoder(10 * 1024 * 1024));
                 // Decode and encode the buffer bytes arrays to readable strings
                 pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
                 pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
@@ -113,7 +120,7 @@ public class ConAirClient {
 
         channel = bootStrap.connect(host, port).sync().channel();
         // Register at server with unique name
-        sendPacket(new HandshakePacket(clientName), WrappedPacket.TARGET_SERVER);
+        sendPacket(new HandshakePacket(this.clientName), WrappedPacket.TARGET_SERVER);
         isConnected = true;
     }
 
@@ -127,8 +134,7 @@ public class ConAirClient {
 
     private void onPacketReceived(WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
-            // TODO: Write debug logger
-            // The packet isn't for this client
+            // The packet is not registered in this client
             return;
         }
         Optional<Packet> result = wrappedPacket.getPacket();
@@ -136,8 +142,8 @@ public class ConAirClient {
             System.err.println("Error while parsing " + wrappedPacket + "!");
             return;
         }
-        Packet packet = result.get();
         // Inform observer
+        Packet packet = result.get();
         BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
         if (consumer != null) {
             consumer.accept(packet, wrappedPacket.getSource());

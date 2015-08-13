@@ -27,6 +27,7 @@ package de.minestar.conair.network;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.Optional;
 
 import org.junit.Test;
@@ -50,6 +51,20 @@ public class PacketTest {
         ChatPacket receivedPacket = possibleResult.get();
         // Check if messages are equal
         assertEquals(sentPacket.getMessage(), receivedPacket.getMessage());
+    }
+
+    @Test
+    public void fileTest() {
+        // Create test packet
+        ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
+        // Serialize packet while wrapping
+        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket);
+        // Parse packet
+        Optional<ResourcePacket> possibleResult = wrappedPacket.getPacket();
+        assertTrue(possibleResult.isPresent());
+        ResourcePacket receivedPacket = possibleResult.get();
+        // Check if messages are equal
+        assertEquals(sentPacket.getData().length, receivedPacket.getData().length);
     }
 
 }

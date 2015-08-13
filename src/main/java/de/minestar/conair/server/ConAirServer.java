@@ -69,7 +69,7 @@ public class ConAirServer {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // Wait until the buffer contains the complete JSON object
-                pipeline.addLast("frameDecoder", new JsonObjectDecoder());
+                pipeline.addLast("frameDecoder", new JsonObjectDecoder(10 * 1024 * 1024));
                 // Decode and encode the buffer bytes arrays to readable strings
                 pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
                 pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));

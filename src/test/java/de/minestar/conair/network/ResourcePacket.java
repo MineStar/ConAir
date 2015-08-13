@@ -22,11 +22,37 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.network;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import de.minestar.conair.api.Packet;
 
 /**
- * Interface to indicate that
+ * Demonstration of a possible chat packet
  */
-public interface Packet {
+public class ResourcePacket implements Packet {
+
+    private byte[] data;
+
+    public ResourcePacket(final File file) {
+        try {
+            data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    @Override
+    public String toString() {
+        return "ResourcePacket [data.length=" + data.length + "]";
+    }
 
 }

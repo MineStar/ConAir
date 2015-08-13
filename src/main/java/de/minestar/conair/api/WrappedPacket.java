@@ -24,12 +24,20 @@
 
 package de.minestar.conair.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import de.minestar.conair.utils.BufferUtils;
+import de.minestar.conair.utils.Unsafe;
 
 /**
  * Packet with additional information about the target of the packet. Contains a
@@ -42,10 +50,7 @@ public class WrappedPacket {
      */
     public static final String TARGET_SERVER = "ConAirServer";
 
-    // The JSON serializer
-    private static final Gson JSON_MAPPER = new Gson();
-
-    private final String packetAsJSON;
+    private String packetAsJSON;
     private final String packetClassName;
 
     private final List<String> targets;
@@ -60,9 +65,37 @@ public class WrappedPacket {
      *            The target clients in the network.
      */
     private WrappedPacket(Packet packet, List<String> targets) {
-        this.packetAsJSON = JSON_MAPPER.toJson(packet);
+        try {
+            this.packetAsJSON = encodePacket(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+            this.packetAsJSON = "";
+        }
+
         this.packetClassName = packet.getClass().getName();
         this.targets = targets;
+    }
+
+    private String encodePacket(Packet packet) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        final Field[] fields = packet.getClass().getDeclaredFields();
+        for (final Field field : fields) {
+            // ignore "volatile" and "transient" fields
+            if (Modifier.isVolatile(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
+
+            field.setAccessible(true);
+            try {
+                BufferUtils.writeObjectIntoBuffer(oos, field.get(packet));
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            field.setAccessible(false);
+        }
+        oos.close();
+        return Base64.getEncoder().encodeToString(bos.toByteArray());
     }
 
     /**
@@ -98,17 +131,36 @@ public class WrappedPacket {
      * @return 
      */
     public <T extends Packet> Optional<T> getPacket() {
-
+        T result;
         try {
-            T result = (T) JSON_MAPPER.fromJson(packetAsJSON, Class.forName(packetClassName));
+            result = decodePacket(packetAsJSON, (Class<T>) Class.forName(packetClassName));
             return Optional.of(result);
-        } catch (JsonSyntaxException e) {
+        } catch (ClassNotFoundException | IOException | InstantiationException e) {
             e.printStackTrace();
-            return Optional.empty();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return Optional.empty();
         }
+        return Optional.empty();
+    }
+
+    private <T extends Packet> T decodePacket(String data, Class<T> packetClass) throws IOException, InstantiationException {
+        // get the constructor
+
+        ByteArrayInputStream bos = new ByteArrayInputStream(Base64.getDecoder().decode(data.getBytes()));
+        ObjectInputStream oos = new ObjectInputStream(bos);
+
+        T instance = (T) Unsafe.get().allocateInstance(packetClass);
+
+        final Field[] fields = packetClass.getDeclaredFields();
+        for (final Field field : fields) {
+            field.setAccessible(true);
+            if (!BufferUtils.readObjectFromBuffer(oos, instance, field)) {
+                throw new IllegalArgumentException("Field '" + field.getName() + "' could not be read (unknown datatype)!");
+            }
+            field.setAccessible(false);
+        }
+
+        oos.close();
+
+        return instance;
     }
 
     /**
