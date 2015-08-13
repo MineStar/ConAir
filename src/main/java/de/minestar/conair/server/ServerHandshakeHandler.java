@@ -30,6 +30,7 @@ import io.netty.util.AttributeKey;
 
 import java.util.Optional;
 
+import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.packets.ErrorPacket;
 import de.minestar.conair.api.packets.ErrorPacket.ErrorType;
@@ -71,13 +72,13 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
         // Channel tries a twice handshake
         else if (isInitialized(ctx) && msg.is(HandshakePacket.class)) {
             ErrorPacket packet = new ErrorPacket(ErrorType.DUPLICATE_HANDSHAKE);
-            ctx.writeAndFlush(WrappedPacket.create(packet, WrappedPacket.TARGET_SERVER));
+            ctx.writeAndFlush(WrappedPacket.create(packet, ConAir.SERVER));
             throw new IllegalStateException("Channel did two handshakes!");
         }
         // Channel tries to sent packets without a handshake
         else {
             ErrorPacket packet = new ErrorPacket(ErrorType.NO_HANDSHAKE);
-            ctx.writeAndFlush(WrappedPacket.create(packet, WrappedPacket.TARGET_SERVER));
+            ctx.writeAndFlush(WrappedPacket.create(packet, ConAir.SERVER));
             throw new IllegalStateException("Channel cannot broadcast before a handshake!");
         }
     }

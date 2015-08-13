@@ -45,11 +45,6 @@ import de.minestar.conair.utils.Unsafe;
  */
 public class WrappedPacket {
 
-    /**
-     * The name for the server. No client can have this name
-     */
-    public static final String TARGET_SERVER = "ConAirServer";
-
     private String packetAsJSON;
     private final String packetClassName;
 

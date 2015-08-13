@@ -120,7 +120,7 @@ public class ConAirClient {
 
         channel = bootStrap.connect(host, port).sync().channel();
         // Register at server with unique name
-        sendPacket(new HandshakePacket(this.clientName), WrappedPacket.TARGET_SERVER);
+        sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
         isConnected = true;
     }
 
@@ -147,8 +147,6 @@ public class ConAirClient {
         BiConsumer<? super Packet, String> consumer = registeredListener.get(packet.getClass());
         if (consumer != null) {
             consumer.accept(packet, wrappedPacket.getSource());
-        } else {
-            // Do nothing
         }
     }
     /**

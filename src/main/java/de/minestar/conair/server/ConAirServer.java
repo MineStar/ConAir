@@ -24,6 +24,8 @@
 
 package de.minestar.conair.server;
 
+import java.util.function.BiConsumer;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -38,6 +40,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
+import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
 
@@ -48,6 +51,7 @@ public class ConAirServer {
     private Channel serverChannel;
 
     private boolean isRunning;
+    private ConAirServerHandler packetHandler;
 
     public ConAirServer() {
         this.isRunning = false;
@@ -80,13 +84,31 @@ public class ConAirServer {
                 pipeline.addLast("jsonEncoder", new JsonEncoder());
 
                 pipeline.addLast("handshakeHandler", new ServerHandshakeHandler());
+
                 // Add server logic
-                pipeline.addLast(new ConAirServerHandler());
+                packetHandler = new ConAirServerHandler();
+                pipeline.addLast(packetHandler);
             }
         });
         // Start server
         this.serverChannel = bootStrap.bind(port).sync().channel();
         this.isRunning = true;
+    }
+
+    /**
+     * Register listener for a Packet type to receive and handle.
+     * 
+     * @param packetClass
+     *            The class of the packet this listener registers to
+     * @param handler
+     *            Packet handler for this type
+     */
+    public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
+        if (this.packetHandler != null) {
+            this.packetHandler.registerPacketListener(packetClass, handler);
+        } else {
+            throw new RuntimeException("Cannot register packet. Server is not started yet!");
+        }
     }
 
     public void stop() throws Exception {

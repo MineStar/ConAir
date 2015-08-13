@@ -28,6 +28,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.server.ConAirServer;
 
@@ -46,6 +47,15 @@ public class ConAirTest {
             // Create the server
             ConAirServer server = new ConAirServer();
             server.start(PORT);
+            server.registerPacketListener(ResourcePacket.class, (ResourcePacket packet, String source) -> {
+                System.out.println("ResourcePacket: " + packet.toString());
+                try {
+                    new File("rec.jpg").createNewFile();
+                    Files.write(Paths.get("rec.jpg"), packet.getData());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
             Thread.sleep(500); // Just for test
 
             // Create first client and connect to server
@@ -63,15 +73,6 @@ public class ConAirTest {
                 System.out.println("C2 (from " + source + ") " + packet.getMessage());
             });
 
-            client2.registerPacketListener(ResourcePacket.class, (ResourcePacket packet, String source) -> {
-                System.out.println("ResourcePacket: " + packet.toString());
-                try {
-                    new File("rec.jpg").createNewFile();
-                    Files.write(Paths.get("rec.jpg"), packet.getData());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
             client2.connect("127.0.0.1", PORT); // ipv4
 
             Thread.sleep(500); // Just for test
@@ -108,7 +109,7 @@ public class ConAirTest {
             Thread.sleep(50); // Just for test
 
             // send a resourcepacket
-            client1.sendPacket(new ResourcePacket(new File("send.jpg")), "Client2");
+            client1.sendPacket(new ResourcePacket(new File("send.jpg")), ConAir.SERVER);
 
             Thread.sleep(1000); // Just for test
 
