@@ -32,20 +32,13 @@ import java.util.Collection;
 
 public class BufferUtils {
 
-    private static final String PREFIX_ARRAY = "[ARRAY]";
-    private static final String PREFIX_COLLECTION = "[COLLECTION]";
-    private static final String PREFIX_OBJECT = "[OBJECT]";
-
     private static String convertObjectToString(final Object object) {
         final StringBuilder stringBuilder = new StringBuilder();
         if (object.getClass().isArray()) {
-            stringBuilder.append(PREFIX_ARRAY);
             stringBuilder.append(XmlUtils.objectToXml(object));
         } else if (Collection.class.isAssignableFrom(object.getClass())) {
-            stringBuilder.append(PREFIX_COLLECTION);
             stringBuilder.append(XmlUtils.objectToXml(object));
         } else if (Serializable.class.isAssignableFrom(object.getClass())) {
-            stringBuilder.append(PREFIX_OBJECT);
             stringBuilder.append(XmlUtils.serializeObject((Serializable) object));
         }
         return stringBuilder.toString();
@@ -60,10 +53,6 @@ public class BufferUtils {
             }
             if (clazz.equals(byte.class) || clazz.equals(Byte.class)) {
                 field.set(instance, buffer.readByte());
-                return true;
-            }
-            if (clazz.equals(byte[].class) || clazz.equals(Byte[].class)) {
-                field.set(instance, buffer.readObject());
                 return true;
             }
             if (clazz.equals(short.class) || clazz.equals(Short.class)) {
@@ -87,21 +76,25 @@ public class BufferUtils {
                 return true;
             }
             if (clazz.equals(String.class)) {
-                String text = buffer.readUTF();
-                if (text.startsWith(PREFIX_ARRAY)) {
-                    text = text.substring(PREFIX_ARRAY.length());
-                    field.set(instance, (Object[]) XmlUtils.objectFromXml(text));
-                    return true;
-                } else if (text.startsWith(PREFIX_COLLECTION)) {
-                    text = text.substring(PREFIX_COLLECTION.length());
-                    field.set(instance, (Collection<?>) XmlUtils.objectFromXml(text));
-                    return true;
-                } else if (text.startsWith(PREFIX_OBJECT)) {
-                    text = text.substring(PREFIX_OBJECT.length());
-                    field.set(instance, XmlUtils.deserializeObject(text));
-                    return true;
-                }
-                field.set(instance, text);
+                field.set(instance, buffer.readUTF());
+                return true;
+            }
+
+            // arrays should always be stored as xml
+            if (clazz.isArray()) {
+                field.set(instance, XmlUtils.objectFromXml(buffer.readUTF()));
+                return true;
+            }
+
+            // collections stored as xml
+            if (Collection.class.isAssignableFrom(clazz)) {
+                field.set(instance, XmlUtils.objectFromXml(buffer.readUTF()));
+                return true;
+            }
+
+            // serializables stored as xml
+            if (Serializable.class.isAssignableFrom(clazz)) {
+                field.set(instance, XmlUtils.deserializeObject(buffer.readUTF()));
                 return true;
             }
         } catch (Exception e) {
@@ -118,10 +111,6 @@ public class BufferUtils {
             }
             if (value.getClass().equals(byte.class) || value.getClass().equals(Byte.class)) {
                 buffer.writeByte((byte) value);
-                return true;
-            }
-            if (value.getClass().equals(byte[].class) || value.getClass().equals(Byte[].class)) {
-                buffer.writeObject(value);
                 return true;
             }
             if (value.getClass().equals(short.class) || value.getClass().equals(Short.class)) {
@@ -150,7 +139,6 @@ public class BufferUtils {
             }
             // arrays should always be stored as xml
             if (value.getClass().isArray()) {
-                System.out.println("is array");
                 buffer.writeUTF(convertObjectToString(value));
                 return true;
             }
