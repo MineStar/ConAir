@@ -39,9 +39,7 @@ public class ResourcePacket implements Packet {
     private final byte[] data;
 
     public ResourcePacket(final File file) throws IOException {
-        System.out.println("1");
         this.data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
-        System.out.println("2");
     }
 
     public byte[] getData() {

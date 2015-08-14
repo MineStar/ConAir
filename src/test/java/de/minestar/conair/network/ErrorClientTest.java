@@ -168,16 +168,11 @@ public class ErrorClientTest {
             }
         }
 
+        @Override
         public void sendPacket(Packet packet, String... targets) throws Exception {
-            ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, targets));
+            ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, getClientName(), targets));
             if (result != null)
                 result.sync();
-        }
-
-        @SuppressWarnings("unchecked")
-        public <T extends Packet> void registerPacketListener(Class<T> packetClass, BiConsumer<T, String> handler) {
-            registeredListener.put(packetClass, (BiConsumer<? super Packet, String>) handler);
-            registeredClasses.add(packetClass.getName());
         }
 
     }

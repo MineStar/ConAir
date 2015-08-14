@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class PacketTest {
         // Create test packet
         ChatPacket sentPacket = new ChatPacket("Das Pferd frisst keinen Gurkensalat!");
         // Serialize packet while wrapping
-        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket);
+        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket, "", "");
         // Parse packet
         Optional<ChatPacket> possibleResult = wrappedPacket.getPacket();
         assertTrue(possibleResult.isPresent());
@@ -54,11 +55,11 @@ public class PacketTest {
     }
 
     @Test
-    public void fileTest() {
+    public void fileTest() throws IOException {
         // Create test packet
         ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
         // Serialize packet while wrapping
-        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket);
+        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket, "", "");
         // Parse packet
         Optional<ResourcePacket> possibleResult = wrappedPacket.getPacket();
         assertTrue(possibleResult.isPresent());

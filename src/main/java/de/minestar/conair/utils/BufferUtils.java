@@ -43,51 +43,48 @@ public class BufferUtils {
         return null;
     }
 
-    public static boolean readObjectFromBuffer(final ObjectInputStream buffer, final Object instance, final Field field) {
+    private static Object readNextObjectFromBuffer(final ObjectInputStream buffer, final Class<?> clazz) {
         try {
-            final Class<?> clazz = field.getType();
             if (clazz.equals(boolean.class) || clazz.equals(Boolean.class)) {
-                field.set(instance, buffer.readByte() == 1);
-                return true;
+                return buffer.readBoolean();
             }
             if (clazz.equals(byte.class) || clazz.equals(Byte.class)) {
-                field.set(instance, buffer.readByte());
-                return true;
+                return buffer.readByte();
             }
             if (clazz.equals(short.class) || clazz.equals(Short.class)) {
-                field.set(instance, buffer.readShort());
-                return true;
+                return buffer.readShort();
             }
             if (clazz.equals(int.class) || clazz.equals(Integer.class)) {
-                field.set(instance, buffer.readInt());
-                return true;
+                return buffer.readInt();
             }
             if (clazz.equals(long.class) || clazz.equals(Long.class)) {
-                field.set(instance, buffer.readLong());
-                return true;
+                return buffer.readLong();
             }
             if (clazz.equals(float.class) || clazz.equals(Float.class)) {
-                field.set(instance, buffer.readFloat());
-                return true;
+                return buffer.readFloat();
             }
             if (clazz.equals(double.class) || clazz.equals(Double.class)) {
-                field.set(instance, buffer.readDouble());
-                return true;
+                return buffer.readDouble();
             }
             if (clazz.equals(String.class)) {
-                field.set(instance, buffer.readUTF());
-                return true;
+                return buffer.readUTF();
             }
             // arrays & serializable
-            if (clazz.isArray() || Serializable.class.isAssignableFrom(clazz)) {
-                field.set(instance, buffer.readObject());
-                return true;
+            if (clazz.isArray() && Serializable.class.isAssignableFrom(clazz)) {
+                return buffer.readObject();
             }
-            // collections stored as xml
-            if (Collection.class.isAssignableFrom(clazz)) {
-                field.set(instance, XmlUtils.objectFromXml(buffer.readUTF()));
-                return true;
-            }
+
+            return XmlUtils.objectFromXml(buffer.readUTF());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean readObjectFromBuffer(final ObjectInputStream buffer, final Object instance, final Field field) {
+        try {
+            field.set(instance, readNextObjectFromBuffer(buffer, field.getType()));
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -128,16 +125,16 @@ public class BufferUtils {
                 buffer.writeUTF((String) value);
                 return true;
             }
+
             // arrays & serializable
-            if (value.getClass().isArray() || Serializable.class.isAssignableFrom(value.getClass())) {
+            if (value.getClass().isArray() && Serializable.class.isAssignableFrom(value.getClass())) {
                 buffer.writeObject(value);
                 return true;
             }
+
             // collections stored as xml
-            if (Collection.class.isAssignableFrom(value.getClass())) {
-                buffer.writeUTF(convertObjectToString(value));
-                return true;
-            }
+            buffer.writeUTF(convertObjectToString(value));
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
