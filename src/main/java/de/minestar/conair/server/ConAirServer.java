@@ -104,6 +104,10 @@ public class ConAirServer {
         this.isRunning = true;
     }
 
+    public boolean isRunning() {
+        return isRunning;
+    }
+
     /**
      * Register listener for a Packet type to receive and handle.
      * 

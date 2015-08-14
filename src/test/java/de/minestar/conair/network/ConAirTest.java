@@ -30,6 +30,9 @@ import java.nio.file.Paths;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.event.Listener;
@@ -55,13 +58,15 @@ public class ConAirTest {
 
     private static long CRC_CHECK;
 
-    public static void main(String[] args) {
+    @Test
+    public void testConAir() {
         try {
 
             // Create the server
             ConAirServer server = new ConAirServer();
             server.start(PORT);
             server.registerPacketListener(new TestListener("S"));
+            Assert.assertTrue(server.isRunning());
 
             Thread.sleep(500); // Just for test
 
@@ -69,27 +74,25 @@ public class ConAirTest {
             ConAirClient client1 = new ConAirClient("Client1");
             client1.registerPacketListener(new TestListener("C1"));
             client1.connect("localhost", PORT); // domain
-
-            Thread.sleep(500); // Just for test
+            Assert.assertTrue(client1.isConnected());
 
             // Create second client and connect to server
             ConAirClient client2 = new ConAirClient("Client2\"");
             client2.registerPacketListener(new TestListener("C2"));
             client2.connect("127.0.0.1", PORT); // ipv4
-
-            Thread.sleep(500); // Just for test
+            Assert.assertTrue(client2.isConnected());
 
             // Create third client and connect to server
             ConAirClient client3 = new ConAirClient("Client3");
             client3.registerPacketListener(new TestListener("C3"));
             client3.connect("::1", PORT); // ipv6
+            Assert.assertTrue(client3.isConnected());
 
             // Create third client and connect to server, This client hasn't a
             // packet registered!
             ConAirClient client4 = new ConAirClient("Client4");
             client4.connect("::1", PORT); // ipv6
-
-            Thread.sleep(250); // Just for test
+            Assert.assertTrue(client4.isConnected());
 
             // Clients are sending packets to everyone in the network
             client1.sendPacket(new ChatPacket("Hi!"), "Client2\"");
@@ -111,7 +114,6 @@ public class ConAirTest {
             // send a resourcepacket
             ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
             CRC_CHECK = crc(resourcePacket.getData());
-//            client1.sendPacket(resourcePacket, ConAir.SERVER);
             client2.sendPacket(resourcePacket, "Client1");
 
             // send a packet for the server only
@@ -125,14 +127,17 @@ public class ConAirTest {
             client2.disconnect();
             client3.disconnect();
             client4.disconnect();
-            server.stop();
+            Assert.assertFalse(client1.isConnected());
+            Assert.assertFalse(client2.isConnected());
+            Assert.assertFalse(client3.isConnected());
+            Assert.assertFalse(client4.isConnected());
 
-            System.out.println("Test ended!");
+            server.stop();
+            Assert.assertFalse(server.isRunning());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     public static class TestListener implements Listener {
 
         private String name;
@@ -147,10 +152,7 @@ public class ConAirTest {
 
         public void onResourcePacket(String source, ResourcePacket packet) {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
-            if (CRC_CHECK != crc(packet.getData())) {
-                System.out.println("CRC IS DIFFERENT!!!!");
-                return;
-            }
+            Assert.assertEquals("CRC IS DIFFERENT!!!!", crc(packet.getData()), CRC_CHECK);
             try {
                 String filename = "rec.jpg";
                 new File(filename).createNewFile();

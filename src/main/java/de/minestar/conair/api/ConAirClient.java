@@ -130,6 +130,11 @@ public class ConAirClient {
         sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
         isConnected = true;
     }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
     private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         @Override
@@ -224,8 +229,8 @@ public class ConAirClient {
             throw new IllegalStateException("Client is not connected!");
         }
         channel.close().sync();
-
         group.shutdownGracefully().sync();
+        isConnected = false;
     }
 
 }
