@@ -67,9 +67,7 @@ public class ConAirTest {
             server.start(PORT);
             server.registerPacketListener(new TestListener("S"));
             Assert.assertTrue(server.isRunning());
-
-            Thread.sleep(500); // Just for test
-
+            
             // Create first client and connect to server
             ConAirClient client1 = new ConAirClient("Client1");
             client1.registerPacketListener(new TestListener("C1"));
@@ -100,16 +98,10 @@ public class ConAirTest {
             client2.sendPacket(new ChatPacket("Hello!"));
             Thread.sleep(50);
             client3.sendPacket(new ChatPacket("Moin!"));
-
-            Thread.sleep(500); // Just for test
-
             // Client 1 talks to client 3
             client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), "Client3");
-            Thread.sleep(50); // Just for test
-
             // Client 3 responses
             client3.sendPacket(new ChatPacket("Roger Client 1, I hear you loud and clear."), "Client1");
-            Thread.sleep(50); // Just for test
 
             // send a resourcepacket
             ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
