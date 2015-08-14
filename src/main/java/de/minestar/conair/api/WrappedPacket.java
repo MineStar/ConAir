@@ -89,7 +89,8 @@ public class WrappedPacket {
             field.setAccessible(false);
         }
         oos.close();
-        return Base64.getEncoder().encodeToString(bos.toByteArray());
+        String encodedString = Base64.getEncoder().encodeToString(bos.toByteArray());
+        return encodedString;
     }
 
     /**

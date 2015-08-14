@@ -24,6 +24,10 @@
 
 package de.minestar.conair.network;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.event.Listener;
@@ -92,10 +96,10 @@ public class ConAirTest {
             Thread.sleep(50); // Just for test
 
             // send a resourcepacket
-//            client1.sendPacket(new ResourcePacket(new File("send.jpg")), ConAir.SERVER);
+            client1.sendPacket(new ResourcePacket(new File("send.jpg")), ConAir.SERVER);
             client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
 
-            // Thread.sleep(1000); // Just for test
+            Thread.sleep(1000); // Just for test
 
             // Clients are disconnecting, server is shutting down
             System.out.println("Shutting down...");
@@ -123,18 +127,14 @@ public class ConAirTest {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
         }
 
-//        public void onResourcePacket(String source, ResourcePacket packet) {
-//            System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
-//            try {
-//                new File("rec.jpg").createNewFile();
-//                Files.write(Paths.get("rec.jpg"), packet.getData());
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-    }
-
-    public static void onPacketReceive(ChatPacket packet, String source) {
-        System.out.println("C1 (from " + source + ") " + packet.getMessage());
+        public void onResourcePacket(String source, ResourcePacket packet) {
+            System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
+            try {
+                new File("rec.png").createNewFile();
+                Files.write(Paths.get("rec.jpg"), packet.getData());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

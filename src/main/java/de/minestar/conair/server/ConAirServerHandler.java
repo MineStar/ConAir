@@ -104,7 +104,6 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     }
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
-        System.out.println("from: " + wrappedPacket.getSource());
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
             return false;

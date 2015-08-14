@@ -33,15 +33,14 @@ import java.util.Collection;
 public class BufferUtils {
 
     private static String convertObjectToString(final Object object) {
-        final StringBuilder stringBuilder = new StringBuilder();
         if (object.getClass().isArray()) {
-            stringBuilder.append(XmlUtils.objectToXml(object));
+            return XmlUtils.objectToXml(object);
         } else if (Collection.class.isAssignableFrom(object.getClass())) {
-            stringBuilder.append(XmlUtils.objectToXml(object));
+            return XmlUtils.objectToXml(object);
         } else if (Serializable.class.isAssignableFrom(object.getClass())) {
-            stringBuilder.append(XmlUtils.serializeObject((Serializable) object));
+            return XmlUtils.serializeObject((Serializable) object);
         }
-        return stringBuilder.toString();
+        return null;
     }
 
     public static boolean readObjectFromBuffer(final ObjectInputStream buffer, final Object instance, final Field field) {
@@ -79,22 +78,14 @@ public class BufferUtils {
                 field.set(instance, buffer.readUTF());
                 return true;
             }
-
-            // arrays should always be stored as xml
-            if (clazz.isArray()) {
-                field.set(instance, XmlUtils.objectFromXml(buffer.readUTF()));
+            // arrays & serializable
+            if (clazz.isArray() || Serializable.class.isAssignableFrom(clazz)) {
+                field.set(instance, buffer.readObject());
                 return true;
             }
-
             // collections stored as xml
             if (Collection.class.isAssignableFrom(clazz)) {
                 field.set(instance, XmlUtils.objectFromXml(buffer.readUTF()));
-                return true;
-            }
-
-            // serializables stored as xml
-            if (Serializable.class.isAssignableFrom(clazz)) {
-                field.set(instance, XmlUtils.deserializeObject(buffer.readUTF()));
                 return true;
             }
         } catch (Exception e) {
@@ -137,20 +128,13 @@ public class BufferUtils {
                 buffer.writeUTF((String) value);
                 return true;
             }
-            // arrays should always be stored as xml
-            if (value.getClass().isArray()) {
-                buffer.writeUTF(convertObjectToString(value));
+            // arrays & serializable
+            if (value.getClass().isArray() || Serializable.class.isAssignableFrom(value.getClass())) {
+                buffer.writeObject(value);
                 return true;
             }
-
             // collections stored as xml
             if (Collection.class.isAssignableFrom(value.getClass())) {
-                buffer.writeUTF(convertObjectToString(value));
-                return true;
-            }
-
-            // serializables stored as xml
-            if (Serializable.class.isAssignableFrom(value.getClass())) {
                 buffer.writeUTF(convertObjectToString(value));
                 return true;
             }

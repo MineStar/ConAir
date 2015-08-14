@@ -166,8 +166,9 @@ public class ConAirClient {
      */
     public void sendPacket(Packet packet, String... targets) throws Exception {
         ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, clientName, targets));
-        if (result != null)
+        if (result != null) {
             result.sync();
+        }
     }
 
     public <L extends Listener> void registerPacketListener(L listener) {
