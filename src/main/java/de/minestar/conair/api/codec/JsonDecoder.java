@@ -24,13 +24,14 @@
 
 package de.minestar.conair.api.codec;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
+
 import java.util.List;
 
 import com.google.gson.Gson;
 
 import de.minestar.conair.api.WrappedPacket;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageDecoder;
 
 /**
  * Converts a JSON encoded string to an {@link WrappedPacket}
@@ -43,6 +44,7 @@ public class JsonDecoder extends MessageToMessageDecoder<String> {
     protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
         WrappedPacket packet = JSON_MAPPER.fromJson(msg, WrappedPacket.class);
         out.add(packet);
+        System.out.println(msg.getBytes().length);
     }
 
 }

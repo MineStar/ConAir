@@ -44,9 +44,11 @@ import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.api.packets.SmallPacket;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
@@ -58,9 +60,12 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
     protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
 
+    private SmallPacketHandler smallPacketHandler;
+
     public ConAirServerHandler() {
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
+        this.smallPacketHandler = new SmallPacketHandler();
     }
 
     @Override
@@ -76,12 +81,27 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
      * Method is invoked, when a client sends a packet to the server
      */
     public void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
+
+        // handle splitted packets
+        if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
+            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
+            if (reconstructedPacket != null) {
+                if (reconstructedPacket.getTargets().contains(ConAir.SERVER)) {
+                    // Returns true, if the packet is handled ONLY by the server
+                    handleServerPacket(ctx, reconstructedPacket);
+                }
+            }
+        }
+
+        // handle packets dedicated for the server
         if (wrappedPacket.getTargets().contains(ConAir.SERVER)) {
             // Returns true, if the packet is handled ONLY by the server
-            if (handleServerPacket(ctx, wrappedPacket) && wrappedPacket.getTargets().size() == 1) {
+            handleServerPacket(ctx, wrappedPacket);
+            if (wrappedPacket.getTargets().size() == 1) {
                 return;
             }
         }
+
         // Wrap the packet and store the source name (maybe useful for target to
         // know, who the source is)
         WrappedPacket packet = WrappedPacket.rePack(wrappedPacket, wrappedPacket.getSource(), getClientName(ctx.channel()));

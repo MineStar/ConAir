@@ -31,11 +31,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import de.minestar.conair.api.packets.SmallPacket;
 import de.minestar.conair.utils.BufferUtils;
 import de.minestar.conair.utils.Unsafe;
 
@@ -44,7 +48,9 @@ import de.minestar.conair.utils.Unsafe;
  */
 public class WrappedPacket {
 
-    private String packetAsJSON;
+    private final static int MAX_PACKET_SIZE = 1 * 1024; // 1 KB
+
+    private final String packetAsJSON;
     private final String packetClassName;
 
     private final List<String> targets;
@@ -57,26 +63,34 @@ public class WrappedPacket {
      *            The packet to wrap. Will be serialized as JSON.
      * @param targets
      *            The target clients in the network.
+     * @throws IOException
      */
-    private WrappedPacket(Packet packet, String source, List<String> targets) {
-        try {
-            this.packetAsJSON = encodePacket(packet);
-        } catch (IOException e) {
-            e.printStackTrace();
-            this.packetAsJSON = "";
-        }
+    private WrappedPacket(Packet packet, String source, List<String> targets) throws IOException {
+        this(packet.getClass(), encodePacket(packet), source, targets);
+    }
+
+    /**
+     * Used when client is sending a packet to the network. Wraps the packet, stores its content as JSON and add target information to the packet.
+     * 
+     * @param packet
+     *            The packet to wrap. Will be serialized as JSON.
+     * @param targets
+     *            The target clients in the network.
+     */
+    private <P extends Packet> WrappedPacket(Class<P> packetClass, String packetData, String source, List<String> targets) {
+        this.packetAsJSON = packetData;
         this.source = source;
-        this.packetClassName = packet.getClass().getName();
+        this.packetClassName = packetClass.getName();
         this.targets = targets;
     }
 
-    private String encodePacket(Packet packet) throws IOException {
+    private static String encodePacket(Packet packet) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         final Field[] fields = packet.getClass().getDeclaredFields();
         for (final Field field : fields) {
-            // ignore "volatile" and "transient" fields
-            if (Modifier.isVolatile(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
+            // ignore "static", "volatile" and "transient" fields
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isVolatile(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
                 continue;
             }
 
@@ -135,16 +149,21 @@ public class WrappedPacket {
         return Optional.empty();
     }
 
-    private <T extends Packet> T decodePacket(String data, Class<T> packetClass) throws IOException, InstantiationException {
+    @SuppressWarnings("unchecked")
+    private static <T extends Packet> T decodePacket(String data, Class<T> packetClass) throws IOException, InstantiationException {
         // get the constructor
-
         ByteArrayInputStream bos = new ByteArrayInputStream(Base64.getDecoder().decode(data.getBytes()));
         ObjectInputStream oos = new ObjectInputStream(bos);
 
+        @SuppressWarnings("restriction")
         T instance = (T) Unsafe.get().allocateInstance(packetClass);
 
         final Field[] fields = packetClass.getDeclaredFields();
         for (final Field field : fields) {
+            // ignore "static", "volatile" and "transient" fields
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isVolatile(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
             field.setAccessible(true);
             if (!BufferUtils.readObjectFromBuffer(oos, instance, field)) {
                 throw new IllegalArgumentException("Field '" + field.getName() + "' could not be read (unknown datatype)!");
@@ -156,7 +175,6 @@ public class WrappedPacket {
 
         return instance;
     }
-
     /**
      * Get a list of targets. If the packet is received from ConAir server, use {@link #getSource()} as an easier way to receive the packets source. Otherwise, the list will contain all (or no one for a broadcast) targeted clients.
      * 
@@ -179,7 +197,6 @@ public class WrappedPacket {
      * @return
      */
     public String getSource() {
-//        return targets.size() == 1 ? targets.get(0) : "";
         return source;
     }
 
@@ -196,9 +213,26 @@ public class WrappedPacket {
      * @param targets
      *            List of targets.
      * @return A wrapped packet, ready to send to server.
+     * @throws IOException
      */
-    public static WrappedPacket create(Packet packet, String source, String... targets) {
-        return new WrappedPacket(packet, source, Arrays.asList(targets));
+    public static List<WrappedPacket> create(Packet packet, String source, String... targets) throws IOException {
+        final List<WrappedPacket> packets = new ArrayList<WrappedPacket>();
+        final List<String> targetList = new ArrayList<>();
+        for (String target : targets) {
+            targetList.add(target.replaceAll("\"", ""));
+        }
+        final WrappedPacket completePacket = new WrappedPacket(packet, source, targetList);
+
+        final byte[] packetData = completePacket.packetAsJSON.getBytes();
+        if (packetData.length > MAX_PACKET_SIZE) {
+            Collection<SmallPacket> split = SmallPacket.split(MAX_PACKET_SIZE, packetData.length, packet, completePacket.packetAsJSON);
+            for (final SmallPacket smallPacket : split) {
+                packets.add(new WrappedPacket(smallPacket, completePacket.source, completePacket.targets));
+            }
+        } else {
+            packets.add(completePacket);
+        }
+        return packets;
     }
 
     /**
@@ -214,4 +248,13 @@ public class WrappedPacket {
         return new WrappedPacket(packet, source, target);
     }
 
+    @SuppressWarnings("unchecked")
+    static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SmallPacket> packets, String packetClassName) throws ClassNotFoundException {
+        Collections.sort(packets);
+        StringBuilder builder = new StringBuilder();
+        for (final SmallPacket packet : packets) {
+            builder.append(packet.getData());
+        }
+        return new WrappedPacket((Class<P>) Class.forName(packetClassName), builder.toString(), wrappedPacket.source, wrappedPacket.targets);
+    }
 }

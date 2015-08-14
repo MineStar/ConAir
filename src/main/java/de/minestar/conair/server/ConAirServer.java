@@ -32,7 +32,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.json.JsonObjectDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
@@ -45,6 +44,7 @@ import java.util.Map;
 
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
+import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.Listener;
 
 public class ConAirServer {
@@ -78,7 +78,8 @@ public class ConAirServer {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // Wait until the buffer contains the complete JSON object
-                pipeline.addLast("frameDecoder", new JsonObjectDecoder(10 * 1024 * 1024));
+                pipeline.addLast("frameDecoder", new JsonFrameDecoder(16 * 1024));
+
                 // Decode and encode the buffer bytes arrays to readable strings
                 pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
                 pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));

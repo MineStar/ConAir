@@ -27,6 +27,8 @@ package de.minestar.conair.network;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
@@ -39,6 +41,19 @@ import de.minestar.conair.server.ConAirServer;
 public class ConAirTest {
 
     private static final int PORT = 8977;
+
+    public static long crc(byte[] bytes) {
+        // create CRC32
+        Checksum checksum = new CRC32();
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(bytes, 0, bytes.length);
+
+        // get the current checksum value
+        return checksum.getValue();
+    }
+
+    private static long CRC_CHECK;
 
     public static void main(String[] args) {
         try {
@@ -58,7 +73,7 @@ public class ConAirTest {
             Thread.sleep(500); // Just for test
 
             // Create second client and connect to server
-            ConAirClient client2 = new ConAirClient("Client2");
+            ConAirClient client2 = new ConAirClient("Client2\"");
             client2.registerPacketListener(new TestListener("C2"));
             client2.connect("127.0.0.1", PORT); // ipv4
 
@@ -74,10 +89,10 @@ public class ConAirTest {
             ConAirClient client4 = new ConAirClient("Client4");
             client4.connect("::1", PORT); // ipv6
 
-            Thread.sleep(500); // Just for test
+            Thread.sleep(250); // Just for test
 
             // Clients are sending packets to everyone in the network
-            client1.sendPacket(new ChatPacket("Hi!"), "Client2");
+            client1.sendPacket(new ChatPacket("Hi!"), "Client2\"");
             Thread.sleep(50);
             client2.sendPacket(new ChatPacket("Hello!"));
             Thread.sleep(50);
@@ -87,16 +102,19 @@ public class ConAirTest {
 
             // Client 1 talks to client 3
             client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), "Client3");
-
             Thread.sleep(50); // Just for test
 
             // Client 3 responses
             client3.sendPacket(new ChatPacket("Roger Client 1, I hear you loud and clear."), "Client1");
-
             Thread.sleep(50); // Just for test
 
             // send a resourcepacket
-            client1.sendPacket(new ResourcePacket(new File("send.jpg")), ConAir.SERVER);
+            ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
+            CRC_CHECK = crc(resourcePacket.getData());
+//            client1.sendPacket(resourcePacket, ConAir.SERVER);
+            client2.sendPacket(resourcePacket, "Client1");
+
+            // send a packet for the server only
             client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
 
             Thread.sleep(1000); // Just for test
@@ -129,9 +147,14 @@ public class ConAirTest {
 
         public void onResourcePacket(String source, ResourcePacket packet) {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
+            if (CRC_CHECK != crc(packet.getData())) {
+                System.out.println("CRC IS DIFFERENT!!!!");
+                return;
+            }
             try {
-                new File("rec.png").createNewFile();
-                Files.write(Paths.get("rec.jpg"), packet.getData());
+                String filename = "rec.jpg";
+                new File(filename).createNewFile();
+                Files.write(Paths.get(filename), packet.getData());
             } catch (Exception e) {
                 e.printStackTrace();
             }

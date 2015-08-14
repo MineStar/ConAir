@@ -24,13 +24,14 @@
 
 package de.minestar.conair.api.codec;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
+
 import java.util.List;
 
 import com.google.gson.Gson;
 
 import de.minestar.conair.api.WrappedPacket;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageEncoder;
 
 /**
  * Converts a {@link WrappedPacket} to a JSON representation of the object.

@@ -35,7 +35,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.json.JsonObjectDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
@@ -45,15 +44,18 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
+import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.packets.HandshakePacket;
+import de.minestar.conair.api.packets.SmallPacket;
 
 public class ConAirClient {
 
@@ -66,12 +68,15 @@ public class ConAirClient {
     private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
     private String clientName;
 
+    private SmallPacketHandler smallPacketHandler;
+
     public ConAirClient(String clientName) {
-        this.clientName = clientName;
+        this.clientName = clientName.replaceAll("\"", "");
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
+        this.smallPacketHandler = new SmallPacketHandler();
     }
 
     public String getClientName() {
@@ -104,8 +109,8 @@ public class ConAirClient {
                 ChannelPipeline pipeline = ch.pipeline();
 
                 // Wait until the buffer contains the complete JSON object
-                // max 10 MB
-                pipeline.addLast("frameDecoder", new JsonObjectDecoder(10 * 1024 * 1024));
+                pipeline.addLast("frameDecoder", new JsonFrameDecoder(16 * 1024));
+
                 // Decode and encode the buffer bytes arrays to readable strings
                 pipeline.addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
                 pipeline.addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
@@ -125,11 +130,18 @@ public class ConAirClient {
         sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
         isConnected = true;
     }
-
     private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
+            // handle splitted packets
+            if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
+                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
+                if (reconstructedPacket != null) {
+                    wrappedPacket = reconstructedPacket;
+                }
+            }
+
             onPacketReceived(wrappedPacket);
         }
     }
@@ -165,9 +177,12 @@ public class ConAirClient {
      *             Something went wrong
      */
     public void sendPacket(Packet packet, String... targets) throws Exception {
-        ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, clientName, targets));
-        if (result != null) {
-            result.sync();
+        List<WrappedPacket> packetList = WrappedPacket.create(packet, clientName, targets);
+        for (final WrappedPacket wrappedPacket : packetList) {
+            ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+            if (result != null) {
+                result.sync();
+            }
         }
     }
 

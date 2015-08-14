@@ -29,11 +29,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
 
+import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
+import de.minestar.conair.api.packets.SmallPacket;
 
 /*
  * Test for serialization and parsing of packets
@@ -41,13 +44,13 @@ import de.minestar.conair.api.WrappedPacket;
 public class PacketTest {
 
     @Test
-    public void test() {
+    public void singlePacketTest() throws IOException, ClassNotFoundException {
         // Create test packet
         ChatPacket sentPacket = new ChatPacket("Das Pferd frisst keinen Gurkensalat!");
         // Serialize packet while wrapping
-        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket, "", "");
+        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, "", "");
         // Parse packet
-        Optional<ChatPacket> possibleResult = wrappedPacket.getPacket();
+        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket();
         assertTrue(possibleResult.isPresent());
         ChatPacket receivedPacket = possibleResult.get();
         // Check if messages are equal
@@ -55,17 +58,26 @@ public class PacketTest {
     }
 
     @Test
-    public void fileTest() throws IOException {
+    public void multiPacketTest() throws IOException, ClassNotFoundException {
         // Create test packet
         ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
         // Serialize packet while wrapping
-        WrappedPacket wrappedPacket = WrappedPacket.create(sentPacket, "", "");
+        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, "", "");
+        SmallPacketHandler smallPacketHandler = new SmallPacketHandler();
+        WrappedPacket result = null;
+        for (WrappedPacket packet : wrappedPackets) {
+            result = smallPacketHandler.handle(packet, (SmallPacket) packet.getPacket().get());
+        }
+
         // Parse packet
-        Optional<ResourcePacket> possibleResult = wrappedPacket.getPacket();
+        Optional<ResourcePacket> possibleResult = result.getPacket();
         assertTrue(possibleResult.isPresent());
         ResourcePacket receivedPacket = possibleResult.get();
-        // Check if messages are equal
-        assertEquals(sentPacket.getData().length, receivedPacket.getData().length);
-    }
 
+        // Check if the contents are equal
+        assertEquals(sentPacket.getData().length, receivedPacket.getData().length);
+        for (int i = 0; i < sentPacket.getData().length; i++) {
+            assertEquals(sentPacket.getData()[i], receivedPacket.getData()[i]);
+        }
+    }
 }
