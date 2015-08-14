@@ -48,6 +48,7 @@ import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.api.packets.SmallPacket;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
@@ -153,6 +154,11 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly two params
             if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 2) {
+                continue;
+            }
+
+            // we need an annotation
+            if (method.getAnnotation(RegisterEvent.class) == null) {
                 continue;
             }
 

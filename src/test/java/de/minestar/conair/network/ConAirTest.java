@@ -36,6 +36,7 @@ import org.junit.Test;
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.server.ConAirServer;
 
 /**
@@ -67,7 +68,7 @@ public class ConAirTest {
             server.start(PORT);
             server.registerPacketListener(new TestListener("S"));
             Assert.assertTrue(server.isRunning());
-            
+
             // Create first client and connect to server
             ConAirClient client1 = new ConAirClient("Client1");
             client1.registerPacketListener(new TestListener("C1"));
@@ -138,10 +139,12 @@ public class ConAirTest {
             name = n;
         }
 
+        @RegisterEvent
         public void onChatPacket(String source, ChatPacket packet) {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
         }
 
+        @RegisterEvent
         public void onResourcePacket(String source, ResourcePacket packet) {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
             Assert.assertEquals("CRC IS DIFFERENT!!!!", crc(packet.getData()), CRC_CHECK);
