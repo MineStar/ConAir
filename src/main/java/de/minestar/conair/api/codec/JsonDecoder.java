@@ -44,7 +44,6 @@ public class JsonDecoder extends MessageToMessageDecoder<String> {
     protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
         WrappedPacket packet = JSON_MAPPER.fromJson(msg, WrappedPacket.class);
         out.add(packet);
-        System.out.println(msg.getBytes().length);
     }
 
 }
