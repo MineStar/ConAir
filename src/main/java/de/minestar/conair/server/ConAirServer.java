@@ -26,6 +26,7 @@ package de.minestar.conair.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -40,8 +41,12 @@ import io.netty.util.CharsetUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
 import de.minestar.conair.api.codec.JsonFrameDecoder;
@@ -56,12 +61,57 @@ public class ConAirServer {
     private boolean isRunning;
     private ConAirServerHandler packetHandler;
     private Map<String, Listener> listenerMap;
+    private Map<String, Channel> clientMap;
 
     public ConAirServer() {
         this.isRunning = false;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.listenerMap = Collections.synchronizedMap(new HashMap<>());
+        this.clientMap = Collections.synchronizedMap(new HashMap<>());
+    }
+
+    void addClient(String clientName, Channel channel) {
+        this.clientMap.put(clientName, channel);
+    }
+
+    void removeClient(Channel channel) {
+        String clientToRemove = null;
+        for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
+            if (channel.id() == entry.getValue().id()) {
+                clientToRemove = entry.getKey();
+                break;
+            }
+        }
+        if (clientToRemove != null) {
+            this.clientMap.remove(clientToRemove);
+        }
+    }
+
+    /**
+     * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
+     * 
+     * @param packet
+     *            The data to send.
+     * @param targets
+     *            The target
+     * @throws Exception
+     *             Something went wrong
+     */
+    public void sendPacket(Packet packet, String... targets) throws Exception {
+        for (String client : targets) {
+            Channel channel = this.clientMap.get(client);
+            if (channel == null) {
+                continue;
+            }
+            List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
+            for (final WrappedPacket wrappedPacket : packetList) {
+                ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                if (result != null) {
+                    result.sync();
+                }
+            }
+        }
     }
 
     public void start(final int port) throws Exception {
@@ -89,7 +139,7 @@ public class ConAirServer {
                 pipeline.addLast("jsonDecoder", new JsonDecoder());
                 pipeline.addLast("jsonEncoder", new JsonEncoder());
 
-                pipeline.addLast("handshakeHandler", new ServerHandshakeHandler());
+                pipeline.addLast("handshakeHandler", new ServerHandshakeHandler(ConAirServer.this));
 
                 // Add server logic
                 ConAirServer.this.packetHandler = new ConAirServerHandler();
@@ -98,12 +148,12 @@ public class ConAirServer {
                 }
                 pipeline.addLast(packetHandler);
             }
+
         });
         // Start server
         this.serverChannel = bootStrap.bind(port).sync().channel();
         this.isRunning = true;
     }
-
     public boolean isRunning() {
         return isRunning;
     }

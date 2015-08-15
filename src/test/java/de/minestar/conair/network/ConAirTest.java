@@ -112,6 +112,9 @@ public class ConAirTest {
             // send a packet for the server only
             client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
 
+            // send a packet from the server to client 3
+            server.sendPacket(new ChatPacket("Thank you!"), "Client3");
+
             Thread.sleep(1000); // Just for test
 
             // Clients are disconnecting, server is shutting down

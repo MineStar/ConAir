@@ -24,6 +24,8 @@
 
 package de.minestar.conair.server;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
@@ -40,6 +42,12 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
 
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
 
+    private final ConAirServer _server;
+
+    public ServerHandshakeHandler(final ConAirServer server) {
+        _server = server;
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.channel().attr(KEY_IS_INITIALIZED).getAndSet(Boolean.FALSE);
@@ -47,6 +55,7 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
         super.channelActive(ctx);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
         // Channel is initialized and packet is not a handshake - client will be
@@ -62,11 +71,18 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
             if (!result.isPresent()) {
                 throw new Exception("Error while parsing " + msg + " as HandshakePacket!");
             }
-            HandshakePacket hPacket = result.get();
+            HandshakePacket handshakePacket = result.get();
             if (!isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
-                ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(hPacket.getClientName());
+                ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
+                _server.addClient(handshakePacket.getClientName(), ctx.channel());
+                ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        _server.removeClient(ctx.channel());
+                    }
+                });
             }
         }
         // Channel tries a twice handshake
