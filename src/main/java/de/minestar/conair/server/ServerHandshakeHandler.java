@@ -47,8 +47,12 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
 
     private final ConAirServer _server;
 
-    public ServerHandshakeHandler(final ConAirServer server) {
+    ServerHandshakeHandler(final ConAirServer server) {
         _server = server;
+    }
+
+    private boolean isInitialized(ChannelHandlerContext ctx) {
+        return ctx.attr(KEY_IS_INITIALIZED).get() == Boolean.TRUE;
     }
 
     @Override
@@ -107,10 +111,6 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-    }
-
-    private boolean isInitialized(ChannelHandlerContext ctx) {
-        return ctx.attr(KEY_IS_INITIALIZED).get() == Boolean.TRUE;
     }
 
 }

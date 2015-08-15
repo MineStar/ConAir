@@ -66,7 +66,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     private final SplittedPacketHandler smallPacketHandler;
     private final ConAirServer _server;
 
-    public ConAirServerHandler(final ConAirServer server) {
+    ConAirServerHandler(final ConAirServer server) {
         _server = server;
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
@@ -128,6 +128,15 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (cause instanceof CorruptedFrameException) {
+            System.err.println("Invalid packet received!");
+        }
+        cause.printStackTrace();
+        ctx.close();
+    }
+
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
@@ -149,11 +158,12 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
         return true;
     }
+
     private String getClientName(Channel channel) {
         return channel.attr(KEY_CLIENT_NAME).get();
     }
 
-    public <L extends Listener> void registerPacketListener(L listener) {
+    <L extends Listener> void registerPacketListener(L listener) {
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly two params
@@ -185,12 +195,4 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (cause instanceof CorruptedFrameException) {
-            System.err.println("Invalid packet received!");
-        }
-        cause.printStackTrace();
-        ctx.close();
-    }
 }
