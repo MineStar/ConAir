@@ -34,9 +34,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
+import de.minestar.conair.client.ConAirClient;
 import de.minestar.conair.server.ConAirServer;
 
 /**
@@ -105,9 +105,9 @@ public class ConAirTest {
             client3.sendPacket(new ChatPacket("Roger Client 1, I hear you loud and clear."), "Client1");
 
             // send a resourcepacket
-            ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
-            CRC_CHECK = crc(resourcePacket.getData());
-            client2.sendPacket(resourcePacket, "Client1");
+//            ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
+//            CRC_CHECK = crc(resourcePacket.getData());
+//            client2.sendPacket(resourcePacket, "Client1");
 
             // send a packet for the server only
             client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);

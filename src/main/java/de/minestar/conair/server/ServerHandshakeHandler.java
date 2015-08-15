@@ -34,6 +34,8 @@ import java.util.Optional;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.WrappedPacket;
+import de.minestar.conair.api.packets.ConnectedClientsPacket;
+import de.minestar.conair.api.packets.ConnectionPacket;
 import de.minestar.conair.api.packets.ErrorPacket;
 import de.minestar.conair.api.packets.ErrorPacket.ErrorType;
 import de.minestar.conair.api.packets.HandshakePacket;
@@ -76,11 +78,14 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
                 // Mark the client as initialized and assign a client name
                 ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
+//                _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
+//                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()));
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
                 ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         _server.removeClient(ctx.channel());
+//                        _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), false));
                     }
                 });
             }
@@ -98,7 +103,6 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
             throw new IllegalStateException("Channel cannot broadcast before a handshake!");
         }
     }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

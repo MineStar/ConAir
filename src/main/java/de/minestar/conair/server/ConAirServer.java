@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
@@ -69,6 +71,10 @@ public class ConAirServer {
         this.workerGroup = new NioEventLoopGroup();
         this.listenerMap = Collections.synchronizedMap(new HashMap<>());
         this.clientMap = Collections.synchronizedMap(new HashMap<>());
+    }
+
+    public String[] getClientMap() {
+        return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
     }
 
     void addClient(String clientName, Channel channel) {
@@ -99,16 +105,29 @@ public class ConAirServer {
      *             Something went wrong
      */
     public void sendPacket(Packet packet, String... targets) throws Exception {
-        for (String client : targets) {
-            Channel channel = this.clientMap.get(client);
-            if (channel == null) {
-                continue;
+        if ((targets == null) && this.clientMap.values().size() > 0) {
+            // broadcast
+            List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, this.clientMap.values().toArray(new String[this.clientMap.values().size()]));
+            for (Entry<String, Channel> entry : this.clientMap.entrySet()) {
+                for (final WrappedPacket wrappedPacket : packetList) {
+                    ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
+                    if (result != null) {
+                        result.sync();
+                    }
+                }
             }
-            List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
-            for (final WrappedPacket wrappedPacket : packetList) {
-                ChannelFuture result = channel.writeAndFlush(wrappedPacket);
-                if (result != null) {
-                    result.sync();
+        } else {
+            for (String client : targets) {
+                Channel channel = this.clientMap.get(client);
+                if (channel == null) {
+                    continue;
+                }
+                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
+                for (final WrappedPacket wrappedPacket : packetList) {
+                    ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                    if (result != null) {
+                        result.sync();
+                    }
                 }
             }
         }

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -49,12 +49,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.SmallPacketHandler;
+import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
 import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
+import de.minestar.conair.api.packets.ConnectedClientsPacket;
+import de.minestar.conair.api.packets.ConnectionPacket;
 import de.minestar.conair.api.packets.HandshakePacket;
 import de.minestar.conair.api.packets.SmallPacket;
 
@@ -127,8 +133,10 @@ public class ConAirClient {
         });
 
         channel = bootStrap.connect(host, port).sync().channel();
+
         // Register at server with unique name
         sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
+        this.registerPacketListener(new ConnectionListener(this));
         isConnected = true;
     }
 
@@ -219,7 +227,6 @@ public class ConAirClient {
                     map = Collections.synchronizedMap(new HashMap<>());
                     registeredListener.put(packetClass, map);
                 }
-                map.put(listener.getClass(), new EventExecutor(listener, method));
             }
         }
     }
@@ -237,6 +244,33 @@ public class ConAirClient {
         channel.close().sync();
         group.shutdownGracefully().sync();
         isConnected = false;
+    }
+
+    private static class ConnectionListener implements Listener {
+
+        private ConAirClient _client;
+
+        ConnectionListener(final ConAirClient client) {
+            _client = client;
+        }
+
+        @RegisterEvent
+        public void onConnectionPacket(final String source, final ConnectionPacket packet) {
+            if (packet.isConnect()) {
+                System.out.println("'" + packet.getClientName() + "' connected!");
+            } else {
+                System.out.println("'" + packet.getClientName() + "' disconnected!");
+            }
+        }
+
+        @RegisterEvent
+        public void onConnectedClientsPacket(final String source, final ConnectedClientsPacket packet) {
+            int i = 1;
+            for (String client : packet.getConnectedClients()) {
+                System.out.println("#" + i + " :" + client);
+                i++;
+            }
+        }
     }
 
 }

@@ -51,12 +51,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import de.minestar.conair.api.ConAirClient;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
 import de.minestar.conair.api.packets.ErrorPacket;
+import de.minestar.conair.client.ConAirClient;
 import de.minestar.conair.server.ConAirServer;
 
 public class ErrorClientTest {
