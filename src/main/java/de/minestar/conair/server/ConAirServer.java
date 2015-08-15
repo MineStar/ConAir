@@ -140,6 +140,7 @@ public class ConAirServer implements PacketSender {
             }
         }
     }
+    
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
      * 
