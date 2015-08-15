@@ -215,13 +215,13 @@ public class WrappedPacket {
      * @return A wrapped packet, ready to send to server.
      * @throws IOException
      */
-    public static List<WrappedPacket> create(Packet packet, String source, String... targets) throws IOException {
+    public static List<WrappedPacket> create(Packet packet, ConAirMember source, ConAirMember... targets) throws IOException {
         final List<WrappedPacket> packets = new ArrayList<WrappedPacket>();
         final List<String> targetList = new ArrayList<>();
-        for (String target : targets) {
-            targetList.add(target.replaceAll("\"", ""));
+        for (ConAirMember target : targets) {
+            targetList.add(target.getName().replaceAll("\"", ""));
         }
-        final WrappedPacket completePacket = new WrappedPacket(packet, source, targetList);
+        final WrappedPacket completePacket = new WrappedPacket(packet, source.getName(), targetList);
 
         final byte[] packetData = completePacket.packetAsJSON.getBytes();
         if (packetData.length > MAX_PACKET_SIZE) {

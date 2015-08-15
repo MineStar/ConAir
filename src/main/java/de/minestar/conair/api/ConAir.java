@@ -27,7 +27,8 @@ package de.minestar.conair.api;
 public class ConAir {
 
     /**
-     * The name for the server. No client can have this name
+     * The Member for the server. No client can have the same name
      */
-    public static final String SERVER = "ConAirServer";
+    public static final ConAirMember SERVER = new ConAirMember("ConAirServer");
+
 }

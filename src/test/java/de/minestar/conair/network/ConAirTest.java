@@ -34,6 +34,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.ConAirMember;
+import de.minestar.conair.api.PacketSender;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.client.ConAirClient;
@@ -94,26 +96,24 @@ public class ConAirTest {
             Assert.assertTrue(client4.isConnected());
 
             // Clients are sending packets to everyone in the network
-            client1.sendPacket(new ChatPacket("Hi!"), "Client2\"");
+            client1.sendPacket(new ChatPacket("Hi Client2!"), client1.getMember("Client2"));
             Thread.sleep(50);
             client2.sendPacket(new ChatPacket("Hello!"));
             Thread.sleep(50);
             client3.sendPacket(new ChatPacket("Moin!"));
             // Client 1 talks to client 3
-            client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), "Client3");
-            // Client 3 responses
-            client3.sendPacket(new ChatPacket("Roger Client 1, I hear you loud and clear."), "Client1");
+            client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), client1.getMember("Client3"));
 
             // send a resourcepacket
             ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
             CRC_CHECK = crc(resourcePacket.getData());
-            client2.sendPacket(resourcePacket, "Client1");
+            client2.sendPacket(resourcePacket, client2.getMember("Client1"));
 
             // send a packet for the server only
             client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
 
             // send a packet from the server to client 3
-            server.sendPacket(new ChatPacket("Thank you!"), "Client3");
+            server.sendPacket(new ChatPacket("Thank you!"), server.getMember("Client3"));
 
             Thread.sleep(1000); // Just for test
 
@@ -143,12 +143,17 @@ public class ConAirTest {
         }
 
         @RegisterEvent
-        public void onChatPacket(String source, ChatPacket packet) {
-            System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
+        public void onChatPacket(final PacketSender receiver, final ConAirMember source, final ChatPacket packet) throws Exception {
+            if (source.getName().equals("Client1") && packet.getMessage().contains("Pssst...client3....can you hear me?")) {
+                System.out.println("[WHISPER] [ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
+                receiver.sendPacket(new ChatPacket("Roger " + source + ", I hear you loud and clear."), source);
+            } else {
+                System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
+            }
         }
 
         @RegisterEvent
-        public void onResourcePacket(String source, ResourcePacket packet) {
+        public void onResourcePacket(final PacketSender receiver, final ConAirMember source, final ResourcePacket packet) {
             System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
             Assert.assertEquals("CRC IS DIFFERENT!!!!", crc(packet.getData()), CRC_CHECK);
             try {

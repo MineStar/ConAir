@@ -50,7 +50,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.PacketSender;
 import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
@@ -64,7 +66,7 @@ import de.minestar.conair.api.packets.ConnectionPacket;
 import de.minestar.conair.api.packets.HandshakePacket;
 import de.minestar.conair.api.packets.SmallPacket;
 
-public class ConAirClient {
+public class ConAirClient implements PacketSender {
 
     private boolean isConnected;
 
@@ -73,20 +75,22 @@ public class ConAirClient {
 
     private Set<String> registeredClasses;
     private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
-    private String clientName;
+    private ConAirMember clientName;
+    private Map<String, ConAirMember> _conAirMembers;
 
     private SmallPacketHandler smallPacketHandler;
 
     public ConAirClient(String clientName) {
-        this.clientName = clientName.replaceAll("\"", "");
+        this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.smallPacketHandler = new SmallPacketHandler();
+        this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
     }
 
-    public String getClientName() {
+    public ConAirMember get() {
         return clientName;
     }
 
@@ -135,7 +139,8 @@ public class ConAirClient {
         channel = bootStrap.connect(host, port).sync().channel();
 
         // Register at server with unique name
-        sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
+        _conAirMembers.put(ConAir.SERVER.getName(), ConAir.SERVER);
+        sendPacket(new HandshakePacket(this.clientName.getName()), ConAir.SERVER);
         isConnected = true;
         this.registerPacketListener(new ClientConnectionListener(this));
     }
@@ -175,7 +180,7 @@ public class ConAirClient {
         Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
         if (map != null) {
             for (final EventExecutor executor : map.values()) {
-                executor.execute(wrappedPacket.getSource(), packet);
+                executor.execute(this, getMember(wrappedPacket.getSource()), packet);
             }
         }
     }
@@ -190,7 +195,8 @@ public class ConAirClient {
      * @throws Exception
      *             Something went wrong
      */
-    public void sendPacket(Packet packet, String... targets) throws Exception {
+    @Override
+    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
         List<WrappedPacket> packetList = WrappedPacket.create(packet, clientName, targets);
         for (final WrappedPacket wrappedPacket : packetList) {
             ChannelFuture result = channel.writeAndFlush(wrappedPacket);
@@ -204,7 +210,7 @@ public class ConAirClient {
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly two params
-            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 2) {
+            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 3) {
                 continue;
             }
 
@@ -214,9 +220,9 @@ public class ConAirClient {
             }
 
             // accept the filter if it is true
-            if (String.class.isAssignableFrom(method.getParameterTypes()[0]) && Packet.class.isAssignableFrom(method.getParameterTypes()[1])) {
+            if (PacketSender.class.isAssignableFrom(method.getParameterTypes()[0]) && ConAirMember.class.isAssignableFrom(method.getParameterTypes()[1]) && Packet.class.isAssignableFrom(method.getParameterTypes()[2])) {
                 @SuppressWarnings("unchecked")
-                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[1];
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the packet class
                 registeredClasses.add(packetClass.getName());
@@ -256,28 +262,27 @@ public class ConAirClient {
         }
 
         @RegisterEvent
-        public void onConnectionPacket(final String source, final ConnectionPacket packet) {
-            System.out.println("----------------------------");
-            System.out.println(_client.getClientName());
+        public void onConnectionPacket(final PacketSender receiver, final ConAirMember source, final ConnectionPacket packet) {
             if (packet.isConnect()) {
-                System.out.println("'" + packet.getClientName() + "' connected!");
+                _client._conAirMembers.put(packet.getClientName(), new ConAirMember(packet.getClientName()));
             } else {
-                System.out.println("'" + packet.getClientName() + "' disconnected!");
+                _client._conAirMembers.remove(packet.getClientName());
             }
-            // TODO: handle packet
         }
 
         @RegisterEvent
-        public void onConnectedClientsPacket(final String source, final ConnectedClientsPacket packet) {
-            int i = 1;
-            System.out.println("----------------------------");
-            System.out.println(_client.getClientName());
-            for (String client : packet.getConnectedClients()) {
-                System.out.println("#" + i + " :" + client);
-                i++;
+        public void onConnectedClientsPacket(final PacketSender receiver, final ConAirMember source, final ConnectedClientsPacket packet) {
+            for (String clientName : packet.getConnectedClients()) {
+                _client._conAirMembers.put(clientName, new ConAirMember(clientName));
             }
-            // TODO: handle packet
         }
+    }
+
+    public ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!_conAirMembers.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
+        }
+        return _conAirMembers.get(name);
     }
 
 }

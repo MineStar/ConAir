@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.packets.SmallPacket;
@@ -48,7 +49,7 @@ public class PacketTest {
         // Create test packet
         ChatPacket sentPacket = new ChatPacket("Das Pferd frisst keinen Gurkensalat!");
         // Serialize packet while wrapping
-        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, "", "");
+        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, ConAir.SERVER, ConAir.SERVER);
         // Parse packet
         Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket();
         assertTrue(possibleResult.isPresent());
@@ -62,7 +63,7 @@ public class PacketTest {
         // Create test packet
         ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
         // Serialize packet while wrapping
-        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, "", "");
+        List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, ConAir.SERVER, ConAir.SERVER);
         SmallPacketHandler smallPacketHandler = new SmallPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {

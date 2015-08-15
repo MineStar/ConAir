@@ -46,14 +46,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.PacketSender;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
 import de.minestar.conair.api.codec.JsonEncoder;
 import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.Listener;
 
-public class ConAirServer {
+public class ConAirServer implements PacketSender {
 
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -109,11 +111,12 @@ public class ConAirServer {
      * @throws Exception
      *             Something went wrong
      */
-    public void sendPacket(Packet packet, String... targets) throws Exception {
+    @Override
+    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
         if ((targets == null || targets.length < 1) && this.clientMap.values().size() > 0) {
             // broadcast
-            for (Entry<String, Channel> entry : this.clientMap.entrySet()) {
-                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, entry.getKey());
+            final List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, targets);
+            for (final Entry<String, Channel> entry : this.clientMap.entrySet()) {
                 for (final WrappedPacket wrappedPacket : packetList) {
                     ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
                     if (result != null) {
@@ -122,8 +125,8 @@ public class ConAirServer {
                 }
             }
         } else {
-            for (String client : targets) {
-                Channel channel = this.clientMap.get(client);
+            for (final ConAirMember client : targets) {
+                Channel channel = this.clientMap.get(client.getName());
                 if (channel == null) {
                     continue;
                 }
@@ -137,7 +140,6 @@ public class ConAirServer {
             }
         }
     }
-
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
      * 
@@ -148,8 +150,8 @@ public class ConAirServer {
      * @throws Exception
      *             Something went wrong
      */
-    void sendPacket(Packet packet, String clientName, Channel channel) throws Exception {
-        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, clientName);
+    void sendPacket(Packet packet, ConAirMember target, Channel channel) throws Exception {
+        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, target);
         for (final WrappedPacket wrappedPacket : packetList) {
             ChannelFuture result = channel.writeAndFlush(wrappedPacket);
             if (result != null) {
@@ -186,7 +188,7 @@ public class ConAirServer {
                 pipeline.addLast("handshakeHandler", new ServerHandshakeHandler(ConAirServer.this));
 
                 // Add server logic
-                ConAirServer.this.packetHandler = new ConAirServerHandler();
+                ConAirServer.this.packetHandler = new ConAirServerHandler(ConAirServer.this);
                 for (final Listener listener : ConAirServer.this.listenerMap.values()) {
                     ConAirServer.this.packetHandler.registerPacketListener(listener);
                 }
@@ -226,5 +228,12 @@ public class ConAirServer {
         workerGroup.shutdownGracefully().sync();
 
         this.isRunning = false;
+    }
+
+    public ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!clientMap.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found!");
+        }
+        return new ConAirMember(name);
     }
 }

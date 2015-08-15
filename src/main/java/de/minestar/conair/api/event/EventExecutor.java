@@ -26,7 +26,9 @@ package de.minestar.conair.api.event;
 
 import java.lang.reflect.Method;
 
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.PacketSender;
 
 public class EventExecutor {
 
@@ -38,10 +40,10 @@ public class EventExecutor {
         _method = method;
     }
 
-    public <P extends Packet> void execute(final String source, final P packet) {
+    public <P extends Packet> void execute(final PacketSender receiver, final ConAirMember source, final P packet) {
         try {
             _method.setAccessible(true);
-            _method.invoke(_listener, source, packet);
+            _method.invoke(_listener, receiver, source, packet);
             _method.setAccessible(false);
         } catch (Exception e) {
             e.printStackTrace();

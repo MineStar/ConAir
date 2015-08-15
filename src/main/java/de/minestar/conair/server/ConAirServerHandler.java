@@ -43,7 +43,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.PacketSender;
 import de.minestar.conair.api.SmallPacketHandler;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.event.EventExecutor;
@@ -61,9 +63,11 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
     protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
 
-    private SmallPacketHandler smallPacketHandler;
+    private final SmallPacketHandler smallPacketHandler;
+    private final ConAirServer _server;
 
-    public ConAirServerHandler() {
+    public ConAirServerHandler(final ConAirServer server) {
+        _server = server;
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.smallPacketHandler = new SmallPacketHandler();
@@ -87,7 +91,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
             final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
             if (reconstructedPacket != null) {
-                if (reconstructedPacket.getTargets().contains(ConAir.SERVER)) {
+                if (reconstructedPacket.getTargets().contains(ConAir.SERVER.getName())) {
                     // Returns true, if the packet is handled ONLY by the server
                     handleServerPacket(ctx, reconstructedPacket);
                 }
@@ -95,7 +99,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
 
         // handle packets dedicated for the server
-        if (wrappedPacket.getTargets().contains(ConAir.SERVER)) {
+        if (wrappedPacket.getTargets().contains(ConAir.SERVER.getName())) {
             // Returns true, if the packet is handled ONLY by the server
             handleServerPacket(ctx, wrappedPacket);
             if (wrappedPacket.getTargets().size() == 1) {
@@ -129,6 +133,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
             // The packet is not registered
             return false;
         }
+
         Optional<Packet> result = wrappedPacket.getPacket();
         if (!result.isPresent()) {
             System.err.println("Error while parsing " + wrappedPacket + "!");
@@ -139,12 +144,11 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
         if (map != null) {
             for (final EventExecutor executor : map.values()) {
-                executor.execute(wrappedPacket.getSource(), packet);
+                executor.execute(_server, _server.getMember(wrappedPacket.getSource()), packet);
             }
         }
         return true;
     }
-
     private String getClientName(Channel channel) {
         return channel.attr(KEY_CLIENT_NAME).get();
     }
@@ -153,7 +157,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly two params
-            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 2) {
+            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 3) {
                 continue;
             }
 
@@ -163,9 +167,9 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
             }
 
             // accept the filter if it is true
-            if (String.class.isAssignableFrom(method.getParameterTypes()[0]) && Packet.class.isAssignableFrom(method.getParameterTypes()[1])) {
+            if (PacketSender.class.isAssignableFrom(method.getParameterTypes()[0]) && ConAirMember.class.isAssignableFrom(method.getParameterTypes()[1]) && Packet.class.isAssignableFrom(method.getParameterTypes()[2])) {
                 @SuppressWarnings("unchecked")
-                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[1];
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the packet class
                 registeredClasses.add(packetClass.getName());

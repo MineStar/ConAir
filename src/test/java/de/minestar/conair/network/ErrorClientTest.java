@@ -51,6 +51,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.codec.JsonDecoder;
@@ -169,8 +170,8 @@ public class ErrorClientTest {
         }
 
         @Override
-        public void sendPacket(Packet packet, String... targets) throws Exception {
-            ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, getClientName(), targets));
+        public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
+            ChannelFuture result = channel.writeAndFlush(WrappedPacket.create(packet, get(), targets));
             if (result != null)
                 result.sync();
         }

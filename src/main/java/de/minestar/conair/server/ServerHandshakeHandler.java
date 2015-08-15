@@ -33,6 +33,7 @@ import io.netty.util.AttributeKey;
 import java.util.Optional;
 
 import de.minestar.conair.api.ConAir;
+import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.WrappedPacket;
 import de.minestar.conair.api.packets.ConnectedClientsPacket;
 import de.minestar.conair.api.packets.ConnectionPacket;
@@ -79,7 +80,7 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
                 ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
                 _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
-                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()), handshakePacket.getClientName(), ctx.channel());
+                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
                 ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
                     @Override
