@@ -55,7 +55,7 @@ import de.minestar.conair.api.codec.JsonEncoder;
 import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.Listener;
 
-public class ConAirServer implements PacketSender {
+public final class ConAirServer implements PacketSender {
 
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -66,102 +66,16 @@ public class ConAirServer implements PacketSender {
     private Map<String, Listener> listenerMap;
     private Map<String, Channel> clientMap;
 
-    public ConAirServer() {
+    public ConAirServer(int port) throws Exception {
         this.isRunning = false;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.listenerMap = Collections.synchronizedMap(new HashMap<>());
         this.clientMap = Collections.synchronizedMap(new HashMap<>());
+        start(port);
     }
 
-    public String[] getClientMap() {
-        synchronized (clientMap) {
-            return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
-        }
-    }
-
-    void addClient(String clientName, Channel channel) {
-        synchronized (clientMap) {
-            this.clientMap.put(clientName, channel);
-        }
-    }
-
-    void removeClient(Channel channel) {
-        synchronized (clientMap) {
-            String clientToRemove = null;
-            for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
-                if (channel.id() == entry.getValue().id()) {
-                    clientToRemove = entry.getKey();
-                    break;
-                }
-            }
-            if (clientToRemove != null) {
-                this.clientMap.remove(clientToRemove);
-            }
-        }
-    }
-
-    /**
-     * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
-     * 
-     * @param packet
-     *            The data to send.
-     * @param targets
-     *            The target
-     * @throws Exception
-     *             Something went wrong
-     */
-    @Override
-    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
-        if ((targets == null || targets.length < 1) && this.clientMap.values().size() > 0) {
-            // broadcast
-            final List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, targets);
-            for (final Entry<String, Channel> entry : this.clientMap.entrySet()) {
-                for (final WrappedPacket wrappedPacket : packetList) {
-                    ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
-                    if (result != null) {
-                        result.sync();
-                    }
-                }
-            }
-        } else {
-            for (final ConAirMember client : targets) {
-                Channel channel = this.clientMap.get(client.getName());
-                if (channel == null) {
-                    continue;
-                }
-                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
-                for (final WrappedPacket wrappedPacket : packetList) {
-                    ChannelFuture result = channel.writeAndFlush(wrappedPacket);
-                    if (result != null) {
-                        result.sync();
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
-     * 
-     * @param packet
-     *            The data to send.
-     * @param targets
-     *            The target
-     * @throws Exception
-     *             Something went wrong
-     */
-    void sendPacket(Packet packet, ConAirMember target, Channel channel) throws Exception {
-        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, target);
-        for (final WrappedPacket wrappedPacket : packetList) {
-            ChannelFuture result = channel.writeAndFlush(wrappedPacket);
-            if (result != null) {
-                result.sync();
-            }
-        }
-    }
-
-    public void start(final int port) throws Exception {
+    private void start(final int port) throws Exception {
         if (isRunning) {
             throw new IllegalStateException("Server is already running!");
         }
@@ -201,6 +115,94 @@ public class ConAirServer implements PacketSender {
         this.serverChannel = bootStrap.bind(port).sync().channel();
         this.isRunning = true;
     }
+
+    String[] getClientMap() {
+        synchronized (clientMap) {
+            return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
+        }
+    }
+
+    void addClient(String clientName, Channel channel) {
+        synchronized (clientMap) {
+            this.clientMap.put(clientName, channel);
+        }
+    }
+
+    void removeClient(Channel channel) {
+        synchronized (clientMap) {
+            String clientToRemove = null;
+            for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
+                if (channel.id() == entry.getValue().id()) {
+                    clientToRemove = entry.getKey();
+                    break;
+                }
+            }
+            if (clientToRemove != null) {
+                this.clientMap.remove(clientToRemove);
+            }
+        }
+    }
+
+    /**
+     * Send a packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
+     * 
+     * @param packet
+     *            The data to send.
+     * @param targets
+     *            The target
+     * @throws Exception
+     *             Something went wrong
+     */
+    void sendPacket(Packet packet, ConAirMember target, Channel channel) throws Exception {
+        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, target);
+        for (final WrappedPacket wrappedPacket : packetList) {
+            ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+            if (result != null) {
+                result.sync();
+            }
+        }
+    }
+
+    /**
+     * Send a packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
+     * 
+     * @param packet
+     *            The data to send.
+     * @param targets
+     *            The target
+     * @throws Exception
+     *             Something went wrong
+     */
+    @Override
+    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
+        if ((targets == null || targets.length < 1) && this.clientMap.values().size() > 0) {
+            // broadcast
+            final List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, targets);
+            for (final Entry<String, Channel> entry : this.clientMap.entrySet()) {
+                for (final WrappedPacket wrappedPacket : packetList) {
+                    ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
+                    if (result != null) {
+                        result.sync();
+                    }
+                }
+            }
+        } else {
+            for (final ConAirMember client : targets) {
+                Channel channel = this.clientMap.get(client.getName());
+                if (channel == null) {
+                    continue;
+                }
+                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
+                for (final WrappedPacket wrappedPacket : packetList) {
+                    ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                    if (result != null) {
+                        result.sync();
+                    }
+                }
+            }
+        }
+    }
+
     public boolean isRunning() {
         return isRunning;
     }
@@ -220,6 +222,14 @@ public class ConAirServer implements PacketSender {
         }
     }
 
+    @Override
+    public ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!clientMap.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found!");
+        }
+        return new ConAirMember(name);
+    }
+
     public void stop() throws Exception {
         if (!isRunning) {
             throw new IllegalStateException("Server isn't running!");
@@ -231,10 +241,4 @@ public class ConAirServer implements PacketSender {
         this.isRunning = false;
     }
 
-    public ConAirMember getMember(final String name) throws IllegalArgumentException {
-        if (!clientMap.containsKey(name)) {
-            throw new IllegalArgumentException("Member '" + name + "' not found!");
-        }
-        return new ConAirMember(name);
-    }
 }

@@ -24,9 +24,33 @@
 
 package de.minestar.conair.api;
 
-public interface PacketSender {
+public class ConAirMember {
 
-    void sendPacket(final Packet packet, final ConAirMember... targets) throws Exception;
+    private final String _name;
 
-    ConAirMember getMember(final String name);
+    public ConAirMember(final String name) {
+        _name = name;
+    }
+
+    public String getName() {
+        return _name;
+    }
+
+    @Override
+    public int hashCode() {
+        return _name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof ConAirMember)) {
+            return false;
+        }
+        return hashCode() == obj.hashCode();
+    }
 }

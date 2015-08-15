@@ -66,7 +66,7 @@ import de.minestar.conair.api.packets.ConnectionPacket;
 import de.minestar.conair.api.packets.HandshakePacket;
 import de.minestar.conair.api.packets.SmallPacket;
 
-public class ConAirClient implements PacketSender {
+public final class ConAirClient implements PacketSender {
 
     private boolean isConnected;
 
@@ -80,7 +80,7 @@ public class ConAirClient implements PacketSender {
 
     private SmallPacketHandler smallPacketHandler;
 
-    public ConAirClient(String clientName) {
+    public ConAirClient(String clientName, String host, int port) throws Exception {
         this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
@@ -88,10 +88,7 @@ public class ConAirClient implements PacketSender {
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.smallPacketHandler = new SmallPacketHandler();
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
-    }
-
-    public ConAirMember get() {
-        return clientName;
+        this.connect(host, port);
     }
 
     /**
@@ -106,7 +103,7 @@ public class ConAirClient implements PacketSender {
      * @throws Exception
      *             Something went wrong
      */
-    public void connect(String host, int port) throws Exception {
+    private void connect(String host, int port) throws Exception {
         if (isConnected) {
             throw new IllegalStateException("Client is already connected!");
         }
@@ -145,26 +142,6 @@ public class ConAirClient implements PacketSender {
         this.registerPacketListener(new ClientConnectionListener(this));
     }
 
-    public boolean isConnected() {
-        return isConnected;
-    }
-
-    private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
-
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
-            // handle splitted packets
-            if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
-                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
-                if (reconstructedPacket != null) {
-                    wrappedPacket = reconstructedPacket;
-                }
-            }
-
-            onPacketReceived(wrappedPacket);
-        }
-    }
-
     private void onPacketReceived(WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered in this client
@@ -183,6 +160,10 @@ public class ConAirClient implements PacketSender {
                 executor.execute(this, getMember(wrappedPacket.getSource()), packet);
             }
         }
+    }
+
+    public boolean isConnected() {
+        return isConnected;
     }
 
     /**
@@ -238,6 +219,14 @@ public class ConAirClient implements PacketSender {
         }
     }
 
+    @Override
+    public ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!_conAirMembers.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
+        }
+        return _conAirMembers.get(name);
+    }
+
     /**
      * Disconnects from the ConAir server and close connection.
      * 
@@ -253,7 +242,24 @@ public class ConAirClient implements PacketSender {
         isConnected = false;
     }
 
-    private static class ClientConnectionListener implements Listener {
+    private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
+            // handle splitted packets
+            if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
+                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
+                if (reconstructedPacket != null) {
+                    wrappedPacket = reconstructedPacket;
+                }
+            }
+
+            // handle received packets
+            onPacketReceived(wrappedPacket);
+        }
+    }
+
+    private class ClientConnectionListener implements Listener {
 
         private ConAirClient _client;
 
@@ -276,13 +282,6 @@ public class ConAirClient implements PacketSender {
                 _client._conAirMembers.put(clientName, new ConAirMember(clientName));
             }
         }
-    }
-
-    public ConAirMember getMember(final String name) throws IllegalArgumentException {
-        if (!_conAirMembers.containsKey(name)) {
-            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
-        }
-        return _conAirMembers.get(name);
     }
 
 }

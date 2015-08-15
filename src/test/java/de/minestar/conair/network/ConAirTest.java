@@ -66,33 +66,28 @@ public class ConAirTest {
         try {
 
             // Create the server
-            ConAirServer server = new ConAirServer();
-            server.start(PORT);
+            ConAirServer server = new ConAirServer(PORT);
             server.registerPacketListener(new TestListener("S"));
             Assert.assertTrue(server.isRunning());
 
             // Create first client and connect to server
-            ConAirClient client1 = new ConAirClient("Client1");
+            ConAirClient client1 = new ConAirClient("Client1", "localhost", PORT);
             client1.registerPacketListener(new TestListener("C1"));
-            client1.connect("localhost", PORT); // domain
             Assert.assertTrue(client1.isConnected());
 
             // Create second client and connect to server
-            ConAirClient client2 = new ConAirClient("Client2\"");
+            ConAirClient client2 = new ConAirClient("Client2\"", "127.0.0.1", PORT);
             client2.registerPacketListener(new TestListener("C2"));
-            client2.connect("127.0.0.1", PORT); // ipv4
             Assert.assertTrue(client2.isConnected());
 
             // Create third client and connect to server
-            ConAirClient client3 = new ConAirClient("Client3");
+            ConAirClient client3 = new ConAirClient("Client3", "::1", PORT);
             client3.registerPacketListener(new TestListener("C3"));
-            client3.connect("::1", PORT); // ipv6
             Assert.assertTrue(client3.isConnected());
 
             // Create third client and connect to server, This client hasn't a
             // packet registered!
-            ConAirClient client4 = new ConAirClient("Client4");
-            client4.connect("::1", PORT); // ipv6
+            ConAirClient client4 = new ConAirClient("Client4", "::1", PORT);
             Assert.assertTrue(client4.isConnected());
 
             // Clients are sending packets to everyone in the network
