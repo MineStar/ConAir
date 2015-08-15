@@ -35,9 +35,9 @@ import java.util.Optional;
 import org.junit.Test;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.SmallPacketHandler;
-import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.packets.SmallPacket;
+import de.minestar.conair.common.packets.SplittedPacketHandler;
+import de.minestar.conair.common.packets.SplittedPacket;
+import de.minestar.conair.common.packets.WrappedPacket;
 
 /*
  * Test for serialization and parsing of packets
@@ -64,10 +64,10 @@ public class PacketTest {
         ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
         // Serialize packet while wrapping
         List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, ConAir.SERVER, ConAir.SERVER);
-        SmallPacketHandler smallPacketHandler = new SmallPacketHandler();
+        SplittedPacketHandler smallPacketHandler = new SplittedPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {
-            result = smallPacketHandler.handle(packet, (SmallPacket) packet.getPacket().get());
+            result = smallPacketHandler.handle(packet, (SplittedPacket) packet.getPacket().get());
         }
 
         // Parse packet

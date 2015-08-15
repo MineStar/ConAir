@@ -22,28 +22,28 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.codec;
+package de.minestar.conair.common.packets;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageEncoder;
+import de.minestar.conair.api.Packet;
 
-import java.util.List;
+public class ConnectedClientsPacket implements Packet {
 
-import com.google.gson.Gson;
+    private final String[] connectedClients;
 
-import de.minestar.conair.api.WrappedPacket;
+    public ConnectedClientsPacket(String... connectedClients) {
+        this.connectedClients = new String[connectedClients.length];
+        for (int i = 0; i < connectedClients.length; i++) {
+            this.connectedClients[i] = connectedClients[i];
+        }
+    }
 
-/**
- * Converts a {@link WrappedPacket} to a JSON representation of the object.
- */
-public class JsonEncoder extends MessageToMessageEncoder<WrappedPacket> {
-
-    private static final Gson JSON_MAPPER = new Gson();
+    public String[] getConnectedClients() {
+        return connectedClients;
+    }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, WrappedPacket msg, List<Object> out) throws Exception {
-        String message = JSON_MAPPER.toJson(msg);
-        out.add(message);
+    public String toString() {
+        return "ConnectedClientsPacket [connectedClients=" + connectedClients + "]";
     }
 
 }

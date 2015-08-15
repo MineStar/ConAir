@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.common.packets;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,12 +30,12 @@ import java.util.Random;
 
 import de.minestar.conair.api.Packet;
 
-public class SmallPacket implements Packet, Comparable<SmallPacket> {
+public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
 
     private static final Random RANDOM = new Random();
 
-    public static <P extends Packet> Collection<SmallPacket> split(final int MAX_PACKET_SIZE, final int dataLength, final P packet, final String data) {
-        final Collection<SmallPacket> packets = new ArrayList<SmallPacket>();
+    public static <P extends Packet> Collection<SplittedPacket> split(final int MAX_PACKET_SIZE, final int dataLength, final P packet, final String data) {
+        final Collection<SplittedPacket> packets = new ArrayList<SplittedPacket>();
 
         final long id = getNextFreeId();
         int totalPackets = (int) (((double) dataLength / (double) MAX_PACKET_SIZE));
@@ -44,7 +44,7 @@ public class SmallPacket implements Packet, Comparable<SmallPacket> {
         }
         int currentPacketId = 0;
         for (int i = 0; i < dataLength; i += MAX_PACKET_SIZE) {
-            packets.add(new SmallPacket(packet, id, currentPacketId, totalPackets, data.substring(i, Math.min(i + MAX_PACKET_SIZE, dataLength))));
+            packets.add(new SplittedPacket(packet, id, currentPacketId, totalPackets, data.substring(i, Math.min(i + MAX_PACKET_SIZE, dataLength))));
             currentPacketId++;
         }
         return packets;
@@ -60,7 +60,7 @@ public class SmallPacket implements Packet, Comparable<SmallPacket> {
     private final long _totalPackets;
     private final String _data;
 
-    private <P extends Packet> SmallPacket(final P packetClass, final long id, final long currentPacketId, final long totalPackets, final String data) {
+    private <P extends Packet> SplittedPacket(final P packetClass, final long id, final long currentPacketId, final long totalPackets, final String data) {
         _id = id;
         _packetClass = packetClass.getClass().getName();
         _currentPacketId = currentPacketId;
@@ -94,7 +94,7 @@ public class SmallPacket implements Packet, Comparable<SmallPacket> {
     }
 
     @Override
-    public int compareTo(SmallPacket o) {
+    public int compareTo(SplittedPacket o) {
         if (_currentPacketId < o._currentPacketId) {
             return -1;
         }

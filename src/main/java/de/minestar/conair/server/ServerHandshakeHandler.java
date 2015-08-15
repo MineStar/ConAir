@@ -33,13 +33,13 @@ import io.netty.util.AttributeKey;
 import java.util.Optional;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirMember;
-import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.packets.ConnectedClientsPacket;
-import de.minestar.conair.api.packets.ConnectionPacket;
-import de.minestar.conair.api.packets.ErrorPacket;
-import de.minestar.conair.api.packets.ErrorPacket.ErrorType;
-import de.minestar.conair.api.packets.HandshakePacket;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.packets.ConnectedClientsPacket;
+import de.minestar.conair.common.packets.ConnectionPacket;
+import de.minestar.conair.common.packets.ErrorPacket;
+import de.minestar.conair.common.packets.HandshakePacket;
+import de.minestar.conair.common.packets.WrappedPacket;
+import de.minestar.conair.common.packets.ErrorPacket.ErrorType;
 
 public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 

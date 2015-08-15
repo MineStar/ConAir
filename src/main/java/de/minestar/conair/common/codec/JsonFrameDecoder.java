@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.codec;
+package de.minestar.conair.common.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

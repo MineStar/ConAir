@@ -43,15 +43,15 @@ import java.util.Optional;
 import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
-import de.minestar.conair.api.PacketSender;
-import de.minestar.conair.api.SmallPacketHandler;
-import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
-import de.minestar.conair.api.packets.SmallPacket;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.PacketSender;
+import de.minestar.conair.common.event.EventExecutor;
+import de.minestar.conair.common.packets.SplittedPacketHandler;
+import de.minestar.conair.common.packets.SplittedPacket;
+import de.minestar.conair.common.packets.WrappedPacket;
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
@@ -63,14 +63,14 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
     protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
 
-    private final SmallPacketHandler smallPacketHandler;
+    private final SplittedPacketHandler smallPacketHandler;
     private final ConAirServer _server;
 
     public ConAirServerHandler(final ConAirServer server) {
         _server = server;
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
-        this.smallPacketHandler = new SmallPacketHandler();
+        this.smallPacketHandler = new SplittedPacketHandler();
     }
 
     @Override
@@ -88,8 +88,8 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     public void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
 
         // handle splitted packets
-        if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
-            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
+        if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
+            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
             if (reconstructedPacket != null) {
                 if (reconstructedPacket.getTargets().contains(ConAir.SERVER.getName())) {
                     // Returns true, if the packet is handled ONLY by the server

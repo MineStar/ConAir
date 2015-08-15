@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.common;
+
+import de.minestar.conair.api.Packet;
 
 public interface PacketSender {
 

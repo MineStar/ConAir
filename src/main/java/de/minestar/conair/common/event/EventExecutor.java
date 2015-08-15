@@ -22,13 +22,14 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.event;
+package de.minestar.conair.common.event;
 
 import java.lang.reflect.Method;
 
-import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
-import de.minestar.conair.api.PacketSender;
+import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.PacketSender;
 
 public class EventExecutor {
 

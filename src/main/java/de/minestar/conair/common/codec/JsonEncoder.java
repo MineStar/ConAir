@@ -22,34 +22,28 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.common.codec;
 
-import de.minestar.conair.api.Packet;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
+
+import java.util.List;
+
+import com.google.gson.Gson;
+
+import de.minestar.conair.common.packets.WrappedPacket;
 
 /**
- * After the connection to the server is established, the client MUST send this packet to server to get into the network. Otherwise no packet will be broadcasted.
+ * Converts a {@link WrappedPacket} to a JSON representation of the object.
  */
-public class HandshakePacket implements Packet {
+public class JsonEncoder extends MessageToMessageEncoder<WrappedPacket> {
 
-    private final String clientName;
-
-    /**
-     * Handshake packet to register on the con air server.
-     * 
-     * @param clientName
-     *            The unique client name of the client.
-     */
-    public HandshakePacket(String clientName) {
-        this.clientName = clientName;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
+    private static final Gson JSON_MAPPER = new Gson();
 
     @Override
-    public String toString() {
-        return "HandshakePaket [clientName=" + clientName + "]";
+    protected void encode(ChannelHandlerContext ctx, WrappedPacket msg, List<Object> out) throws Exception {
+        String message = JSON_MAPPER.toJson(msg);
+        out.add(message);
     }
 
 }

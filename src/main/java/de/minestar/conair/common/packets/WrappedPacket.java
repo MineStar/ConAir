@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.common.packets;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,9 +39,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import de.minestar.conair.api.packets.SmallPacket;
-import de.minestar.conair.utils.BufferUtils;
-import de.minestar.conair.utils.Unsafe;
+import de.minestar.conair.api.Packet;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.utils.BufferUtils;
+import de.minestar.conair.common.utils.Unsafe;
 
 /**
  * Packet with additional information about the target of the packet. Contains a serialized version of the packet (currently as JSON string)
@@ -225,8 +226,8 @@ public class WrappedPacket {
 
         final byte[] packetData = completePacket.packetAsJSON.getBytes();
         if (packetData.length > MAX_PACKET_SIZE) {
-            Collection<SmallPacket> split = SmallPacket.split(MAX_PACKET_SIZE, packetData.length, packet, completePacket.packetAsJSON);
-            for (final SmallPacket smallPacket : split) {
+            Collection<SplittedPacket> split = SplittedPacket.split(MAX_PACKET_SIZE, packetData.length, packet, completePacket.packetAsJSON);
+            for (final SplittedPacket smallPacket : split) {
                 packets.add(new WrappedPacket(smallPacket, completePacket.source, completePacket.targets));
             }
         } else {
@@ -249,10 +250,10 @@ public class WrappedPacket {
     }
 
     @SuppressWarnings("unchecked")
-    static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SmallPacket> packets, String packetClassName) throws ClassNotFoundException {
+    static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SplittedPacket> packets, String packetClassName) throws ClassNotFoundException {
         Collections.sort(packets);
         StringBuilder builder = new StringBuilder();
-        for (final SmallPacket packet : packets) {
+        for (final SplittedPacket packet : packets) {
             builder.append(packet.getData());
         }
         return new WrappedPacket((Class<P>) Class.forName(packetClassName), builder.toString(), wrappedPacket.source, wrappedPacket.targets);

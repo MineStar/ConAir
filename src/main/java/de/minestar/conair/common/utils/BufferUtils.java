@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.utils;
+package de.minestar.conair.common.utils;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

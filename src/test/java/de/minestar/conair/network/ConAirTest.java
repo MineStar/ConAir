@@ -34,11 +34,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirMember;
-import de.minestar.conair.api.PacketSender;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.client.ConAirClient;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.server.ConAirServer;
 
 /**

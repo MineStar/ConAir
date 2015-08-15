@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.common;
 
 public class ConAirMember {
 

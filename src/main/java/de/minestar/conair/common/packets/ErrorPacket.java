@@ -22,35 +22,32 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api.packets;
+package de.minestar.conair.common.packets;
 
 import de.minestar.conair.api.Packet;
 
-public class ConnectionPacket implements Packet {
+/**
+ * Error packet, sent to client if an error occurs. For example, the client want to broadcast a packet, but hasn't make a handshake with the server. See {@link HandshakePacket}
+ */
+public class ErrorPacket implements Packet {
 
-    private final String clientName;
-    private final boolean connect;
-
-    public ConnectionPacket(String clientName, boolean connect) {
-        this.clientName = clientName;
-        this.connect = connect;
+    public enum ErrorType {
+        GENERAL, DUPLICATE_HANDSHAKE, NO_HANDSHAKE;
     }
 
-    public boolean isConnect() {
-        return connect;
+    private final ErrorType type;
+
+    public ErrorPacket(ErrorType type) {
+        this.type = type;
     }
 
-    public boolean isDisconnect() {
-        return !connect;
-    }
-
-    public String getClientName() {
-        return clientName;
+    public ErrorType getType() {
+        return type;
     }
 
     @Override
     public String toString() {
-        return "ConnectionPacket [clientName=" + clientName + ", connect=" + connect + "]";
+        return "ErrorPacket [type=" + type + "]";
     }
 
 }

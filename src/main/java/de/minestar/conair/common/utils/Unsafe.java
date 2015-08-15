@@ -15,7 +15,7 @@
  * ConAir. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.minestar.conair.utils;
+package de.minestar.conair.common.utils;
 
 import java.lang.reflect.Field;
 

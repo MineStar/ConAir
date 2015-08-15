@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.api;
+package de.minestar.conair.common.packets;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,17 +30,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.minestar.conair.api.packets.SmallPacket;
+public class SplittedPacketHandler {
 
-public class SmallPacketHandler {
+    private final Map<Long, List<SplittedPacket>> map = Collections.synchronizedMap(new HashMap<>());
 
-    private final Map<Long, List<SmallPacket>> map = Collections.synchronizedMap(new HashMap<>());
-
-    public WrappedPacket handle(final WrappedPacket wrappedPacket, final SmallPacket packet) throws ClassNotFoundException {
+    public WrappedPacket handle(final WrappedPacket wrappedPacket, final SplittedPacket packet) throws ClassNotFoundException {
         // add the packet to the list
-        List<SmallPacket> list = map.get(packet.getId());
+        List<SplittedPacket> list = map.get(packet.getId());
         if (list == null) {
-            list = new ArrayList<SmallPacket>();
+            list = new ArrayList<SplittedPacket>();
             map.put(packet.getId(), list);
         }
         list.add(packet);

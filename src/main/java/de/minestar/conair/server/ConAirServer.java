@@ -46,14 +46,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
-import de.minestar.conair.api.PacketSender;
-import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.codec.JsonDecoder;
-import de.minestar.conair.api.codec.JsonEncoder;
-import de.minestar.conair.api.codec.JsonFrameDecoder;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.PacketSender;
+import de.minestar.conair.common.codec.JsonDecoder;
+import de.minestar.conair.common.codec.JsonEncoder;
+import de.minestar.conair.common.codec.JsonFrameDecoder;
+import de.minestar.conair.common.packets.WrappedPacket;
 
 public final class ConAirServer implements PacketSender {
 

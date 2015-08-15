@@ -50,21 +50,21 @@ import java.util.Optional;
 import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.ConAirMember;
 import de.minestar.conair.api.Packet;
-import de.minestar.conair.api.PacketSender;
-import de.minestar.conair.api.SmallPacketHandler;
-import de.minestar.conair.api.WrappedPacket;
-import de.minestar.conair.api.codec.JsonDecoder;
-import de.minestar.conair.api.codec.JsonEncoder;
-import de.minestar.conair.api.codec.JsonFrameDecoder;
-import de.minestar.conair.api.event.EventExecutor;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
-import de.minestar.conair.api.packets.ConnectedClientsPacket;
-import de.minestar.conair.api.packets.ConnectionPacket;
-import de.minestar.conair.api.packets.HandshakePacket;
-import de.minestar.conair.api.packets.SmallPacket;
+import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.PacketSender;
+import de.minestar.conair.common.codec.JsonDecoder;
+import de.minestar.conair.common.codec.JsonEncoder;
+import de.minestar.conair.common.codec.JsonFrameDecoder;
+import de.minestar.conair.common.event.EventExecutor;
+import de.minestar.conair.common.packets.ConnectedClientsPacket;
+import de.minestar.conair.common.packets.ConnectionPacket;
+import de.minestar.conair.common.packets.HandshakePacket;
+import de.minestar.conair.common.packets.SplittedPacketHandler;
+import de.minestar.conair.common.packets.SplittedPacket;
+import de.minestar.conair.common.packets.WrappedPacket;
 
 public final class ConAirClient implements PacketSender {
 
@@ -78,7 +78,7 @@ public final class ConAirClient implements PacketSender {
     private ConAirMember clientName;
     private Map<String, ConAirMember> _conAirMembers;
 
-    private SmallPacketHandler smallPacketHandler;
+    private SplittedPacketHandler smallPacketHandler;
 
     public ConAirClient(String clientName, String host, int port) throws Exception {
         this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
@@ -86,7 +86,7 @@ public final class ConAirClient implements PacketSender {
         this.group = new NioEventLoopGroup();
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
-        this.smallPacketHandler = new SmallPacketHandler();
+        this.smallPacketHandler = new SplittedPacketHandler();
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
         this.connect(host, port);
     }
@@ -247,8 +247,8 @@ public final class ConAirClient implements PacketSender {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
             // handle splitted packets
-            if (wrappedPacket.getPacketClassName().equals(SmallPacket.class.getName())) {
-                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SmallPacket) wrappedPacket.getPacket().get());
+            if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
+                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
                 if (reconstructedPacket != null) {
                     wrappedPacket = reconstructedPacket;
                 }
