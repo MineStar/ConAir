@@ -44,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
@@ -74,23 +73,29 @@ public class ConAirServer {
     }
 
     public String[] getClientMap() {
-        return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
+        synchronized (clientMap) {
+            return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
+        }
     }
 
     void addClient(String clientName, Channel channel) {
-        this.clientMap.put(clientName, channel);
+        synchronized (clientMap) {
+            this.clientMap.put(clientName, channel);
+        }
     }
 
     void removeClient(Channel channel) {
-        String clientToRemove = null;
-        for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
-            if (channel.id() == entry.getValue().id()) {
-                clientToRemove = entry.getKey();
-                break;
+        synchronized (clientMap) {
+            String clientToRemove = null;
+            for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
+                if (channel.id() == entry.getValue().id()) {
+                    clientToRemove = entry.getKey();
+                    break;
+                }
             }
-        }
-        if (clientToRemove != null) {
-            this.clientMap.remove(clientToRemove);
+            if (clientToRemove != null) {
+                this.clientMap.remove(clientToRemove);
+            }
         }
     }
 
@@ -105,10 +110,10 @@ public class ConAirServer {
      *             Something went wrong
      */
     public void sendPacket(Packet packet, String... targets) throws Exception {
-        if ((targets == null) && this.clientMap.values().size() > 0) {
+        if ((targets == null || targets.length < 1) && this.clientMap.values().size() > 0) {
             // broadcast
-            List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, this.clientMap.values().toArray(new String[this.clientMap.values().size()]));
             for (Entry<String, Channel> entry : this.clientMap.entrySet()) {
+                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, entry.getKey());
                 for (final WrappedPacket wrappedPacket : packetList) {
                     ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
                     if (result != null) {
@@ -129,6 +134,26 @@ public class ConAirServer {
                         result.sync();
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
+     * 
+     * @param packet
+     *            The data to send.
+     * @param targets
+     *            The target
+     * @throws Exception
+     *             Something went wrong
+     */
+    void sendPacket(Packet packet, String clientName, Channel channel) throws Exception {
+        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, clientName);
+        for (final WrappedPacket wrappedPacket : packetList) {
+            ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+            if (result != null) {
+                result.sync();
             }
         }
     }

@@ -78,14 +78,14 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
                 // Mark the client as initialized and assign a client name
                 ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
-//                _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
-//                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()));
+                _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
+                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()), handshakePacket.getClientName(), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
                 ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         _server.removeClient(ctx.channel());
-//                        _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), false));
+                        _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), false));
                     }
                 });
             }

@@ -136,8 +136,8 @@ public class ConAirClient {
 
         // Register at server with unique name
         sendPacket(new HandshakePacket(this.clientName), ConAir.SERVER);
-        this.registerPacketListener(new ConnectionListener(this));
         isConnected = true;
+        this.registerPacketListener(new ClientConnectionListener(this));
     }
 
     public boolean isConnected() {
@@ -227,6 +227,7 @@ public class ConAirClient {
                     map = Collections.synchronizedMap(new HashMap<>());
                     registeredListener.put(packetClass, map);
                 }
+                map.put(listener.getClass(), new EventExecutor(listener, method));
             }
         }
     }
@@ -246,30 +247,36 @@ public class ConAirClient {
         isConnected = false;
     }
 
-    private static class ConnectionListener implements Listener {
+    private static class ClientConnectionListener implements Listener {
 
         private ConAirClient _client;
 
-        ConnectionListener(final ConAirClient client) {
+        ClientConnectionListener(final ConAirClient client) {
             _client = client;
         }
 
         @RegisterEvent
         public void onConnectionPacket(final String source, final ConnectionPacket packet) {
+            System.out.println("----------------------------");
+            System.out.println(_client.getClientName());
             if (packet.isConnect()) {
                 System.out.println("'" + packet.getClientName() + "' connected!");
             } else {
                 System.out.println("'" + packet.getClientName() + "' disconnected!");
             }
+            // TODO: handle packet
         }
 
         @RegisterEvent
         public void onConnectedClientsPacket(final String source, final ConnectedClientsPacket packet) {
             int i = 1;
+            System.out.println("----------------------------");
+            System.out.println(_client.getClientName());
             for (String client : packet.getConnectedClients()) {
                 System.out.println("#" + i + " :" + client);
                 i++;
             }
+            // TODO: handle packet
         }
     }
 
