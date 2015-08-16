@@ -65,7 +65,7 @@ final class PluginLoader {
                 if (!entry.getName().endsWith(".class")) {
                     continue;
                 }
-                pluginClasses.add(entry.getName().replaceAll("/", "\\."));
+                pluginClasses.add(entry.getName().substring(0, entry.getName().length() - ".class".length()).replaceAll("/", "\\."));
             }
             jarFile.close();
         } catch (Exception e) {
@@ -86,7 +86,7 @@ final class PluginLoader {
                     final Class<? extends ConAirPlugin> plugin = jarClass.asSubclass(ConAirPlugin.class);
                     final Constructor<? extends ConAirPlugin> constructor = plugin.getConstructor();
                     final ConAirPlugin pluginInstance = constructor.newInstance();
-                    pluginInstance.initialize(server, result.getClass().getSimpleName(), pluginManager);
+                    pluginInstance.initialize(server, pluginInstance.getClass().getSimpleName(), pluginManager);
                     result.add(pluginInstance);
                     _loaders.put(pluginInstance.getPluginName(), classLoader);
                 } catch (Exception e) {

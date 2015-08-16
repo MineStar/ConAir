@@ -37,4 +37,7 @@ public interface PacketSender {
 
 
     <L extends Listener> void registerPacketListener(L listener);
+
+
+    String getName();
 }

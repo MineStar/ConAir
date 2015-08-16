@@ -30,8 +30,10 @@ import de.minestar.conair.common.ConAirMember;
 public class ConAir {
 
     /**
-     * The Member for the server. No client can have the same name
+     * The Member for the server. No client can have the same name.
      */
     public static final ConAirMember SERVER = new ConAirMember("ConAirServer");
+
+    public static final String DEFAULT_PLUGIN_FOLDER = "plugins" + System.getProperty("file.separator");
 
 }

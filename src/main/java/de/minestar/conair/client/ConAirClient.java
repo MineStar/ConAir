@@ -27,6 +27,7 @@ package de.minestar.conair.client;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -62,9 +63,10 @@ import de.minestar.conair.common.event.EventExecutor;
 import de.minestar.conair.common.packets.ConnectedClientsPacket;
 import de.minestar.conair.common.packets.ConnectionPacket;
 import de.minestar.conair.common.packets.HandshakePacket;
-import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.SplittedPacket;
+import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
+import de.minestar.conair.common.plugin.PluginManager;
 
 
 public final class ConAirClient implements PacketSender {
@@ -74,23 +76,30 @@ public final class ConAirClient implements PacketSender {
     private final EventLoopGroup group;
     private Channel channel;
 
-    private Set<String> registeredClasses;
-    private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
-    private ConAirMember clientName;
-    private Map<String, ConAirMember> _conAirMembers;
+    private final Set<String> registeredClasses;
+    private final Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
+    private final ConAirMember clientName;
+    private final Map<String, ConAirMember> _conAirMembers;
 
-    private SplittedPacketHandler smallPacketHandler;
+    private final SplittedPacketHandler splittedPacketHandler;
+    private final PluginManager _pluginManager;
 
 
     public ConAirClient(String clientName, String host, int port) throws Exception {
+        this(clientName, host, port, ConAir.DEFAULT_PLUGIN_FOLDER);
+    }
+
+
+    public ConAirClient(String clientName, String host, int port, String pluginFolder) throws Exception {
         this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
         this.isConnected = false;
         this.group = new NioEventLoopGroup();
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
-        this.smallPacketHandler = new SplittedPacketHandler();
+        this.splittedPacketHandler = new SplittedPacketHandler();
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
-        this.connect(host, port);
+        _pluginManager = new PluginManager(this, pluginFolder);
+        connect(host, port);
     }
 
 
@@ -106,6 +115,7 @@ public final class ConAirClient implements PacketSender {
      * @throws Exception
      *             Something went wrong
      */
+    @SuppressWarnings("unchecked")
     private void connect(String host, int port) throws Exception {
         if (isConnected) {
             throw new IllegalStateException("Client is already connected!");
@@ -137,12 +147,20 @@ public final class ConAirClient implements PacketSender {
         });
 
         channel = bootStrap.connect(host, port).sync().channel();
+        channel.closeFuture().addListeners(new ChannelFutureListener() {
 
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                _pluginManager.onDisconnect();
+                _pluginManager.disablePlugins();
+            }
+        });
         // Register at server with unique name
         _conAirMembers.put(ConAir.SERVER.getName(), ConAir.SERVER);
         sendPacket(new HandshakePacket(this.clientName.getName()), ConAir.SERVER);
         isConnected = true;
-        this.registerPacketListener(new ClientConnectionListener(this));
+        _pluginManager.onConnect();
+        registerPacketListener(new ClientConnectionListener(this));
     }
 
 
@@ -258,7 +276,7 @@ public final class ConAirClient implements PacketSender {
         protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
             // handle splitted packets
             if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-                final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
+                final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
                 if (reconstructedPacket != null) {
                     wrappedPacket = reconstructedPacket;
                 }
@@ -295,6 +313,12 @@ public final class ConAirClient implements PacketSender {
                 _client._conAirMembers.put(clientName, new ConAirMember(clientName));
             }
         }
+    }
+
+
+    @Override
+    public String getName() {
+        return clientName.toString();
     }
 
 }

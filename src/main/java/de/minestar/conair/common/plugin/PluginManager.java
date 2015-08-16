@@ -41,20 +41,16 @@ public final class PluginManager {
     private final HashMap<String, ConAirPlugin> _pluginMap;
 
 
-    public PluginManager(PacketSender packetSender) {
-        this(packetSender, "plugins" + System.getProperty("file.separator"));
-    }
-
-
     public PluginManager(PacketSender packetSender, String pluginFolder) {
         _pluginLoader = new PluginLoader();
         _pluginMap = new HashMap<String, ConAirPlugin>();
         _packetSender = packetSender;
         _pluginFolder = pluginFolder;
+        loadPlugins();
     }
 
 
-    public void loadPlugins() {
+    private void loadPlugins() {
         // create PluginFolder
         File pluginFolder = new File(_pluginFolder);
         pluginFolder.mkdir();
@@ -74,6 +70,7 @@ public final class PluginManager {
                         continue;
                     } else {
                         _pluginMap.put(plugin.getPluginName(), plugin);
+                        plugin.onLoad();
                     }
                 }
             }
@@ -82,6 +79,30 @@ public final class PluginManager {
         // enable plugins
         System.out.println("Plugins found: " + _pluginMap.size());
         enablePlugins();
+    }
+
+
+    public void onConnect() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onConnect();
+            } catch (Exception e) {
+                // print stacktrace
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public void onDisconnect() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onDisconnect();
+            } catch (Exception e) {
+                // print stacktrace
+                e.printStackTrace();
+            }
+        }
     }
 
 

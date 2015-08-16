@@ -56,25 +56,46 @@ public abstract class ConAirPlugin {
     }
 
 
-    public abstract void onLoad();
+    /**
+     * Called on client side ONLY.
+     */
+    public void onConnect() {
+    }
 
 
-    public abstract void onPreEnable();
+    /**
+     * Called on client side ONLY.
+     */
+    public void onDisconnect() {
+    }
 
 
-    public abstract void onEnable();
+    public void onLoad() {
+    }
 
 
-    public abstract void onPostEnable();
+    public void onPreEnable() {
+    }
 
 
-    public abstract void onPreDisable();
+    public void onEnable() {
+    }
 
 
-    public abstract void onDisable();
+    public void onPostEnable() {
+    }
 
 
-    public abstract void onPostDisable();
+    public void onPreDisable() {
+    }
+
+
+    public void onDisable() {
+    }
+
+
+    public void onPostDisable() {
+    }
 
 
     public final String getPluginName() {

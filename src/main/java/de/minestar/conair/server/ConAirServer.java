@@ -27,6 +27,7 @@ package de.minestar.conair.server;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -54,6 +55,7 @@ import de.minestar.conair.common.codec.JsonDecoder;
 import de.minestar.conair.common.codec.JsonEncoder;
 import de.minestar.conair.common.codec.JsonFrameDecoder;
 import de.minestar.conair.common.packets.WrappedPacket;
+import de.minestar.conair.common.plugin.PluginManager;
 
 
 public final class ConAirServer implements PacketSender {
@@ -63,21 +65,29 @@ public final class ConAirServer implements PacketSender {
     private Channel serverChannel;
 
     private boolean isRunning;
+    private final Map<String, Listener> listenerMap;
+    private final Map<String, Channel> clientMap;
+    private final PluginManager _pluginManager;
     private ConAirServerHandler packetHandler;
-    private Map<String, Listener> listenerMap;
-    private Map<String, Channel> clientMap;
 
 
     public ConAirServer(int port) throws Exception {
+        this(port, ConAir.DEFAULT_PLUGIN_FOLDER);
+    }
+
+
+    public ConAirServer(int port, String pluginFolder) throws Exception {
         this.isRunning = false;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.listenerMap = Collections.synchronizedMap(new HashMap<>());
         this.clientMap = Collections.synchronizedMap(new HashMap<>());
+        _pluginManager = new PluginManager(this, pluginFolder);
         start(port);
     }
 
 
+    @SuppressWarnings("unchecked")
     private void start(final int port) throws Exception {
         if (isRunning) {
             throw new IllegalStateException("Server is already running!");
@@ -116,6 +126,13 @@ public final class ConAirServer implements PacketSender {
         });
         // Start server
         this.serverChannel = bootStrap.bind(port).sync().channel();
+        this.serverChannel.closeFuture().addListeners(new ChannelFutureListener() {
+
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                _pluginManager.disablePlugins();
+            }
+        });
         this.isRunning = true;
     }
 
@@ -242,8 +259,13 @@ public final class ConAirServer implements PacketSender {
         this.serverChannel.close().sync();
         bossGroup.shutdownGracefully().sync();
         workerGroup.shutdownGracefully().sync();
-
         this.isRunning = false;
+    }
+
+
+    @Override
+    public String getName() {
+        return ConAir.SERVER.getName();
     }
 
 }
