@@ -54,7 +54,7 @@ import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
 
 
-public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
+class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private Set<String> registeredClasses;
     private Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;

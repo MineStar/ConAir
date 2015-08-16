@@ -42,7 +42,7 @@ import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.packets.ErrorPacket.ErrorType;
 
 
-public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
+class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
 
