@@ -247,8 +247,8 @@ public final class ConAirClient implements PacketSender {
 
 
     @Override
-    public <L extends Listener> void unregisterPacketListener(L listener) {
-        final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
+    public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
+        final Method[] declaredMethods = listenerClass.getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly three params and a public method
             if (Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != 3) {
@@ -268,7 +268,7 @@ public final class ConAirClient implements PacketSender {
                 // register the EventExecutor
                 Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
                 if (map != null) {
-                    map.remove(listener.getClass());
+                    map.remove(listenerClass);
                 }
             }
         }

@@ -72,7 +72,7 @@ public interface PacketSender {
      * @param listener
      *            the @link Listener listener} to unregister.
      */
-    <L extends Listener> void unregisterPacketListener(L listener);
+    <L extends Listener> void unregisterPacketListener(Class<L> listenerClass);
 
 
     /**

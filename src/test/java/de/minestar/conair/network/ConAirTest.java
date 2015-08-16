@@ -113,6 +113,10 @@ public class ConAirTest {
             // send a packet from the server to client 3
             server.sendPacket(new ChatPacket("Thank you!"), server.getMember("Client3"));
 
+            // unregister and send the packet again
+            client3.unregisterPacketListener(TestListener.class);
+            server.sendPacket(new ChatPacket("Thank you again! (YOU SHOULD NOT SEE THIS)"), server.getMember("Client3"));
+
             Thread.sleep(1000); // Just for test
 
             // Clients are disconnecting, server is shutting down

@@ -244,8 +244,8 @@ public final class ConAirServer implements PacketSender {
 
 
     @Override
-    public <L extends Listener> void unregisterPacketListener(L listener) {
-        this.packetHandler.unregisterPacketListener(listener);
+    public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
+        this.packetHandler.unregisterPacketListener(listenerClass);
     }
 
 
