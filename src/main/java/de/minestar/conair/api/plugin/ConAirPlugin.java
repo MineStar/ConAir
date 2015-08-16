@@ -36,23 +36,19 @@ public abstract class ConAirPlugin {
     private String _pluginName;
     private File _dataFolder;
     private PacketSender _packetSender;
+    private PluginManager _pluginManager;
 
 
-    public ConAirPlugin() {
-    }
-
-
-    public final void initialize(PacketSender packetSender, String pluginName, PluginManager pluginManager) {
-        // set server
+    @SuppressWarnings("unused")
+    // called via reflection
+    private final void initialize(PacketSender packetSender, String pluginName, PluginManager pluginManager) {
         _packetSender = packetSender;
-
-        // set PluginName
         _pluginName = pluginName;
+        _pluginManager = pluginManager;
 
         // create PluginFolder
-        File pluginFolder = new File(pluginManager.getPluginFolder());
-        _dataFolder = new File(pluginFolder + pluginName + System.getProperty("file.separator"));
-        _dataFolder.mkdirs();
+        _dataFolder = new File(pluginManager.getPluginFolder() + pluginName + "/");
+        _dataFolder.mkdir();
     }
 
 
@@ -110,6 +106,11 @@ public abstract class ConAirPlugin {
 
     public final File getDataFolder() {
         return _dataFolder;
+    }
+
+
+    public final PluginManager getPluginManager() {
+        return _pluginManager;
     }
 
 

@@ -34,6 +34,6 @@ public class ConAir {
      */
     public static final ConAirMember SERVER = new ConAirMember("ConAirServer");
 
-    public static final String DEFAULT_PLUGIN_FOLDER = "plugins" + System.getProperty("file.separator");
+    public static final String DEFAULT_PLUGIN_FOLDER = "plugins/";
 
 }

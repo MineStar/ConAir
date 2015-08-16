@@ -25,7 +25,7 @@
 package de.minestar.conair.common.plugin;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +39,7 @@ import java.util.jar.JarFile;
 
 import de.minestar.conair.api.plugin.ConAirPlugin;
 import de.minestar.conair.common.PacketSender;
+import de.minestar.conair.common.utils.Unsafe;
 
 
 final class PluginLoader {
@@ -74,8 +75,7 @@ final class PluginLoader {
         }
 
         try {
-            final URL[] urls = new URL[1];
-            urls[0] = file.toURI().toURL();
+            final URL[] urls = new URL[]{file.toURI().toURL()};
             final PluginClassLoader classLoader = new PluginClassLoader(this, urls, getClass().getClassLoader());
             for (final String className : pluginClasses) {
                 try {
@@ -83,10 +83,13 @@ final class PluginLoader {
                     if (!ConAirPlugin.class.isAssignableFrom(jarClass)) {
                         continue;
                     }
-                    final Class<? extends ConAirPlugin> plugin = jarClass.asSubclass(ConAirPlugin.class);
-                    final Constructor<? extends ConAirPlugin> constructor = plugin.getConstructor();
-                    final ConAirPlugin pluginInstance = constructor.newInstance();
-                    pluginInstance.initialize(server, pluginInstance.getClass().getSimpleName(), pluginManager);
+
+                    @SuppressWarnings("restriction")
+                    final ConAirPlugin pluginInstance = (ConAirPlugin) Unsafe.get().allocateInstance(jarClass);
+                    final Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
+                    initializeMethod.setAccessible(true);
+                    initializeMethod.invoke(pluginInstance, server, pluginInstance.getClass().getSimpleName(), pluginManager);
+                    initializeMethod.setAccessible(false);
                     result.add(pluginInstance);
                     _loaders.put(pluginInstance.getPluginName(), classLoader);
                 } catch (Exception e) {

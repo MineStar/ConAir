@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Optional;
 
 import de.minestar.conair.api.plugin.ConAirPlugin;
 import de.minestar.conair.common.PacketSender;
@@ -45,7 +46,11 @@ public final class PluginManager {
         _pluginLoader = new PluginLoader();
         _pluginMap = new HashMap<String, ConAirPlugin>();
         _packetSender = packetSender;
-        _pluginFolder = pluginFolder;
+        if (pluginFolder.endsWith("/")) {
+            _pluginFolder = pluginFolder;
+        } else {
+            _pluginFolder = pluginFolder + '/';
+        }
         loadPlugins();
     }
 
@@ -151,6 +156,14 @@ public final class PluginManager {
             }
         }
         _pluginMap.clear();
+    }
+
+
+    public Optional<ConAirPlugin> getPlugin(final String pluginName) {
+        if (_pluginMap.containsKey(pluginName)) {
+            return Optional.of(_pluginMap.get(pluginName));
+        }
+        return Optional.<ConAirPlugin> empty();
     }
 
 
