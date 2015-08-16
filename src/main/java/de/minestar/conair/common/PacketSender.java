@@ -81,4 +81,7 @@ public interface PacketSender {
      * @return
      */
     String getName();
+
+
+    ConAirMember getServer();
 }

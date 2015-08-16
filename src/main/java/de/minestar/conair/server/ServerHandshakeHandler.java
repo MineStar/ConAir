@@ -32,14 +32,13 @@ import io.netty.util.AttributeKey;
 
 import java.util.Optional;
 
-import de.minestar.conair.api.ConAir;
 import de.minestar.conair.common.ConAirMember;
-import de.minestar.conair.common.packets.ConnectedClientsPacket;
 import de.minestar.conair.common.packets.ConnectionPacket;
 import de.minestar.conair.common.packets.ErrorPacket;
-import de.minestar.conair.common.packets.HandshakePacket;
-import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.packets.ErrorPacket.ErrorType;
+import de.minestar.conair.common.packets.HandshakePacket;
+import de.minestar.conair.common.packets.ServerInfoPacket;
+import de.minestar.conair.common.packets.WrappedPacket;
 
 
 class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
@@ -89,7 +88,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
                 ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
                 _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
-                _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
+                _server.sendPacket(new ServerInfoPacket(_server.getName(), _server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
                 ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
 
@@ -104,13 +103,13 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
         // Channel tries a twice handshake
         else if (isInitialized(ctx) && msg.is(HandshakePacket.class)) {
             ErrorPacket packet = new ErrorPacket(ErrorType.DUPLICATE_HANDSHAKE);
-            ctx.writeAndFlush(WrappedPacket.create(packet, ConAir.SERVER));
+            ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
             throw new IllegalStateException("Channel did two handshakes!");
         }
         // Channel tries to sent packets without a handshake
         else {
             ErrorPacket packet = new ErrorPacket(ErrorType.NO_HANDSHAKE);
-            ctx.writeAndFlush(WrappedPacket.create(packet, ConAir.SERVER));
+            ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
             throw new IllegalStateException("Channel cannot broadcast before a handshake!");
         }
     }

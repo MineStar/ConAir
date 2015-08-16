@@ -27,27 +27,34 @@ package de.minestar.conair.common.packets;
 import de.minestar.conair.api.Packet;
 
 
-public class ConnectedClientsPacket implements Packet {
+public class ServerInfoPacket implements Packet {
 
-    private final String[] connectedClients;
+    private final String _serverName;
+    private final String[] _connectedClients;
 
 
-    public ConnectedClientsPacket(String... connectedClients) {
-        this.connectedClients = new String[connectedClients.length];
+    public ServerInfoPacket(String serverName, String... connectedClients) {
+        _serverName = serverName;
+        _connectedClients = new String[connectedClients.length];
         for (int i = 0; i < connectedClients.length; i++) {
-            this.connectedClients[i] = connectedClients[i];
+            _connectedClients[i] = connectedClients[i];
         }
     }
 
 
+    public String getServerName() {
+        return _serverName;
+    }
+
+
     public String[] getConnectedClients() {
-        return connectedClients;
+        return _connectedClients;
     }
 
 
     @Override
     public String toString() {
-        return "ConnectedClientsPacket [connectedClients=" + connectedClients + "]";
+        return "ConnectedClientsPacket [serverName=" + _serverName + ", connectedClients=" + _connectedClients + "]";
     }
 
 }

@@ -60,28 +60,35 @@ import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 public final class ConAirServer implements PacketSender {
 
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workerGroup;
-    private Channel serverChannel;
+    private final EventLoopGroup _bossGroup;
+    private final EventLoopGroup _workerGroup;
+    private Channel _serverChannel;
 
-    private boolean isRunning;
-    private final Map<String, Listener> listenerMap;
-    private final Map<String, Channel> clientMap;
+    private boolean _isRunning;
+    private final Map<String, Listener> _listenerMap;
+    private final Map<String, Channel> _clientMap;
     private final PluginManagerFactory _pluginManagerFactory;
+    private final ConAirMember _serverMember;
     private ConAirServerHandler packetHandler;
 
 
     public ConAirServer(int port) throws Exception {
-        this(port, ConAir.DEFAULT_PLUGIN_FOLDER);
+        this("ConAirServer", port, ConAir.DEFAULT_PLUGIN_FOLDER);
     }
 
 
-    public ConAirServer(int port, String pluginFolder) throws Exception {
-        this.isRunning = false;
-        this.bossGroup = new NioEventLoopGroup(1);
-        this.workerGroup = new NioEventLoopGroup();
-        this.listenerMap = Collections.synchronizedMap(new HashMap<>());
-        this.clientMap = Collections.synchronizedMap(new HashMap<>());
+    public ConAirServer(String serverName, int port) throws Exception {
+        this(serverName, port, ConAir.DEFAULT_PLUGIN_FOLDER);
+    }
+
+
+    public ConAirServer(String serverName, int port, String pluginFolder) throws Exception {
+        _serverMember = new ConAirMember(serverName);
+        _isRunning = false;
+        _bossGroup = new NioEventLoopGroup(1);
+        _workerGroup = new NioEventLoopGroup();
+        _listenerMap = Collections.synchronizedMap(new HashMap<>());
+        _clientMap = Collections.synchronizedMap(new HashMap<>());
         _pluginManagerFactory = new PluginManagerFactory(this, pluginFolder);
         start(port);
     }
@@ -89,11 +96,11 @@ public final class ConAirServer implements PacketSender {
 
     @SuppressWarnings("unchecked")
     private void start(final int port) throws Exception {
-        if (isRunning) {
+        if (_isRunning) {
             throw new IllegalStateException("Server is already running!");
         }
         ServerBootstrap bootStrap = new ServerBootstrap();
-        bootStrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class);
+        bootStrap.group(_bossGroup, _workerGroup).channel(NioServerSocketChannel.class);
         bootStrap.handler(new LoggingHandler(LogLevel.INFO));
         bootStrap.childHandler(new ChannelInitializer<SocketChannel>() {
 
@@ -117,51 +124,51 @@ public final class ConAirServer implements PacketSender {
 
                 // Add server logic
                 ConAirServer.this.packetHandler = new ConAirServerHandler(ConAirServer.this);
-                for (final Listener listener : ConAirServer.this.listenerMap.values()) {
+                for (final Listener listener : ConAirServer.this._listenerMap.values()) {
                     ConAirServer.this.packetHandler.registerPacketListener(listener);
                 }
-                pipeline.addLast(packetHandler);
+                pipeline.addLast(ConAirServer.this.packetHandler);
             }
 
         });
         // Start server
-        this.serverChannel = bootStrap.bind(port).sync().channel();
-        this.serverChannel.closeFuture().addListeners(new ChannelFutureListener() {
+        _serverChannel = bootStrap.bind(port).sync().channel();
+        _serverChannel.closeFuture().addListeners(new ChannelFutureListener() {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 _pluginManagerFactory.disablePlugins();
             }
         });
-        this.isRunning = true;
+        _isRunning = true;
     }
 
 
     String[] getClientMap() {
-        synchronized (clientMap) {
-            return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
+        synchronized (_clientMap) {
+            return _clientMap.keySet().toArray(new String[_clientMap.keySet().size()]);
         }
     }
 
 
     void addClient(String clientName, Channel channel) {
-        synchronized (clientMap) {
-            this.clientMap.put(clientName, channel);
+        synchronized (_clientMap) {
+            _clientMap.put(clientName, channel);
         }
     }
 
 
     void removeClient(Channel channel) {
-        synchronized (clientMap) {
+        synchronized (_clientMap) {
             String clientToRemove = null;
-            for (Map.Entry<String, Channel> entry : this.clientMap.entrySet()) {
+            for (Map.Entry<String, Channel> entry : _clientMap.entrySet()) {
                 if (channel.id() == entry.getValue().id()) {
                     clientToRemove = entry.getKey();
                     break;
                 }
             }
             if (clientToRemove != null) {
-                this.clientMap.remove(clientToRemove);
+                _clientMap.remove(clientToRemove);
             }
         }
     }
@@ -178,7 +185,7 @@ public final class ConAirServer implements PacketSender {
      *             Something went wrong
      */
     void sendPacket(Packet packet, ConAirMember target, Channel channel) throws Exception {
-        List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, target);
+        List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), target);
         for (final WrappedPacket wrappedPacket : packetList) {
             ChannelFuture result = channel.writeAndFlush(wrappedPacket);
             if (result != null) {
@@ -200,10 +207,10 @@ public final class ConAirServer implements PacketSender {
      */
     @Override
     public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
-        if ((targets == null || targets.length < 1) && this.clientMap.values().size() > 0) {
+        if ((targets == null || targets.length < 1) && _clientMap.values().size() > 0) {
             // broadcast
-            final List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, targets);
-            for (final Entry<String, Channel> entry : this.clientMap.entrySet()) {
+            final List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), targets);
+            for (final Entry<String, Channel> entry : _clientMap.entrySet()) {
                 for (final WrappedPacket wrappedPacket : packetList) {
                     ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
                     if (result != null) {
@@ -213,11 +220,11 @@ public final class ConAirServer implements PacketSender {
             }
         } else {
             for (final ConAirMember client : targets) {
-                Channel channel = this.clientMap.get(client.getName());
+                Channel channel = _clientMap.get(client.getName());
                 if (channel == null) {
                     continue;
                 }
-                List<WrappedPacket> packetList = WrappedPacket.create(packet, ConAir.SERVER, client);
+                List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), client);
                 for (final WrappedPacket wrappedPacket : packetList) {
                     ChannelFuture result = channel.writeAndFlush(wrappedPacket);
                     if (result != null) {
@@ -230,28 +237,28 @@ public final class ConAirServer implements PacketSender {
 
 
     public boolean isRunning() {
-        return isRunning;
+        return _isRunning;
     }
 
 
     @Override
     public <L extends Listener> void registerPacketListener(L listener) {
-        this.listenerMap.put(listener.getClass().toString(), listener);
-        if (isRunning && this.packetHandler != null) {
-            this.packetHandler.registerPacketListener(listener);
+        _listenerMap.put(listener.getClass().toString(), listener);
+        if (_isRunning && packetHandler != null) {
+            packetHandler.registerPacketListener(listener);
         }
     }
 
 
     @Override
     public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
-        this.packetHandler.unregisterPacketListener(listenerClass);
+        packetHandler.unregisterPacketListener(listenerClass);
     }
 
 
     @Override
     public ConAirMember getMember(final String name) throws IllegalArgumentException {
-        if (!clientMap.containsKey(name)) {
+        if (!_clientMap.containsKey(name)) {
             throw new IllegalArgumentException("Member '" + name + "' not found!");
         }
         return new ConAirMember(name);
@@ -259,19 +266,25 @@ public final class ConAirServer implements PacketSender {
 
 
     public void stop() throws Exception {
-        if (!isRunning) {
+        if (!_isRunning) {
             throw new IllegalStateException("Server isn't running!");
         }
-        this.serverChannel.close().sync();
-        bossGroup.shutdownGracefully().sync();
-        workerGroup.shutdownGracefully().sync();
-        this.isRunning = false;
+        _serverChannel.close().sync();
+        _bossGroup.shutdownGracefully().sync();
+        _workerGroup.shutdownGracefully().sync();
+        _isRunning = false;
     }
 
 
     @Override
     public String getName() {
-        return ConAir.SERVER.getName();
+        return _serverMember.getName();
+    }
+
+
+    @Override
+    public ConAirMember getServer() {
+        return _serverMember;
     }
 
 }

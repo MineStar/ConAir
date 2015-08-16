@@ -158,13 +158,12 @@ public class WrappedPacket {
     }
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     private static <T extends Packet> T decodePacket(String data, Class<T> packetClass) throws IOException, InstantiationException {
         // get the constructor
         ByteArrayInputStream bos = new ByteArrayInputStream(Base64.getDecoder().decode(data.getBytes()));
         ObjectInputStream oos = new ObjectInputStream(bos);
 
-        @SuppressWarnings("restriction")
         T instance = (T) Unsafe.get().allocateInstance(packetClass);
 
         final Field[] fields = packetClass.getDeclaredFields();

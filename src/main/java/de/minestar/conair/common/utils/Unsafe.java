@@ -22,16 +22,14 @@ import java.lang.reflect.Field;
 
 public class Unsafe {
 
-    @SuppressWarnings("restriction")
     private static sun.misc.Unsafe _unsafe;
 
 
     /**
-     * Get the {@link Unsafe}.
+     * Get the {@link sun.misc.Unsafe Unsafe}.
      * 
-     * @return the {@link Unsafe}.
+     * @return the {@link sun.misc.Unsafe Unsafe}
      */
-    @SuppressWarnings("restriction")
     public static final sun.misc.Unsafe get() {
         if (_unsafe != null) {
             return _unsafe;

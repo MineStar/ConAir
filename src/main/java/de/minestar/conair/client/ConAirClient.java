@@ -60,9 +60,9 @@ import de.minestar.conair.common.codec.JsonDecoder;
 import de.minestar.conair.common.codec.JsonEncoder;
 import de.minestar.conair.common.codec.JsonFrameDecoder;
 import de.minestar.conair.common.event.EventExecutor;
-import de.minestar.conair.common.packets.ConnectedClientsPacket;
 import de.minestar.conair.common.packets.ConnectionPacket;
 import de.minestar.conair.common.packets.HandshakePacket;
+import de.minestar.conair.common.packets.ServerInfoPacket;
 import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
@@ -83,6 +83,8 @@ public final class ConAirClient implements PacketSender {
 
     private final SplittedPacketHandler splittedPacketHandler;
     private final PluginManagerFactory _pluginManagerFactory;
+
+    private ConAirMember _server = null;
 
 
     public ConAirClient(String clientName, String host, int port) throws Exception {
@@ -156,8 +158,7 @@ public final class ConAirClient implements PacketSender {
             }
         });
         // Register at server with unique name
-        _conAirMembers.put(ConAir.SERVER.getName(), ConAir.SERVER);
-        sendPacket(new HandshakePacket(this.clientName.getName()), ConAir.SERVER);
+        sendPacket(new HandshakePacket(this.clientName.getName()));
         isConnected = true;
         _pluginManagerFactory.onConnect();
         registerPacketListener(new ClientConnectionListener(this));
@@ -179,7 +180,11 @@ public final class ConAirClient implements PacketSender {
         Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
         if (map != null) {
             for (final EventExecutor executor : map.values()) {
-                executor.execute(this, getMember(wrappedPacket.getSource()), packet);
+                try {
+                    executor.execute(this, getMember(wrappedPacket.getSource()), packet);
+                } catch (Exception e) {
+                    executor.execute(this, new ConAirMember(wrappedPacket.getSource()), packet);
+                }
             }
         }
     }
@@ -337,7 +342,14 @@ public final class ConAirClient implements PacketSender {
 
 
         @RegisterEvent
-        public void onConnectedClientsPacket(final PacketSender receiver, final ConAirMember source, final ConnectedClientsPacket packet) {
+        public void onConnectedClientsPacket(final PacketSender receiver, final ConAirMember source, final ServerInfoPacket packet) throws Exception {
+            if (packet.getServerName().equals(_client.getName())) {
+                // disconnect the client
+                _client.disconnect();
+                throw new IllegalArgumentException("Disconnected! Name '" + _client.getName() + "' is already used by the server!");
+            }
+            _client._server = new ConAirMember(packet.getServerName());
+            _conAirMembers.put(_client.getServer().getName(), _client._server);
             for (String clientName : packet.getConnectedClients()) {
                 _client._conAirMembers.put(clientName, new ConAirMember(clientName));
             }
@@ -350,4 +362,9 @@ public final class ConAirClient implements PacketSender {
         return clientName.toString();
     }
 
+
+    @Override
+    public ConAirMember getServer() {
+        return _server;
+    }
 }

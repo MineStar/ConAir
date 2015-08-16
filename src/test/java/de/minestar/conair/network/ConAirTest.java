@@ -33,7 +33,6 @@ import java.util.zip.Checksum;
 import org.junit.Assert;
 import org.junit.Test;
 
-import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.client.ConAirClient;
@@ -69,7 +68,7 @@ public class ConAirTest {
         try {
 
             // Create the server
-            ConAirServer server = new ConAirServer(PORT);
+            ConAirServer server = new ConAirServer("MyTestServer", PORT);
             server.registerPacketListener(new TestListener("S"));
             Assert.assertTrue(server.isRunning());
 
@@ -108,7 +107,7 @@ public class ConAirTest {
             client2.sendPacket(resourcePacket, client2.getMember("Client1"));
 
             // send a packet for the server only
-            client3.sendPacket(new ChatPacket("Just for the server."), ConAir.SERVER);
+            client3.sendPacket(new ChatPacket("Just for the server."), client3.getServer());
 
             // send a packet from the server to client 3
             server.sendPacket(new ChatPacket("Thank you!"), server.getMember("Client3"));

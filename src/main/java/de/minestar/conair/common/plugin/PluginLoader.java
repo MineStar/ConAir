@@ -84,7 +84,6 @@ final class PluginLoader {
                         continue;
                     }
 
-                    @SuppressWarnings("restriction")
                     final ConAirPlugin pluginInstance = (ConAirPlugin) Unsafe.get().allocateInstance(jarClass);
                     final Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
                     initializeMethod.setAccessible(true);

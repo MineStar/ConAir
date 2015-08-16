@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
@@ -95,7 +94,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
             final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
             if (reconstructedPacket != null) {
-                if (reconstructedPacket.getTargets().contains(ConAir.SERVER.getName())) {
+                if (reconstructedPacket.getTargets().contains(_server.getName())) {
                     // Returns true, if the packet is handled ONLY by the server
                     handleServerPacket(ctx, reconstructedPacket);
                 }
@@ -103,7 +102,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         }
 
         // handle packets dedicated for the server
-        if (wrappedPacket.getTargets().contains(ConAir.SERVER.getName())) {
+        if (wrappedPacket.getTargets().contains(_server.getName())) {
             // Returns true, if the packet is handled ONLY by the server
             handleServerPacket(ctx, wrappedPacket);
             if (wrappedPacket.getTargets().size() == 1) {
