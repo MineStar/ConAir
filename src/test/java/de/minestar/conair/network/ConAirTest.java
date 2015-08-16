@@ -144,19 +144,19 @@ public class ConAirTest {
 
 
         @RegisterEvent
-        public void onChatPacket(final PacketSender receiver, final ConAirMember source, final ChatPacket packet) throws Exception {
-            if (source.getName().equals("Client1") && packet.getMessage().contains("Pssst...client3....can you hear me?")) {
-                System.out.println("[WHISPER] [ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
-                receiver.sendPacket(new ChatPacket("Roger " + source + ", I hear you loud and clear."), source);
+        public void onChatPacket(final PacketSender receiver, final ConAirMember sender, final ChatPacket packet) throws Exception {
+            if (sender.getName().equals("Client1") && packet.getMessage().contains("Pssst...client3....can you hear me?")) {
+                System.out.println("[WHISPER] [ to: " + name + " ] [ from: " + sender + " ] " + packet.getMessage());
+                receiver.sendPacket(new ChatPacket("Roger " + sender + ", I hear you loud and clear."), sender);
             } else {
-                System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
+                System.out.println("[ to: " + name + " ] [ from: " + sender + " ] " + packet.getMessage());
             }
         }
 
 
         @RegisterEvent
-        public void onResourcePacket(final PacketSender receiver, final ConAirMember source, final ResourcePacket packet) {
-            System.out.println("[ to: " + name + " ] [ from: " + source + " ] ResourcePacket: " + packet.toString());
+        public void onResourcePacket(final PacketSender receiver, final ConAirMember sender, final ResourcePacket packet) {
+            System.out.println("[ to: " + name + " ] [ from: " + sender + " ] ResourcePacket: " + packet.toString());
             Assert.assertEquals("CRC IS DIFFERENT!!!!", crc(packet.getData()), CRC_CHECK);
             try {
                 String filename = "rec.jpg";

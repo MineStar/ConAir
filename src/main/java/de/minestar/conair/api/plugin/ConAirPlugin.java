@@ -26,11 +26,30 @@ package de.minestar.conair.api.plugin;
 
 import java.io.File;
 
+import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.client.ConAirClient;
 import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.common.plugin.PluginManager;
+import de.minestar.conair.server.ConAirServer;
 
 
+/**
+ * This class represents a plugin for ConAir (Server & Clientside). <br>
+ * <br>
+ * The lifecycle of a plugin is the following:
+ * <ul>
+ * <li>onLoad</li>
+ * <li>onPreEnable</li>
+ * <li>onEnable</li>
+ * <li>onPostEnable</li>
+ * <li>onConnected (Client ONLY)</li>
+ * <li>onDisconnected (Client ONLY)</li>
+ * <li>onPreDisable</li>
+ * <li>onDisable</li>
+ * <li>onPostDisable</li>
+ * </ul>
+ */
 public abstract class ConAirPlugin {
 
     private String _pluginName;
@@ -39,8 +58,17 @@ public abstract class ConAirPlugin {
     private PluginManager _pluginManager;
 
 
+    /**
+     * This method initializes the plugin. It is automatically called via reflections in the {@link PluginManager#loadPlugins PluginManager} when this plugin is about to get loaded.
+     * 
+     * @param packetSender
+     *            the {@link PacketSender}
+     * @param pluginName
+     *            the {@link #getPluginName() name} of the plugin
+     * @param pluginManager
+     *            the {@link PluginManager}
+     */
     @SuppressWarnings("unused")
-    // called via reflection
     private final void initialize(PacketSender packetSender, String pluginName, PluginManager pluginManager) {
         _packetSender = packetSender;
         _pluginName = pluginName;
@@ -53,67 +81,114 @@ public abstract class ConAirPlugin {
 
 
     /**
-     * Called on client side ONLY.
+     * Called when the plugin is loaded.
+     */
+    public void onLoad() {
+    }
+
+
+    /**
+     * Called before the plugin is enabled.
+     */
+    public void onPreEnable() {
+    }
+
+
+    /**
+     * Called when the plugin is enabled.
+     */
+    public void onEnable() {
+    }
+
+
+    /**
+     * Called after the plugin is enabled.
+     */
+    public void onPostEnable() {
+    }
+
+
+    /**
+     * Called after the client is successfully connected to a {@link ConAirServer}. (Client ONLY)
      */
     public void onConnected() {
     }
 
 
     /**
-     * Called on client side ONLY.
+     * Called after the client successfully disconnected from a {@link ConAirServer}. (Client ONLY)
      */
     public void onDisconnected() {
     }
 
 
-    public void onLoad() {
-    }
-
-
-    public void onPreEnable() {
-    }
-
-
-    public void onEnable() {
-    }
-
-
-    public void onPostEnable() {
-    }
-
-
+    /**
+     * Called before the plugin is disabled.
+     */
     public void onPreDisable() {
     }
 
 
+    /**
+     * Called when the plugin is disabled.
+     */
     public void onDisable() {
     }
 
 
+    /**
+     * Called after the plugin is disabled.
+     */
     public void onPostDisable() {
     }
 
 
+    /**
+     * Get the name of the plugin. The Name is always the {@link Class#getSimpleName() classname}.
+     * 
+     * @return the name of the plugin
+     */
     public final String getPluginName() {
         return _pluginName;
     }
 
 
+    /**
+     * Register a {@link Listener} at the {@link PacketSender}. The given {@link Listener} can be used to handle incoming {@link Packet packets}.
+     * 
+     * @param listener
+     *            the {@link Listener} to register
+     */
     public final <L extends Listener> void registerPacketListener(L listener) {
         _packetSender.registerPacketListener(listener);
     }
 
 
+    /**
+     * Get the datafolder of the plugin. All related files should be stored here.
+     * 
+     * @return the datafolder of the plugin
+     */
     public final File getDataFolder() {
         return _dataFolder;
     }
 
 
+    /**
+     * Get the {@link PluginManager}.
+     * 
+     * @return the {@link PluginManager}
+     */
     public final PluginManager getPluginManager() {
         return _pluginManager;
     }
 
 
+    /**
+     * Get the {@link PacketSender}. The {@link PacketSender} can be a {@link ConAirClient} or a {@link ConAirServer}.
+     * 
+     * @return the {@link PacketSender}
+     */
     public final PacketSender getPacketSender() {
         return _packetSender;
     }

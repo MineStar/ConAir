@@ -24,7 +24,6 @@
 
 package de.minestar.conair.common.plugin;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
@@ -111,29 +110,54 @@ public final class PluginManager {
     }
 
 
+    private void preEnablePlugins() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onPreEnable();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
     /**
      * Enables all ConAirPlugins
      */
     private void enablePlugins() {
-        ArrayList<ConAirPlugin> failedPlugins = new ArrayList<ConAirPlugin>();
+        preEnablePlugins();
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
                 // enable the plugin
-                plugin.onPreEnable();
                 System.out.println("Enabling plugin: '" + plugin.getPluginName() + "'");
                 plugin.onEnable();
                 System.out.println("Plugin enabled: '" + plugin.getPluginName() + "'");
-                plugin.onPostEnable();
             } catch (Exception e) {
-                // queue plugin and print stacktrace
-                failedPlugins.add(plugin);
                 e.printStackTrace();
             }
         }
+        postEnablePlugins();
+    }
 
-        // remove all failed pluginsFS
-        for (ConAirPlugin plugin : failedPlugins) {
-            _pluginMap.remove(plugin.getPluginName());
+
+    private void postEnablePlugins() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onPostEnable();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private void preDisablePlugins() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onPreDisable();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -142,20 +166,30 @@ public final class PluginManager {
      * Disables all ServerPlugins
      */
     public void disablePlugins() {
+        preDisablePlugins();
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
                 // disable the plugin
-                plugin.onPreDisable();
                 System.out.println("Disabling plugin: '" + plugin.getPluginName() + "'");
                 plugin.onDisable();
                 System.out.println("Plugin disabled: '" + plugin.getPluginName() + "'");
-                plugin.onPostDisable();
             } catch (Exception e) {
-                // print stacktrace
                 e.printStackTrace();
             }
         }
+        postDisablePlugins();
         _pluginMap.clear();
+    }
+
+
+    private void postDisablePlugins() {
+        for (ConAirPlugin plugin : _pluginMap.values()) {
+            try {
+                plugin.onPostDisable();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
