@@ -41,7 +41,7 @@ public final class PluginManager {
     private final HashMap<String, ConAirPlugin> _pluginMap;
 
 
-    public PluginManager(PacketSender packetSender, String pluginFolder) {
+    PluginManager(PacketSender packetSender, String pluginFolder) {
         _pluginLoader = new PluginLoader();
         _pluginMap = new HashMap<String, ConAirPlugin>();
         _packetSender = packetSender;
@@ -69,11 +69,11 @@ public final class PluginManager {
                 final Collection<ConAirPlugin> plugins = _pluginLoader.loadPlugins(this, _packetSender, jarFile);
                 for (final ConAirPlugin plugin : plugins) {
                     // pluginnames MUST be unique!
-                    if (_pluginMap.containsKey(plugin.getPluginName())) {
+                    if (_pluginMap.containsKey(plugin.getClass().getName())) {
                         System.out.println("A plugin named '" + plugin.getPluginName() + "' is already registered! Ignoring '" + plugin.getPluginName() + "' from '" + jarFile.getName() + "'...");
                         continue;
                     } else {
-                        _pluginMap.put(plugin.getPluginName(), plugin);
+                        _pluginMap.put(plugin.getClass().getName(), plugin);
                         plugin.onLoad();
                     }
                 }
@@ -86,24 +86,22 @@ public final class PluginManager {
     }
 
 
-    public void onConnect() {
+    void onConnected() {
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
                 plugin.onConnected();
             } catch (Exception e) {
-                // print stacktrace
                 e.printStackTrace();
             }
         }
     }
 
 
-    public void onDisconnect() {
+    void onDisconnected() {
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
                 plugin.onDisconnected();
             } catch (Exception e) {
-                // print stacktrace
                 e.printStackTrace();
             }
         }
@@ -165,7 +163,7 @@ public final class PluginManager {
     /**
      * Disables all ServerPlugins
      */
-    public void disablePlugins() {
+    void disablePlugins() {
         preDisablePlugins();
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
@@ -193,19 +191,26 @@ public final class PluginManager {
     }
 
 
-    public Optional<ConAirPlugin> getPlugin(final String pluginName) {
-        if (_pluginMap.containsKey(pluginName)) {
-            return Optional.of(_pluginMap.get(pluginName));
+    /**
+     * Get a plugin by the given {@link Class ConAirPlugin-Class}.
+     * 
+     * @param pluginClass
+     *            the class of the plugin to look for
+     * @return the {@link Optional Optional[ConAirPlugin]}
+     */
+    public Optional<ConAirPlugin> getPlugin(final Class<? extends ConAirPlugin> pluginClass) {
+        if (_pluginMap.containsKey(pluginClass.getName())) {
+            return Optional.of(_pluginMap.get(pluginClass.getName()));
         }
         return Optional.<ConAirPlugin> empty();
     }
 
 
-    public PacketSender getPacketSender() {
-        return _packetSender;
-    }
-
-
+    /**
+     * Get the plugin folder.
+     * 
+     * @return the plugin folder
+     */
     public String getPluginFolder() {
         return _pluginFolder;
     }

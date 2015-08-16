@@ -25,7 +25,7 @@
 package de.minestar.conair.api;
 
 /**
- * Interface to indicate that
+ * This interface represents a packet. All packets <b>must</b> implements this interface. Packets can be send over the network.
  */
 public interface Packet {
 

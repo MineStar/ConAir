@@ -27,15 +27,18 @@ package de.minestar.conair.api;
 import de.minestar.conair.common.ConAirMember;
 
 
+/**
+ * Static C
+ */
 public class ConAir {
 
     /**
-     * The member for the server. No client can have the same name.
+     * The {@link ConAirMember member} for the {@link ConAirServer server}. No {@link ConAirClient client} can have the same name. The default name of the {@link ConAirServer server} is 'ConAirServer'.
      */
     public static final ConAirMember SERVER = new ConAirMember("ConAirServer");
 
     /**
-     * The default plugin-folder.
+     * The default plugin-folder for {@link ConAirPlugin ConAirPlugins}.
      */
     public static final String DEFAULT_PLUGIN_FOLDER = "plugins/";
 

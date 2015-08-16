@@ -55,7 +55,7 @@ import de.minestar.conair.common.codec.JsonDecoder;
 import de.minestar.conair.common.codec.JsonEncoder;
 import de.minestar.conair.common.codec.JsonFrameDecoder;
 import de.minestar.conair.common.packets.WrappedPacket;
-import de.minestar.conair.common.plugin.PluginManager;
+import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
 public final class ConAirServer implements PacketSender {
@@ -67,7 +67,7 @@ public final class ConAirServer implements PacketSender {
     private boolean isRunning;
     private final Map<String, Listener> listenerMap;
     private final Map<String, Channel> clientMap;
-    private final PluginManager _pluginManager;
+    private final PluginManagerFactory _pluginManagerFactory;
     private ConAirServerHandler packetHandler;
 
 
@@ -82,7 +82,7 @@ public final class ConAirServer implements PacketSender {
         this.workerGroup = new NioEventLoopGroup();
         this.listenerMap = Collections.synchronizedMap(new HashMap<>());
         this.clientMap = Collections.synchronizedMap(new HashMap<>());
-        _pluginManager = new PluginManager(this, pluginFolder);
+        _pluginManagerFactory = new PluginManagerFactory(this, pluginFolder);
         start(port);
     }
 
@@ -130,7 +130,7 @@ public final class ConAirServer implements PacketSender {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                _pluginManager.disablePlugins();
+                _pluginManagerFactory.disablePlugins();
             }
         });
         this.isRunning = true;
@@ -240,6 +240,12 @@ public final class ConAirServer implements PacketSender {
         if (isRunning && this.packetHandler != null) {
             this.packetHandler.registerPacketListener(listener);
         }
+    }
+
+
+    @Override
+    public <L extends Listener> void unregisterPacketListener(L listener) {
+        this.packetHandler.unregisterPacketListener(listener);
     }
 
 

@@ -202,4 +202,32 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
             }
         }
     }
+
+
+    <L extends Listener> void unregisterPacketListener(L listener) {
+        final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
+        for (final Method method : declaredMethods) {
+            // ignore static methods & we need exactly three params and a public method
+            if (Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != 3) {
+                continue;
+            }
+
+            // we need an annotation
+            if (method.getAnnotation(RegisterEvent.class) == null) {
+                continue;
+            }
+
+            // accept the filter if it is true
+            if (PacketSender.class.isAssignableFrom(method.getParameterTypes()[0]) && ConAirMember.class.isAssignableFrom(method.getParameterTypes()[1]) && Packet.class.isAssignableFrom(method.getParameterTypes()[2])) {
+                @SuppressWarnings("unchecked")
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
+
+                // register the EventExecutor
+                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                if (map != null) {
+                    map.remove(listener.getClass());
+                }
+            }
+        }
+    }
 }

@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 
 /**
- * Annotation to tell the system that a method should be handled in the {@link Listener}.
+ * Annotation to tell the eventsystem when a method should be handled in the {@link Listener}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

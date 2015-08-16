@@ -22,47 +22,33 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.common;
+package de.minestar.conair.common.plugin;
 
-import de.minestar.conair.api.ConAir;
-import de.minestar.conair.api.Packet;
-
-
-/**
- * This class is used to represent a single participant of the {@link ConAir}-Network. It is used when sending and receiving {@link Packet packets}.
- */
-public final class ConAirMember {
-
-    private final String _name;
+import de.minestar.conair.common.PacketSender;
 
 
-    public ConAirMember(final String name) {
-        _name = name;
+public class PluginManagerFactory {
+
+    private final PluginManager _pluginManager;
+
+
+    public PluginManagerFactory(final PacketSender packetSender, final String pluginFolder) {
+        _pluginManager = new PluginManager(packetSender, pluginFolder);
     }
 
 
-    public String getName() {
-        return _name;
+    public void disablePlugins() {
+        _pluginManager.disablePlugins();
     }
 
 
-    @Override
-    public int hashCode() {
-        return _name.hashCode();
+    public void onConnect() {
+        _pluginManager.onConnected();
     }
 
 
-    @Override
-    public String toString() {
-        return getName();
+    public void onDisconnect() {
+        _pluginManager.onDisconnected();
     }
 
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof ConAirMember)) {
-            return false;
-        }
-        return hashCode() == obj.hashCode();
-    }
 }

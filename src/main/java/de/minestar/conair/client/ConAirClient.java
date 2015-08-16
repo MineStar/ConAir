@@ -66,7 +66,7 @@ import de.minestar.conair.common.packets.HandshakePacket;
 import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
-import de.minestar.conair.common.plugin.PluginManager;
+import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
 public final class ConAirClient implements PacketSender {
@@ -82,7 +82,7 @@ public final class ConAirClient implements PacketSender {
     private final Map<String, ConAirMember> _conAirMembers;
 
     private final SplittedPacketHandler splittedPacketHandler;
-    private final PluginManager _pluginManager;
+    private final PluginManagerFactory _pluginManagerFactory;
 
 
     public ConAirClient(String clientName, String host, int port) throws Exception {
@@ -98,7 +98,7 @@ public final class ConAirClient implements PacketSender {
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.splittedPacketHandler = new SplittedPacketHandler();
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
-        _pluginManager = new PluginManager(this, pluginFolder);
+        _pluginManagerFactory = new PluginManagerFactory(this, pluginFolder);
         connect(host, port);
     }
 
@@ -151,15 +151,15 @@ public final class ConAirClient implements PacketSender {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                _pluginManager.onDisconnect();
-                _pluginManager.disablePlugins();
+                _pluginManagerFactory.onDisconnect();
+                _pluginManagerFactory.disablePlugins();
             }
         });
         // Register at server with unique name
         _conAirMembers.put(ConAir.SERVER.getName(), ConAir.SERVER);
         sendPacket(new HandshakePacket(this.clientName.getName()), ConAir.SERVER);
         isConnected = true;
-        _pluginManager.onConnect();
+        _pluginManagerFactory.onConnect();
         registerPacketListener(new ClientConnectionListener(this));
     }
 
@@ -241,6 +241,35 @@ public final class ConAirClient implements PacketSender {
                     registeredListener.put(packetClass, map);
                 }
                 map.put(listener.getClass(), new EventExecutor(listener, method));
+            }
+        }
+    }
+
+
+    @Override
+    public <L extends Listener> void unregisterPacketListener(L listener) {
+        final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
+        for (final Method method : declaredMethods) {
+            // ignore static methods & we need exactly three params and a public method
+            if (Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != 3) {
+                continue;
+            }
+
+            // we need an annotation
+            if (method.getAnnotation(RegisterEvent.class) == null) {
+                continue;
+            }
+
+            // accept the filter if it is true
+            if (PacketSender.class.isAssignableFrom(method.getParameterTypes()[0]) && ConAirMember.class.isAssignableFrom(method.getParameterTypes()[1]) && Packet.class.isAssignableFrom(method.getParameterTypes()[2])) {
+                @SuppressWarnings("unchecked")
+                Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
+
+                // register the EventExecutor
+                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                if (map != null) {
+                    map.remove(listener.getClass());
+                }
             }
         }
     }

@@ -31,9 +31,9 @@ import de.minestar.conair.common.PacketSender;
 
 /**
  * This interface represents an EventListener. It must be used to implement a PacketListener. To register a method, it <b>must</b> be implemented as the following: <code>
- * <pre>@RegisterEvent
- * public void myMethod({@link PacketSender PacketSender receiver}, {@link ConAirMember ConAirMember sender}, {@link Packet Packet packet})
- *  ...
+ * <pre> @RegisterEvent
+ * public void myMethod({@link PacketSender PacketSender receiver}, {@link ConAirMember ConAirMember sender}, {@link Packet Packet packet}) {
+ *    ...
  * }
  * </pre>
  * </code>

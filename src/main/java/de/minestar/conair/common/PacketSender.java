@@ -24,20 +24,61 @@
 
 package de.minestar.conair.common;
 
+import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.event.Listener;
+import de.minestar.conair.client.ConAirClient;
 
 
+/**
+ * This interface represents a single participant of the {@link ConAir}-Network. A participant is always a {@link ConAirServer} or a {@link ConAirClient}.
+ */
 public interface PacketSender {
 
+    /**
+     * Send a single {@link Packet packet} to all given {@link ConAirMember targets}.
+     * 
+     * @param packet
+     *            the {@link Packet packet} to send
+     * @param targets
+     *            the {@link ConAirMember targets} to send the packet to. If no targets are given, the packet will be broadcasted to everyone.
+     * @throws Exception
+     */
     void sendPacket(final Packet packet, final ConAirMember... targets) throws Exception;
 
 
+    /**
+     * Get a single {@link ConAirMember member} of this sender. All members of a ConAir-Network can be accessed.
+     * 
+     * @param name
+     *            the name to lookup
+     * @return the {@link ConAirMember}
+     */
     ConAirMember getMember(final String name);
 
 
+    /**
+     * Register a {@link Listener listener} for {@link Packet packets}.
+     * 
+     * @param listener
+     *            the @link Listener listener} to register.
+     */
     <L extends Listener> void registerPacketListener(L listener);
 
 
+    /**
+     * Unregister a {@link Listener listener} for {@link Packet packets}.
+     * 
+     * @param listener
+     *            the @link Listener listener} to unregister.
+     */
+    <L extends Listener> void unregisterPacketListener(L listener);
+
+
+    /**
+     * Get the name of this {@link PacketSender}. The name will be the name of the {@link ConAir#SERVER server} or the name of the {@link ConAirClient client}.
+     * 
+     * @return
+     */
     String getName();
 }

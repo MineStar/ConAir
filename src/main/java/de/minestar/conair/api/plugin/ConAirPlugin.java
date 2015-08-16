@@ -35,19 +35,19 @@ import de.minestar.conair.server.ConAirServer;
 
 
 /**
- * This class represents a plugin for ConAir (Server & Clientside). <br>
+ * This class represents a plugin for ConAir ({@link ConAirServer ServerSide} & {@link ConAirClient ClientSide} ). <br>
  * <br>
  * The lifecycle of a plugin is the following:
  * <ul>
- * <li>onLoad</li>
- * <li>onPreEnable</li>
- * <li>onEnable</li>
- * <li>onPostEnable</li>
- * <li>onConnected (Client ONLY)</li>
- * <li>onDisconnected (Client ONLY)</li>
- * <li>onPreDisable</li>
- * <li>onDisable</li>
- * <li>onPostDisable</li>
+ * <li>{@link #onLoad}</li>
+ * <li>{@link #onPreEnable}</li>
+ * <li>{@link #onEnable}</li>
+ * <li>{@link #onPostEnable}</li>
+ * <li>{@link #onConnected} (Client for the ONLY)</li>
+ * <li>{@link #onDisconnected} (Client for the ONLY)</li>
+ * <li>{@link #onPreDisable}</li>
+ * <li>{@link #onDisable}</li>
+ * <li>{@link #onPostDisable}</li>
  * </ul>
  */
 public abstract class ConAirPlugin {
