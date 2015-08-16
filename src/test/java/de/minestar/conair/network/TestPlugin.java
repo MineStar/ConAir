@@ -32,7 +32,7 @@ public class TestPlugin extends ConAirPlugin {
     /**
      * Called on client side ONLY.
      */
-    public void onConnect() {
+    public void onConnected() {
         System.out.println("onConnect: " + getPacketSender().getName());
     }
 
@@ -40,7 +40,7 @@ public class TestPlugin extends ConAirPlugin {
     /**
      * Called on client side ONLY.
      */
-    public void onDisconnect() {
+    public void onDisconnected() {
         System.out.println("onDisconnect: " + getPacketSender().getName());
     }
 

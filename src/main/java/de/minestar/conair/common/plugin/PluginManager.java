@@ -90,7 +90,7 @@ public final class PluginManager {
     public void onConnect() {
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
-                plugin.onConnect();
+                plugin.onConnected();
             } catch (Exception e) {
                 // print stacktrace
                 e.printStackTrace();
@@ -102,7 +102,7 @@ public final class PluginManager {
     public void onDisconnect() {
         for (ConAirPlugin plugin : _pluginMap.values()) {
             try {
-                plugin.onDisconnect();
+                plugin.onDisconnected();
             } catch (Exception e) {
                 // print stacktrace
                 e.printStackTrace();

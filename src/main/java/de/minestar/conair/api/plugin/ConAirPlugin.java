@@ -55,14 +55,14 @@ public abstract class ConAirPlugin {
     /**
      * Called on client side ONLY.
      */
-    public void onConnect() {
+    public void onConnected() {
     }
 
 
     /**
      * Called on client side ONLY.
      */
-    public void onDisconnect() {
+    public void onDisconnected() {
     }
 
 
