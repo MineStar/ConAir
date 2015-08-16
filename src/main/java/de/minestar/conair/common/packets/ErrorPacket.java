@@ -26,6 +26,7 @@ package de.minestar.conair.common.packets;
 
 import de.minestar.conair.api.Packet;
 
+
 /**
  * Error packet, sent to client if an error occurs. For example, the client want to broadcast a packet, but hasn't make a handshake with the server. See {@link HandshakePacket}
  */
@@ -37,13 +38,16 @@ public class ErrorPacket implements Packet {
 
     private final ErrorType type;
 
+
     public ErrorPacket(ErrorType type) {
         this.type = type;
     }
 
+
     public ErrorType getType() {
         return type;
     }
+
 
     @Override
     public String toString() {

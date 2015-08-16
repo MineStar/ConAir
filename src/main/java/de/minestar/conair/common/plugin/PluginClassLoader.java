@@ -22,36 +22,52 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.common.packets;
+package de.minestar.conair.common.plugin;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
-public class SplittedPacketHandler {
+final class PluginClassLoader extends URLClassLoader {
 
-    private final Map<Long, List<SplittedPacket>> map = Collections.synchronizedMap(new HashMap<>());
+    private final PluginLoader _loader;
+    private final Map<String, Class<?>> _classes = new HashMap<String, Class<?>>();
 
 
-    public WrappedPacket handle(final WrappedPacket wrappedPacket, final SplittedPacket packet) throws ClassNotFoundException {
-        // add the packet to the list
-        List<SplittedPacket> list = map.get(packet.getId());
-        if (list == null) {
-            list = new ArrayList<SplittedPacket>();
-            map.put(packet.getId(), list);
+    public PluginClassLoader(PluginLoader loader, URL[] urls, ClassLoader parent) {
+        super(urls, parent);
+        _loader = loader;
+    }
+
+
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        return findClass(name, true);
+    }
+
+
+    protected Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
+        Class<?> result = _classes.get(name);
+        if (result == null) {
+            if (checkGlobal) {
+                result = _loader.getClassByName(name);
+            }
+            if (result == null) {
+                result = super.findClass(name);
+
+                if (result != null) {
+                    _loader.setClass(name, result);
+                }
+            }
+            _classes.put(name, result);
         }
-        list.add(packet);
+        return result;
+    }
 
-        // all packets received => reconstruct the packet
-        if (list.size() == packet.getTotalPackets()) {
-            WrappedPacket completePacket = WrappedPacket.construct(wrappedPacket, list, packet.getPacketClass());
-            map.remove(packet.getId());
-            list.clear();
-            return completePacket;
-        }
-        return null;
+
+    public Set<String> getClasses() {
+        return _classes.keySet();
     }
 }

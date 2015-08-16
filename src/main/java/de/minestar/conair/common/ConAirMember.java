@@ -28,23 +28,28 @@ public class ConAirMember {
 
     private final String _name;
 
+
     public ConAirMember(final String name) {
         _name = name;
     }
 
+
     public String getName() {
         return _name;
     }
+
 
     @Override
     public int hashCode() {
         return _name.hashCode();
     }
 
+
     @Override
     public String toString() {
         return getName();
     }
+
 
     @Override
     public boolean equals(Object obj) {

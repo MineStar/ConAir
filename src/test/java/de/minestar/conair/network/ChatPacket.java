@@ -26,6 +26,7 @@ package de.minestar.conair.network;
 
 import de.minestar.conair.api.Packet;
 
+
 /**
  * Demonstration of a possible chat packet
  */
@@ -33,13 +34,16 @@ public class ChatPacket implements Packet {
 
     private final String message;
 
+
     public ChatPacket(final String message) {
         this.message = message;
     }
 
+
     public String getMessage() {
         return message;
     }
+
 
     @Override
     public String toString() {

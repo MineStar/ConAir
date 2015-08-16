@@ -26,27 +26,33 @@ package de.minestar.conair.common.packets;
 
 import de.minestar.conair.api.Packet;
 
+
 public class ConnectionPacket implements Packet {
 
     private final String clientName;
     private final boolean connect;
+
 
     public ConnectionPacket(String clientName, boolean connect) {
         this.clientName = clientName;
         this.connect = connect;
     }
 
+
     public boolean isConnect() {
         return connect;
     }
+
 
     public boolean isDisconnect() {
         return !connect;
     }
 
+
     public String getClientName() {
         return clientName;
     }
+
 
     @Override
     public String toString() {

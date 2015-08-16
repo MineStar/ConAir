@@ -33,6 +33,7 @@ import io.netty.handler.codec.TooLongFrameException;
 import java.nio.charset.Charset;
 import java.util.List;
 
+
 public class JsonFrameDecoder extends ByteToMessageDecoder {
 
     private final int maxObjectLength;
@@ -44,13 +45,16 @@ public class JsonFrameDecoder extends ByteToMessageDecoder {
     private final static byte BRACKET_RIGHT = '}';
     private final static byte QUOTE = '"';
 
+
     public JsonFrameDecoder(int maxObjectLength) {
         this.maxObjectLength = maxObjectLength;
     }
 
+
     public JsonFrameDecoder() {
         this(1024 * 1024);
     }
+
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {

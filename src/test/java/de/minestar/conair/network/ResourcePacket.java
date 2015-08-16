@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 
 import de.minestar.conair.api.Packet;
 
+
 /**
  * Demonstration of a possible ResourcePacket
  */
@@ -38,13 +39,16 @@ public class ResourcePacket implements Packet {
 
     private final byte[] data;
 
+
     public ResourcePacket(final File file) throws IOException {
         this.data = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
     }
 
+
     public byte[] getData() {
         return data;
     }
+
 
     @Override
     public String toString() {

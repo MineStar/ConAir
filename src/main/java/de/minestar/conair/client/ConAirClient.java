@@ -66,6 +66,7 @@ import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.WrappedPacket;
 
+
 public final class ConAirClient implements PacketSender {
 
     private boolean isConnected;
@@ -80,6 +81,7 @@ public final class ConAirClient implements PacketSender {
 
     private SplittedPacketHandler smallPacketHandler;
 
+
     public ConAirClient(String clientName, String host, int port) throws Exception {
         this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
         this.isConnected = false;
@@ -90,6 +92,7 @@ public final class ConAirClient implements PacketSender {
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
         this.connect(host, port);
     }
+
 
     /**
      * Establish a connection to ConAir server. Must be called before {@link #sendPacket(Packet)} can get used.
@@ -142,6 +145,7 @@ public final class ConAirClient implements PacketSender {
         this.registerPacketListener(new ClientConnectionListener(this));
     }
 
+
     private void onPacketReceived(WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered in this client
@@ -162,9 +166,11 @@ public final class ConAirClient implements PacketSender {
         }
     }
 
+
     public boolean isConnected() {
         return isConnected;
     }
+
 
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
@@ -187,11 +193,13 @@ public final class ConAirClient implements PacketSender {
         }
     }
 
+
+    @Override
     public <L extends Listener> void registerPacketListener(L listener) {
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
-            // ignore static methods & we need exactly two params
-            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 3) {
+            // ignore static methods & we need exactly three params and a public method
+            if (Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != 3) {
                 continue;
             }
 
@@ -219,6 +227,7 @@ public final class ConAirClient implements PacketSender {
         }
     }
 
+
     @Override
     public ConAirMember getMember(final String name) throws IllegalArgumentException {
         if (!_conAirMembers.containsKey(name)) {
@@ -226,6 +235,7 @@ public final class ConAirClient implements PacketSender {
         }
         return _conAirMembers.get(name);
     }
+
 
     /**
      * Disconnects from the ConAir server and close connection.
@@ -263,9 +273,11 @@ public final class ConAirClient implements PacketSender {
 
         private ConAirClient _client;
 
+
         ClientConnectionListener(final ConAirClient client) {
             _client = client;
         }
+
 
         @RegisterEvent
         public void onConnectionPacket(final PacketSender receiver, final ConAirMember source, final ConnectionPacket packet) {
@@ -275,6 +287,7 @@ public final class ConAirClient implements PacketSender {
                 _client._conAirMembers.remove(packet.getClientName());
             }
         }
+
 
         @RegisterEvent
         public void onConnectedClientsPacket(final PacketSender receiver, final ConAirMember source, final ConnectedClientsPacket packet) {

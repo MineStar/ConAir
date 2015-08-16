@@ -30,9 +30,11 @@ import java.util.Random;
 
 import de.minestar.conair.api.Packet;
 
+
 public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
 
     private static final Random RANDOM = new Random();
+
 
     public static <P extends Packet> Collection<SplittedPacket> split(final int MAX_PACKET_SIZE, final int dataLength, final P packet, final String data) {
         final Collection<SplittedPacket> packets = new ArrayList<SplittedPacket>();
@@ -50,6 +52,7 @@ public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
         return packets;
     }
 
+
     private static long getNextFreeId() {
         return RANDOM.nextLong();
     }
@@ -60,6 +63,7 @@ public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
     private final long _totalPackets;
     private final String _data;
 
+
     private <P extends Packet> SplittedPacket(final P packetClass, final long id, final long currentPacketId, final long totalPackets, final String data) {
         _id = id;
         _packetClass = packetClass.getClass().getName();
@@ -68,30 +72,37 @@ public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
         _data = data;
     }
 
+
     public long getId() {
         return _id;
     }
+
 
     public String getPacketClass() {
         return _packetClass;
     }
 
+
     public long getCurrentPacketId() {
         return _currentPacketId;
     }
+
 
     public long getTotalPackets() {
         return _totalPackets;
     }
 
+
     public String getData() {
         return _data;
     }
+
 
     @Override
     public String toString() {
         return "SmallPacket [id=" + _id + ", totalPackets=" + _totalPackets + ", data=" + _data + "]";
     }
+
 
     @Override
     public int compareTo(SplittedPacket o) {

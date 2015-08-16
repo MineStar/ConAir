@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 
+
 /**
  * 
  * Utilityclass for XML handling.
@@ -39,6 +40,7 @@ public class XmlUtils {
 
     private XmlUtils() {
     }
+
 
     /**
      * Read an object from a xml-string.
@@ -54,6 +56,7 @@ public class XmlUtils {
         decoder.close();
         return object;
     }
+
 
     /**
      * Convert a object to a xml-string.
@@ -76,6 +79,7 @@ public class XmlUtils {
         }
     }
 
+
     /**
      * Deserialize a {@link Base64} encoded string to an Object.
      * 
@@ -97,6 +101,7 @@ public class XmlUtils {
             return null;
         }
     }
+
 
     /**
      * Serialize an Object to a {@link Base64} encoded string.

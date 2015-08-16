@@ -44,6 +44,7 @@ import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.utils.BufferUtils;
 import de.minestar.conair.common.utils.Unsafe;
 
+
 /**
  * Packet with additional information about the target of the packet. Contains a serialized version of the packet (currently as JSON string)
  */
@@ -57,6 +58,7 @@ public class WrappedPacket {
     private final List<String> targets;
     private final String source;
 
+
     /**
      * Used when client is sending a packet to the network. Wraps the packet, stores its content as JSON and add target information to the packet.
      * 
@@ -69,6 +71,7 @@ public class WrappedPacket {
     private WrappedPacket(Packet packet, String source, List<String> targets) throws IOException {
         this(packet.getClass(), encodePacket(packet), source, targets);
     }
+
 
     /**
      * Used when client is sending a packet to the network. Wraps the packet, stores its content as JSON and add target information to the packet.
@@ -84,6 +87,7 @@ public class WrappedPacket {
         this.packetClassName = packetClass.getName();
         this.targets = targets;
     }
+
 
     private static String encodePacket(Packet packet) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -108,6 +112,7 @@ public class WrappedPacket {
         return encodedString;
     }
 
+
     /**
      * Used when server is sending the packet to a client in the network. The server set the target field as the packets source.
      * 
@@ -123,6 +128,7 @@ public class WrappedPacket {
         this.targets = Arrays.asList(target);
     }
 
+
     /**
      * Check if this packet contains an object of the class.
      * 
@@ -133,6 +139,7 @@ public class WrappedPacket {
     public boolean is(Class<? extends Packet> clazz) {
         return packetClassName.equals(clazz.getName());
     }
+
 
     @SuppressWarnings("unchecked")
     /**
@@ -149,6 +156,7 @@ public class WrappedPacket {
         }
         return Optional.empty();
     }
+
 
     @SuppressWarnings("unchecked")
     private static <T extends Packet> T decodePacket(String data, Class<T> packetClass) throws IOException, InstantiationException {
@@ -176,6 +184,8 @@ public class WrappedPacket {
 
         return instance;
     }
+
+
     /**
      * Get a list of targets. If the packet is received from ConAir server, use {@link #getSource()} as an easier way to receive the packets source. Otherwise, the list will contain all (or no one for a broadcast) targeted clients.
      * 
@@ -185,12 +195,14 @@ public class WrappedPacket {
         return targets;
     }
 
+
     /**
      * @return The complete name of the encapsulated class name
      */
     public String getPacketClassName() {
         return packetClassName;
     }
+
 
     /**
      * Shortcut for <code>getTargets().get(0)</code> with an additional check, if the list contains only one element. Otherwise it will return an empty string.
@@ -201,10 +213,12 @@ public class WrappedPacket {
         return source;
     }
 
+
     @Override
     public String toString() {
         return "WrappedPacket [packetAsJSON=" + packetAsJSON + ", packetClassName=" + packetClassName + ", targets=" + targets + "]";
     }
+
 
     /**
      * Wrap a packet. See {@link #WrappedPacket(Packet, List)} for description.
@@ -236,6 +250,7 @@ public class WrappedPacket {
         return packets;
     }
 
+
     /**
      * Change target list to single source entry. See {@link #WrappedPacket(WrappedPacket, String)} for description.
      * 
@@ -248,6 +263,7 @@ public class WrappedPacket {
     public static WrappedPacket rePack(final WrappedPacket packet, String source, String target) {
         return new WrappedPacket(packet, source, target);
     }
+
 
     @SuppressWarnings("unchecked")
     static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SplittedPacket> packets, String packetClassName) throws ClassNotFoundException {

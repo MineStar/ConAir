@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
+
 public class BufferUtils {
 
     private static String convertObjectToString(final Object object) {
@@ -42,6 +43,7 @@ public class BufferUtils {
         }
         return null;
     }
+
 
     private static Object readNextObjectFromBuffer(final ObjectInputStream buffer, final Class<?> clazz) {
         try {
@@ -81,6 +83,7 @@ public class BufferUtils {
         return null;
     }
 
+
     public static boolean readObjectFromBuffer(final ObjectInputStream buffer, final Object instance, final Field field) {
         try {
             field.set(instance, readNextObjectFromBuffer(buffer, field.getType()));
@@ -90,6 +93,7 @@ public class BufferUtils {
         }
         return false;
     }
+
 
     public static boolean writeObjectIntoBuffer(final ObjectOutputStream buffer, final Object value) {
         try {

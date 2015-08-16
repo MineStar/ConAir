@@ -26,12 +26,14 @@ package de.minestar.conair.common.packets;
 
 import de.minestar.conair.api.Packet;
 
+
 /**
  * After the connection to the server is established, the client MUST send this packet to server to get into the network. Otherwise no packet will be broadcasted.
  */
 public class HandshakePacket implements Packet {
 
     private final String clientName;
+
 
     /**
      * Handshake packet to register on the con air server.
@@ -43,9 +45,11 @@ public class HandshakePacket implements Packet {
         this.clientName = clientName;
     }
 
+
     public String getClientName() {
         return clientName;
     }
+
 
     @Override
     public String toString() {

@@ -26,9 +26,11 @@ package de.minestar.conair.common.packets;
 
 import de.minestar.conair.api.Packet;
 
+
 public class ConnectedClientsPacket implements Packet {
 
     private final String[] connectedClients;
+
 
     public ConnectedClientsPacket(String... connectedClients) {
         this.connectedClients = new String[connectedClients.length];
@@ -37,9 +39,11 @@ public class ConnectedClientsPacket implements Packet {
         }
     }
 
+
     public String[] getConnectedClients() {
         return connectedClients;
     }
+
 
     @Override
     public String toString() {

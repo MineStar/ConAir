@@ -49,9 +49,10 @@ import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.common.event.EventExecutor;
-import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.SplittedPacket;
+import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
+
 
 public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
@@ -66,12 +67,14 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
     private final SplittedPacketHandler smallPacketHandler;
     private final ConAirServer _server;
 
+
     ConAirServerHandler(final ConAirServer server) {
         _server = server;
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.smallPacketHandler = new SplittedPacketHandler();
     }
+
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
@@ -80,6 +83,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         // Mark channel as not initialized - waiting for handshake
         ctx.channel().attr(KEY_IS_INITIALIZED).getAndSet(Boolean.FALSE);
     }
+
 
     @Override
     /** 
@@ -128,6 +132,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         }
     }
 
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (cause instanceof CorruptedFrameException) {
@@ -136,6 +141,7 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         cause.printStackTrace();
         ctx.close();
     }
+
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
@@ -159,15 +165,17 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
         return true;
     }
 
+
     private String getClientName(Channel channel) {
         return channel.attr(KEY_CLIENT_NAME).get();
     }
 
+
     <L extends Listener> void registerPacketListener(L listener) {
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
-            // ignore static methods & we need exactly two params
-            if (Modifier.isStatic(method.getModifiers()) || method.getParameterCount() != 3) {
+            // ignore static methods & we need exactly three params and a public method
+            if (Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != 3) {
                 continue;
             }
 
@@ -194,5 +202,4 @@ public class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPack
             }
         }
     }
-
 }

@@ -41,12 +41,14 @@ import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.server.ConAirServer;
 
+
 /**
  * Demonstration of the ConAir API starting a server and three clients are connecting to the server. After the handshake, clients are sending chat packets.
  */
 public class ConAirTest {
 
     private static final int PORT = 8977;
+
 
     public static long crc(byte[] bytes) {
         // create CRC32
@@ -60,6 +62,7 @@ public class ConAirTest {
     }
 
     private static long CRC_CHECK;
+
 
     @Test
     public void testConAir() {
@@ -129,13 +132,16 @@ public class ConAirTest {
             e.printStackTrace();
         }
     }
+
     public static class TestListener implements Listener {
 
         private String name;
 
+
         public TestListener(String n) {
             name = n;
         }
+
 
         @RegisterEvent
         public void onChatPacket(final PacketSender receiver, final ConAirMember source, final ChatPacket packet) throws Exception {
@@ -146,6 +152,7 @@ public class ConAirTest {
                 System.out.println("[ to: " + name + " ] [ from: " + source + " ] " + packet.getMessage());
             }
         }
+
 
         @RegisterEvent
         public void onResourcePacket(final PacketSender receiver, final ConAirMember source, final ResourcePacket packet) {

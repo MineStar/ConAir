@@ -55,6 +55,7 @@ import de.minestar.conair.common.codec.JsonEncoder;
 import de.minestar.conair.common.codec.JsonFrameDecoder;
 import de.minestar.conair.common.packets.WrappedPacket;
 
+
 public final class ConAirServer implements PacketSender {
 
     private final EventLoopGroup bossGroup;
@@ -66,6 +67,7 @@ public final class ConAirServer implements PacketSender {
     private Map<String, Listener> listenerMap;
     private Map<String, Channel> clientMap;
 
+
     public ConAirServer(int port) throws Exception {
         this.isRunning = false;
         this.bossGroup = new NioEventLoopGroup(1);
@@ -74,6 +76,7 @@ public final class ConAirServer implements PacketSender {
         this.clientMap = Collections.synchronizedMap(new HashMap<>());
         start(port);
     }
+
 
     private void start(final int port) throws Exception {
         if (isRunning) {
@@ -116,17 +119,20 @@ public final class ConAirServer implements PacketSender {
         this.isRunning = true;
     }
 
+
     String[] getClientMap() {
         synchronized (clientMap) {
             return clientMap.keySet().toArray(new String[clientMap.keySet().size()]);
         }
     }
 
+
     void addClient(String clientName, Channel channel) {
         synchronized (clientMap) {
             this.clientMap.put(clientName, channel);
         }
     }
+
 
     void removeClient(Channel channel) {
         synchronized (clientMap) {
@@ -142,6 +148,7 @@ public final class ConAirServer implements PacketSender {
             }
         }
     }
+
 
     /**
      * Send a packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
@@ -162,6 +169,7 @@ public final class ConAirServer implements PacketSender {
             }
         }
     }
+
 
     /**
      * Send a packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
@@ -203,24 +211,20 @@ public final class ConAirServer implements PacketSender {
         }
     }
 
+
     public boolean isRunning() {
         return isRunning;
     }
 
-    /**
-     * Register listener for a Packet type to receive and handle.
-     * 
-     * @param packetClass
-     *            The class of the packet this listener registers to
-     * @param handler
-     *            Packet handler for this type
-     */
+
+    @Override
     public <L extends Listener> void registerPacketListener(L listener) {
         this.listenerMap.put(listener.getClass().toString(), listener);
         if (isRunning && this.packetHandler != null) {
             this.packetHandler.registerPacketListener(listener);
         }
     }
+
 
     @Override
     public ConAirMember getMember(final String name) throws IllegalArgumentException {
@@ -229,6 +233,7 @@ public final class ConAirServer implements PacketSender {
         }
         return new ConAirMember(name);
     }
+
 
     public void stop() throws Exception {
         if (!isRunning) {

@@ -31,15 +31,18 @@ import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.PacketSender;
 
+
 public class EventExecutor {
 
     private final Listener _listener;
     private final Method _method;
 
+
     public EventExecutor(final Listener listener, final Method method) {
         _listener = listener;
         _method = method;
     }
+
 
     public <P extends Packet> void execute(final PacketSender receiver, final ConAirMember source, final P packet) {
         try {

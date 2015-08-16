@@ -41,19 +41,23 @@ import de.minestar.conair.common.packets.HandshakePacket;
 import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.packets.ErrorPacket.ErrorType;
 
+
 public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
 
     private final ConAirServer _server;
 
+
     ServerHandshakeHandler(final ConAirServer server) {
         _server = server;
     }
 
+
     private boolean isInitialized(ChannelHandlerContext ctx) {
         return ctx.attr(KEY_IS_INITIALIZED).get() == Boolean.TRUE;
     }
+
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -61,6 +65,7 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
         // TODO Auto-generated method stub
         super.channelActive(ctx);
     }
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -87,6 +92,7 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
                 _server.sendPacket(new ConnectedClientsPacket(_server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
                 ctx.channel().closeFuture().addListeners(new ChannelFutureListener() {
+
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         _server.removeClient(ctx.channel());
@@ -108,6 +114,8 @@ public class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedP
             throw new IllegalStateException("Channel cannot broadcast before a handshake!");
         }
     }
+
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

@@ -25,10 +25,16 @@
 package de.minestar.conair.common;
 
 import de.minestar.conair.api.Packet;
+import de.minestar.conair.api.event.Listener;
+
 
 public interface PacketSender {
 
     void sendPacket(final Packet packet, final ConAirMember... targets) throws Exception;
 
+
     ConAirMember getMember(final String name);
+
+
+    <L extends Listener> void registerPacketListener(L listener);
 }

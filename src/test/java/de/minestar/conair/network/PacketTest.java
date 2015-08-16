@@ -39,6 +39,7 @@ import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.WrappedPacket;
 
+
 /*
  * Test for serialization and parsing of packets
  */
@@ -57,6 +58,7 @@ public class PacketTest {
         // Check if messages are equal
         assertEquals(sentPacket.getMessage(), receivedPacket.getMessage());
     }
+
 
     @Test
     public void multiPacketTest() throws IOException, ClassNotFoundException {

@@ -33,12 +33,14 @@ import com.google.gson.Gson;
 
 import de.minestar.conair.common.packets.WrappedPacket;
 
+
 /**
  * Converts a {@link WrappedPacket} to a JSON representation of the object.
  */
 public class JsonEncoder extends MessageToMessageEncoder<WrappedPacket> {
 
     private static final Gson JSON_MAPPER = new Gson();
+
 
     @Override
     protected void encode(ChannelHandlerContext ctx, WrappedPacket msg, List<Object> out) throws Exception {
