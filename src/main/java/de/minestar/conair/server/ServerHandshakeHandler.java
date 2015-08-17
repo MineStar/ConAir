@@ -43,7 +43,7 @@ import de.minestar.conair.common.packets.WrappedPacket;
 
 class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
-    private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
+    private static final AttributeKey<Boolean> CONAIR_IS_INITIALIZED = AttributeKey.valueOf("CONAIR_IS_INITIALIZED");
 
     private final ConAirServer _server;
 
@@ -54,13 +54,13 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
 
 
     private boolean isInitialized(ChannelHandlerContext ctx) {
-        return ctx.attr(KEY_IS_INITIALIZED).get() == Boolean.TRUE;
+        return ctx.attr(CONAIR_IS_INITIALIZED).get() == Boolean.TRUE;
     }
 
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        ctx.channel().attr(KEY_IS_INITIALIZED).getAndSet(Boolean.FALSE);
+        ctx.channel().attr(CONAIR_IS_INITIALIZED).getAndSet(Boolean.FALSE);
         // TODO Auto-generated method stub
         super.channelActive(ctx);
     }
@@ -86,7 +86,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             if (!isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
                 ctx.channel().attr(ConAirServerHandler.CONAIR_CLIENT_NAME).set(handshakePacket.getClientName());
-                ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
+                ctx.channel().attr(CONAIR_IS_INITIALIZED).set(Boolean.TRUE);
                 _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
                 _server.sendPacket(new ServerInfoPacket(_server.getName(), _server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
