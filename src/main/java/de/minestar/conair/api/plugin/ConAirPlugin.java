@@ -165,6 +165,17 @@ public abstract class ConAirPlugin {
 
 
     /**
+     * Unregister a {@link Listener listener} for {@link Packet packets}.
+     * 
+     * @param listenerClass
+     *            the class of the {@link Listener listener} to unregister
+     */
+    public final <L extends Listener> void unregisterPacketListener(Class<L> listener) {
+        _packetSender.unregisterPacketListener(listener);
+    }
+
+
+    /**
      * Get the datafolder of the plugin. All related files should be stored here.
      * 
      * @return the datafolder of the plugin

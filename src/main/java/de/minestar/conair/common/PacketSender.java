@@ -61,7 +61,7 @@ public interface PacketSender {
      * Register a {@link Listener listener} for {@link Packet packets}.
      * 
      * @param listener
-     *            the @link Listener listener} to register.
+     *            the @link Listener listener} to register
      */
     <L extends Listener> void registerPacketListener(L listener);
 
@@ -70,7 +70,7 @@ public interface PacketSender {
      * Unregister a {@link Listener listener} for {@link Packet packets}.
      * 
      * @param listenerClass
-     *            the class of the {@link Listener listener} to unregister.
+     *            the class of the {@link Listener listener} to unregister
      */
     <L extends Listener> void unregisterPacketListener(Class<L> listenerClass);
 
@@ -78,7 +78,7 @@ public interface PacketSender {
     /**
      * Get the name of this {@link PacketSender}. The name will be the name of the {@link ConAir#SERVER server} or the name of the {@link ConAirClient client}.
      * 
-     * @return
+     * @return the name of this {@link ConAirMember}
      */
     String getName();
 
