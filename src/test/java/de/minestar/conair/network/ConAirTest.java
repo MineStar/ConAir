@@ -78,7 +78,7 @@ public class ConAirTest {
             Assert.assertTrue(client1.isConnected());
 
             // Create second client and connect to server
-            ConAirClient client2 = new ConAirClient("Client2\"", "127.0.0.1", PORT);
+            ConAirClient client2 = new ConAirClient("Client2", "127.0.0.1", PORT);
             client2.registerPacketListener(new TestListener("C2"));
             Assert.assertTrue(client2.isConnected());
 
