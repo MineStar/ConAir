@@ -60,8 +60,8 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    private static final AttributeKey<Boolean> KEY_IS_INITIALIZED = AttributeKey.valueOf("initialized");
-    protected static final AttributeKey<String> KEY_CLIENT_NAME = AttributeKey.valueOf("clientName");
+    private static final AttributeKey<Boolean> CONAIR_IS_INITIALIZED = AttributeKey.valueOf("CONAIR_IS_INITIALIZED");
+    protected static final AttributeKey<String> CONAIR_CLIENT_NAME = AttributeKey.valueOf("CONAIR_CLIENT_NAME");
 
     private final SplittedPacketHandler smallPacketHandler;
     private final ConAirServer _server;
@@ -80,7 +80,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         // Pre-Initialize the channel
         channels.add(ctx.channel());
         // Mark channel as not initialized - waiting for handshake
-        ctx.channel().attr(KEY_IS_INITIALIZED).getAndSet(Boolean.FALSE);
+        ctx.channel().attr(CONAIR_IS_INITIALIZED).getAndSet(Boolean.FALSE);
     }
 
 
@@ -166,7 +166,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
 
     private String getClientName(Channel channel) {
-        return channel.attr(KEY_CLIENT_NAME).get();
+        return channel.attr(CONAIR_CLIENT_NAME).get();
     }
 
 

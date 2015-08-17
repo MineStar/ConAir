@@ -85,7 +85,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             HandshakePacket handshakePacket = result.get();
             if (!isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
-                ctx.channel().attr(ConAirServerHandler.KEY_CLIENT_NAME).set(handshakePacket.getClientName());
+                ctx.channel().attr(ConAirServerHandler.CONAIR_CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(KEY_IS_INITIALIZED).set(Boolean.TRUE);
                 _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
                 _server.sendPacket(new ServerInfoPacket(_server.getName(), _server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
