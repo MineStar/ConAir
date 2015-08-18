@@ -48,7 +48,7 @@ final class PluginLoader {
     private final Map<String, PluginClassLoader> _loaders = new HashMap<String, PluginClassLoader>();
 
 
-    public Collection<ConAirPlugin> loadPlugins(PluginManager pluginManager, PacketSender server, File file) {
+    public Collection<ConAirPlugin> loadPlugins(PluginManager pluginManager, PacketSender packetSender, File file) {
         final Collection<ConAirPlugin> result = new ArrayList<ConAirPlugin>();
 
         if (!file.exists()) {
@@ -88,7 +88,7 @@ final class PluginLoader {
                     final ConAirPlugin pluginInstance = (ConAirPlugin) Unsafe.get().allocateInstance(jarClass);
                     final Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
                     initializeMethod.setAccessible(true);
-                    initializeMethod.invoke(pluginInstance, server, pluginInstance.getClass().getSimpleName(), pluginManager);
+                    initializeMethod.invoke(pluginInstance, packetSender, pluginInstance.getClass().getSimpleName(), pluginManager);
                     initializeMethod.setAccessible(false);
                     result.add(pluginInstance);
                 } catch (Exception e) {

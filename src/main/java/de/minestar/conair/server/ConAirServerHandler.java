@@ -87,16 +87,6 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
      */
     public void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
 
-        System.out.println("packet: " + wrappedPacket.getPacketClassName());
-
-        List<String> targets = wrappedPacket.getTargets();
-        System.out.println("targets.size: " + targets.size());
-        int i = 1;
-        for (String t : targets) {
-            System.out.println(i + ": " + t);
-            i++;
-        }
-
         // handle splitted packets
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
             final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_server._pluginManagerFactory), _server._pluginManagerFactory);
@@ -152,11 +142,8 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
-            System.out.println("Packet not registered!");
             return false;
         }
-
-        System.out.println("Packet is registered....");
 
         Optional<Packet> result = wrappedPacket.getPacket(_server._pluginManagerFactory);
         if (!result.isPresent()) {
@@ -167,12 +154,9 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         Packet packet = result.get();
         Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
         if (map != null) {
-            System.out.println("listeners found...");
             for (final EventExecutor executor : map.values()) {
                 executor.execute(_server, _server.getMember(wrappedPacket.getSource()), packet);
             }
-        } else {
-            System.out.println("No listeners found!");
         }
         return true;
     }
@@ -184,7 +168,6 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
 
     <L extends Listener> void registerPacketListener(L listener) {
-        System.out.println("registering packetListener: " + listener.getClass());
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly three params and a public method
@@ -212,7 +195,6 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
                     registeredListener.put(packetClass, map);
                 }
                 map.put(listener.getClass(), new EventExecutor(listener, method));
-                System.out.println("adding: " + method.getName());
             }
         }
     }
