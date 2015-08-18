@@ -100,7 +100,7 @@ public final class ConAirClient implements PacketSender {
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
         this.splittedPacketHandler = new SplittedPacketHandler();
         this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
-        _pluginManagerFactory = new PluginManagerFactory(this, pluginFolder);
+        _pluginManagerFactory = new PluginManagerFactory(pluginFolder);
         connect(host, port);
     }
 
@@ -160,7 +160,7 @@ public final class ConAirClient implements PacketSender {
         // Register at server with unique name
         sendPacket(new HandshakePacket(this.clientName.getName()));
         isConnected = true;
-        _pluginManagerFactory.loadPlugins();
+        _pluginManagerFactory.loadPlugins(this);
         _pluginManagerFactory.onConnect();
         registerPacketListener(new ClientConnectionListener(this));
     }

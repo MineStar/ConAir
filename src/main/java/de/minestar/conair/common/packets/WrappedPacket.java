@@ -150,19 +150,13 @@ public class WrappedPacket {
     public <T extends Packet> Optional<T> getPacket(final PluginManagerFactory pluginManagerFactory) {
         T result = null;
         try {
-            try {
-                result = decodePacket(packetAsJSON, (Class<T>) Class.forName(packetClassName));
-            } catch (Exception e) {
-                if (pluginManagerFactory != null) {
-                    result = decodePacket(packetAsJSON, (Class<T>) pluginManagerFactory.getClassByName(packetClassName));
-                }
-            }
+            result = decodePacket(packetAsJSON, (Class<T>) pluginManagerFactory.classForName(packetClassName));
             if (result != null) {
                 return Optional.of(result);
             } else {
                 return Optional.empty();
             }
-        } catch (IOException | InstantiationException e) {
+        } catch (IOException | InstantiationException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return Optional.empty();

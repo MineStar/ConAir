@@ -52,7 +52,7 @@ final class PluginClassLoader extends URLClassLoader {
         Class<?> result = _classes.get(name);
         if (result == null) {
             if (checkGlobal) {
-                result = _loader.getClassByName(name);
+                result = _loader.classForName(name);
             }
             if (result == null) {
                 result = super.findClass(name);

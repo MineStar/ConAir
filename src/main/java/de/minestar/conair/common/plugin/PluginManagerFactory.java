@@ -27,23 +27,23 @@ package de.minestar.conair.common.plugin;
 import de.minestar.conair.common.PacketSender;
 
 
-public class PluginManagerFactory {
+public final class PluginManagerFactory {
 
     private final PluginManager _pluginManager;
 
 
-    public PluginManagerFactory(final PacketSender packetSender, final String pluginFolder) {
-        _pluginManager = new PluginManager(packetSender, pluginFolder);
+    public PluginManagerFactory(final String pluginFolder) {
+        _pluginManager = new PluginManager(pluginFolder);
     }
 
 
-    public Class<?> getClassByName(final String name) {
-        return _pluginManager.getClassByName(name);
+    public Class<?> classForName(final String name) throws ClassNotFoundException {
+        return _pluginManager.classForName(name);
     }
 
 
-    public void loadPlugins() {
-        _pluginManager.loadPlugins();
+    public void loadPlugins(final PacketSender packetSender) {
+        _pluginManager.loadPlugins(packetSender);
     }
 
 
@@ -60,5 +60,4 @@ public class PluginManagerFactory {
     public void onDisconnect() {
         _pluginManager.onDisconnected();
     }
-
 }

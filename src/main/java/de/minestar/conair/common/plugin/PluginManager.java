@@ -24,6 +24,8 @@
 
 package de.minestar.conair.common.plugin;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
@@ -35,16 +37,14 @@ import de.minestar.conair.common.PacketSender;
 public final class PluginManager {
 
     private final PluginLoader _pluginLoader;
-    private final PacketSender _packetSender;
     private final String _pluginFolder;
 
     private final HashMap<String, ConAirPlugin> _pluginMap;
 
 
-    PluginManager(PacketSender packetSender, String pluginFolder) {
+    PluginManager(String pluginFolder) {
         _pluginLoader = new PluginLoader();
         _pluginMap = new HashMap<String, ConAirPlugin>();
-        _packetSender = packetSender;
         if (pluginFolder.endsWith("/")) {
             _pluginFolder = pluginFolder;
         } else {
@@ -53,12 +53,12 @@ public final class PluginManager {
     }
 
 
-    Class<?> getClassByName(final String name) {
-        return _pluginLoader.getClassByName(name);
+    Class<?> classForName(final String name) throws ClassNotFoundException {
+        return _pluginLoader.classForName(name);
     }
 
 
-    void loadPlugins() {
+    void loadPlugins(final PacketSender packetSender) {
         // create PluginFolder
         File pluginFolder = new File(_pluginFolder);
         pluginFolder.mkdir();
@@ -70,15 +70,26 @@ public final class PluginManager {
         for (File jarFile : pluginFolder.listFiles()) {
             if (jarFile.isFile() && jarFile.getName().endsWith(".jar")) {
                 // retrieve ServerPlugin
-                final Collection<ConAirPlugin> plugins = _pluginLoader.loadPlugins(this, _packetSender, jarFile);
+                final Collection<ConAirPlugin> plugins = _pluginLoader.loadPlugins(this, jarFile);
                 for (final ConAirPlugin plugin : plugins) {
                     // pluginnames MUST be unique!
                     if (_pluginMap.containsKey(plugin.getClass().getName())) {
                         System.out.println("A plugin named '" + plugin.getPluginName() + "' is already registered! Ignoring '" + plugin.getPluginName() + "' from '" + jarFile.getName() + "'...");
                         continue;
                     } else {
-                        _pluginMap.put(plugin.getClass().getName(), plugin);
-                        plugin.onLoad();
+                        try {
+                            // initialize the plugin
+                            Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
+                            initializeMethod.setAccessible(true);
+                            initializeMethod.invoke(plugin, packetSender, plugin.getClass().getSimpleName(), this);
+                            initializeMethod.setAccessible(false);
+
+                            // add it to the map
+                            _pluginMap.put(plugin.getClass().getName(), plugin);
+                            plugin.onLoad();
+                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

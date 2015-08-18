@@ -25,7 +25,6 @@
 package de.minestar.conair.common.plugin;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +37,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import de.minestar.conair.api.plugin.ConAirPlugin;
-import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.common.utils.Unsafe;
 
 
@@ -48,7 +46,7 @@ final class PluginLoader {
     private final Map<String, PluginClassLoader> _loaders = new HashMap<String, PluginClassLoader>();
 
 
-    public Collection<ConAirPlugin> loadPlugins(PluginManager pluginManager, PacketSender packetSender, File file) {
+    public Collection<ConAirPlugin> loadPlugins(PluginManager pluginManager, File file) {
         final Collection<ConAirPlugin> result = new ArrayList<ConAirPlugin>();
 
         if (!file.exists()) {
@@ -79,17 +77,13 @@ final class PluginLoader {
             final PluginClassLoader classLoader = new PluginClassLoader(this, urls, getClass().getClassLoader());
             for (final String className : pluginClasses) {
                 try {
-                    final Class<?> jarClass = Class.forName(className, true, classLoader);
+                    final Class<?> jarClass = Class.forName(className);
                     _loaders.put(className, classLoader);
                     if (!ConAirPlugin.class.isAssignableFrom(jarClass)) {
                         continue;
                     }
 
                     final ConAirPlugin pluginInstance = (ConAirPlugin) Unsafe.get().allocateInstance(jarClass);
-                    final Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
-                    initializeMethod.setAccessible(true);
-                    initializeMethod.invoke(pluginInstance, packetSender, pluginInstance.getClass().getSimpleName(), pluginManager);
-                    initializeMethod.setAccessible(false);
                     result.add(pluginInstance);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -102,7 +96,7 @@ final class PluginLoader {
     }
 
 
-    public Class<?> getClassByName(final String name) {
+    public Class<?> classForName(final String name) throws ClassNotFoundException {
         Class<?> cachedClass = _classes.get(name);
 
         if (cachedClass != null) {
@@ -119,7 +113,7 @@ final class PluginLoader {
                 }
             }
         }
-        return null;
+        return Class.forName(name);
     }
 
 

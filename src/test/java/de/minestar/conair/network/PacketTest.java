@@ -37,6 +37,7 @@ import org.junit.Test;
 import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
+import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
 /*
@@ -51,7 +52,7 @@ public class PacketTest {
         // Serialize packet while wrapping
         List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, new ConAirMember("Server"), new ConAirMember("Server"));
         // Parse packet
-        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket(null);
+        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket(new PluginManagerFactory(""));
         assertTrue(possibleResult.isPresent());
         ChatPacket receivedPacket = possibleResult.get();
         // Check if messages are equal
@@ -68,11 +69,11 @@ public class PacketTest {
         SplittedPacketHandler splittedPacketHandler = new SplittedPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {
-            result = splittedPacketHandler.handle(packet, packet.getPacket(null), null);
+            result = splittedPacketHandler.handle(packet, packet.getPacket(new PluginManagerFactory("")), null);
         }
 
         // Parse packet
-        Optional<ResourcePacket> possibleResult = result.getPacket(null);
+        Optional<ResourcePacket> possibleResult = result.getPacket(new PluginManagerFactory(""));
         assertTrue(possibleResult.isPresent());
         ResourcePacket receivedPacket = possibleResult.get();
 
