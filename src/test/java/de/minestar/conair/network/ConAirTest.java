@@ -31,6 +31,7 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
@@ -62,7 +63,7 @@ public class ConAirTest {
     private static long CRC_CHECK;
 
 
-//    @Test
+    @Test
     public void testConAir() {
         try {
 

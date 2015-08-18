@@ -113,7 +113,7 @@ final class PluginLoader {
                 }
             }
         }
-        return Class.forName(name);
+        return getClass().getClassLoader().loadClass(name);
     }
 
 
