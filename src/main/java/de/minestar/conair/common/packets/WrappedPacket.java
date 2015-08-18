@@ -41,6 +41,7 @@ import java.util.Optional;
 
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.common.ConAirMember;
+import de.minestar.conair.common.plugin.PluginManagerFactory;
 import de.minestar.conair.common.utils.BufferUtils;
 import de.minestar.conair.common.utils.Unsafe;
 
@@ -69,7 +70,7 @@ public class WrappedPacket {
      * @throws IOException
      */
     private WrappedPacket(Packet packet, String source, List<String> targets) throws IOException {
-        this(packet.getClass(), encodePacket(packet), source, targets);
+        this(packet.getClass().getName(), encodePacket(packet), source, targets);
     }
 
 
@@ -81,10 +82,10 @@ public class WrappedPacket {
      * @param targets
      *            The target clients in the network.
      */
-    private <P extends Packet> WrappedPacket(Class<P> packetClass, String packetData, String source, List<String> targets) {
+    private <P extends Packet> WrappedPacket(String packetClassName, String packetData, String source, List<String> targets) {
         this.packetAsJSON = packetData;
         this.source = source;
-        this.packetClassName = packetClass.getName();
+        this.packetClassName = packetClassName;
         this.targets = targets;
     }
 
@@ -146,12 +147,22 @@ public class WrappedPacket {
      * Parse the JSON content of this packet. Invoking this method will always produce a new object!
      * @return 
      */
-    public <T extends Packet> Optional<T> getPacket() {
-        T result;
+    public <T extends Packet> Optional<T> getPacket(final PluginManagerFactory pluginManagerFactory) {
+        T result = null;
         try {
-            result = decodePacket(packetAsJSON, (Class<T>) Class.forName(packetClassName));
-            return Optional.of(result);
-        } catch (ClassNotFoundException | IOException | InstantiationException e) {
+            try {
+                result = decodePacket(packetAsJSON, (Class<T>) Class.forName(packetClassName));
+            } catch (Exception e) {
+                if (pluginManagerFactory != null) {
+                    result = decodePacket(packetAsJSON, (Class<T>) pluginManagerFactory.getClassByName(packetClassName));
+                }
+            }
+            if (result != null) {
+                return Optional.of(result);
+            } else {
+                return Optional.empty();
+            }
+        } catch (IOException | InstantiationException e) {
             e.printStackTrace();
         }
         return Optional.empty();
@@ -264,13 +275,12 @@ public class WrappedPacket {
     }
 
 
-    @SuppressWarnings("unchecked")
-    static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SplittedPacket> packets, String packetClassName) throws ClassNotFoundException {
+    static <P extends Packet> WrappedPacket construct(WrappedPacket wrappedPacket, List<SplittedPacket> packets, PluginManagerFactory pluginManagerFactory, String packetClassName) {
         Collections.sort(packets);
         StringBuilder builder = new StringBuilder();
         for (final SplittedPacket packet : packets) {
             builder.append(packet.getData());
         }
-        return new WrappedPacket((Class<P>) Class.forName(packetClassName), builder.toString(), wrappedPacket.source, wrappedPacket.targets);
+        return new WrappedPacket(packetClassName, builder.toString(), wrappedPacket.source, wrappedPacket.targets);
     }
 }

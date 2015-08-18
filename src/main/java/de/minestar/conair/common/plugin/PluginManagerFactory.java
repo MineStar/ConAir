@@ -37,6 +37,11 @@ public class PluginManagerFactory {
     }
 
 
+    public Class<?> getClassByName(final String name) {
+        return _pluginManager.getClassByName(name);
+    }
+
+
     public void loadPlugins() {
         _pluginManager.loadPlugins();
     }

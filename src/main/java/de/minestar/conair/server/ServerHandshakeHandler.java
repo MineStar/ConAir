@@ -64,19 +64,19 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
         // Channel is initialized and packet is not a handshake - client will be
         // handled in later handlers.
-        if (isInitialized(ctx) && !msg.is(HandshakePacket.class)) {
-            ctx.fireChannelRead(msg);
+        if (isInitialized(ctx) && !wrappedPacket.is(HandshakePacket.class)) {
+            ctx.fireChannelRead(wrappedPacket);
             return;
         }
 
         // Channel starts handshake
-        if (!isInitialized(ctx) && msg.is(HandshakePacket.class)) {
-            Optional<HandshakePacket> result = msg.getPacket();
+        if (!isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
+            Optional<HandshakePacket> result = wrappedPacket.getPacket(_server._pluginManagerFactory);
             if (!result.isPresent()) {
-                throw new Exception("Error while parsing " + msg + " as HandshakePacket!");
+                throw new Exception("Error while parsing " + wrappedPacket + " as HandshakePacket!");
             }
             HandshakePacket handshakePacket = result.get();
             if (!isInitialized(ctx)) {
@@ -97,7 +97,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             }
         }
         // Channel tries a twice handshake
-        else if (isInitialized(ctx) && msg.is(HandshakePacket.class)) {
+        else if (isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
             ErrorPacket packet = new ErrorPacket(ErrorType.DUPLICATE_HANDSHAKE);
             ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
             throw new IllegalStateException("Channel did two handshakes!");

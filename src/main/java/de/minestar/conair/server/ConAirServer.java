@@ -68,7 +68,7 @@ public final class ConAirServer implements PacketSender {
     private boolean _isRunning;
     private final Map<String, Listener> _listenerMap;
     private final Map<String, Channel> _clientMap;
-    private final PluginManagerFactory _pluginManagerFactory;
+    protected final PluginManagerFactory _pluginManagerFactory;
     private final ConAirMember _serverMember;
     private final Map<InetSocketAddress, ConAirServerHandler> _packetHandler;
 

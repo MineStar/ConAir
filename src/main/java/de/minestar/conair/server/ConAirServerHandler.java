@@ -37,6 +37,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -88,11 +89,19 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         System.out.println("packet: " + wrappedPacket.getPacketClassName());
 
+        List<String> targets = wrappedPacket.getTargets();
+        System.out.println("targets.size: " + targets.size());
+        int i = 1;
+        for (String t : targets) {
+            System.out.println(i + ": " + t);
+            i++;
+        }
+
         // handle splitted packets
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
+            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_server._pluginManagerFactory), _server._pluginManagerFactory);
             if (reconstructedPacket != null) {
-                if (reconstructedPacket.getTargets().contains(_server.getName())) {
+                if (wrappedPacket.getTargets().isEmpty() || reconstructedPacket.getTargets().contains(_server.getName())) {
                     // Returns true, if the packet is handled ONLY by the server
                     handleServerPacket(ctx, reconstructedPacket);
                 }
@@ -100,7 +109,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         }
 
         // handle packets dedicated for the server
-        if (wrappedPacket.getTargets().contains(_server.getName())) {
+        if (wrappedPacket.getTargets().isEmpty() || wrappedPacket.getTargets().contains(_server.getName())) {
             // Returns true, if the packet is handled ONLY by the server
             handleServerPacket(ctx, wrappedPacket);
             if (wrappedPacket.getTargets().size() == 1) {
@@ -147,7 +156,9 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
             return false;
         }
 
-        Optional<Packet> result = wrappedPacket.getPacket();
+        System.out.println("Packet is registered....");
+
+        Optional<Packet> result = wrappedPacket.getPacket(_server._pluginManagerFactory);
         if (!result.isPresent()) {
             System.err.println("Error while parsing " + wrappedPacket + "!");
             return true;
@@ -156,9 +167,12 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         Packet packet = result.get();
         Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
         if (map != null) {
+            System.out.println("listeners found...");
             for (final EventExecutor executor : map.values()) {
                 executor.execute(_server, _server.getMember(wrappedPacket.getSource()), packet);
             }
+        } else {
+            System.out.println("No listeners found!");
         }
         return true;
     }

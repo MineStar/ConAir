@@ -35,7 +35,6 @@ import java.util.Optional;
 import org.junit.Test;
 
 import de.minestar.conair.common.ConAirMember;
-import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
 
@@ -52,7 +51,7 @@ public class PacketTest {
         // Serialize packet while wrapping
         List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, new ConAirMember("Server"), new ConAirMember("Server"));
         // Parse packet
-        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket();
+        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket(null);
         assertTrue(possibleResult.isPresent());
         ChatPacket receivedPacket = possibleResult.get();
         // Check if messages are equal
@@ -69,11 +68,11 @@ public class PacketTest {
         SplittedPacketHandler smallPacketHandler = new SplittedPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {
-            result = smallPacketHandler.handle(packet, (SplittedPacket) packet.getPacket().get());
+            result = smallPacketHandler.handle(packet, packet.getPacket(null), null);
         }
 
         // Parse packet
-        Optional<ResourcePacket> possibleResult = result.getPacket();
+        Optional<ResourcePacket> possibleResult = result.getPacket(null);
         assertTrue(possibleResult.isPresent());
         ResourcePacket receivedPacket = possibleResult.get();
 

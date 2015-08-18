@@ -171,7 +171,7 @@ public final class ConAirClient implements PacketSender {
             // The packet is not registered in this client
             return;
         }
-        Optional<Packet> result = wrappedPacket.getPacket();
+        Optional<Packet> result = wrappedPacket.getPacket(_pluginManagerFactory);
         if (!result.isPresent()) {
             System.err.println("Error while parsing " + wrappedPacket + "!");
             return;
@@ -311,7 +311,7 @@ public final class ConAirClient implements PacketSender {
         protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
             // handle splitted packets
             if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-                final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, (SplittedPacket) wrappedPacket.getPacket().get());
+                final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_pluginManagerFactory), _pluginManagerFactory);
                 if (reconstructedPacket != null) {
                     wrappedPacket = reconstructedPacket;
                 }

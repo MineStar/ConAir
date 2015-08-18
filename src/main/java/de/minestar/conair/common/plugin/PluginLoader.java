@@ -80,6 +80,7 @@ final class PluginLoader {
             for (final String className : pluginClasses) {
                 try {
                     final Class<?> jarClass = Class.forName(className, true, classLoader);
+                    _loaders.put(className, classLoader);
                     if (!ConAirPlugin.class.isAssignableFrom(jarClass)) {
                         continue;
                     }
@@ -90,7 +91,6 @@ final class PluginLoader {
                     initializeMethod.invoke(pluginInstance, server, pluginInstance.getClass().getSimpleName(), pluginManager);
                     initializeMethod.setAccessible(false);
                     result.add(pluginInstance);
-                    _loaders.put(pluginInstance.getPluginName(), classLoader);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -110,7 +110,6 @@ final class PluginLoader {
         } else {
             for (String current : _loaders.keySet()) {
                 PluginClassLoader loader = _loaders.get(current);
-
                 try {
                     cachedClass = loader.findClass(name, false);
                 } catch (ClassNotFoundException cnfe) {

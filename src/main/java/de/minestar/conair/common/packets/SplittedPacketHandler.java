@@ -29,6 +29,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
 public class SplittedPacketHandler {
@@ -36,8 +39,14 @@ public class SplittedPacketHandler {
     private final Map<Long, List<SplittedPacket>> map = Collections.synchronizedMap(new HashMap<>());
 
 
-    public WrappedPacket handle(final WrappedPacket wrappedPacket, final SplittedPacket packet) throws ClassNotFoundException {
+    public WrappedPacket handle(final WrappedPacket wrappedPacket, final Optional<SplittedPacket> optionalPacket, final PluginManagerFactory pluginManagerFactory) throws ClassNotFoundException {
         // add the packet to the list
+
+        if (!optionalPacket.isPresent()) {
+            return null;
+        }
+
+        final SplittedPacket packet = optionalPacket.get();
         List<SplittedPacket> list = map.get(packet.getId());
         if (list == null) {
             list = new ArrayList<SplittedPacket>();
@@ -47,7 +56,7 @@ public class SplittedPacketHandler {
 
         // all packets received => reconstruct the packet
         if (list.size() == packet.getTotalPackets()) {
-            WrappedPacket completePacket = WrappedPacket.construct(wrappedPacket, list, packet.getPacketClass());
+            WrappedPacket completePacket = WrappedPacket.construct(wrappedPacket, list, pluginManagerFactory, packet.getPacketClass());
             map.remove(packet.getId());
             list.clear();
             return completePacket;

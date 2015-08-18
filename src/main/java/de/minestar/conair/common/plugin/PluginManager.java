@@ -53,6 +53,11 @@ public final class PluginManager {
     }
 
 
+    Class<?> getClassByName(final String name) {
+        return _pluginLoader.getClassByName(name);
+    }
+
+
     void loadPlugins() {
         // create PluginFolder
         File pluginFolder = new File(_pluginFolder);
