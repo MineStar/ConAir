@@ -65,10 +65,10 @@ public class PacketTest {
         ResourcePacket sentPacket = new ResourcePacket(new File("send.jpg"));
         // Serialize packet while wrapping
         List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, new ConAirMember("Server"), new ConAirMember("Server"));
-        SplittedPacketHandler smallPacketHandler = new SplittedPacketHandler();
+        SplittedPacketHandler splittedPacketHandler = new SplittedPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {
-            result = smallPacketHandler.handle(packet, packet.getPacket(null), null);
+            result = splittedPacketHandler.handle(packet, packet.getPacket(null), null);
         }
 
         // Parse packet

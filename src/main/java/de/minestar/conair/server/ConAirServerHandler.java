@@ -60,7 +60,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    private final SplittedPacketHandler smallPacketHandler;
+    private final SplittedPacketHandler splittedPacketHandler;
     private final ConAirServer _server;
 
 
@@ -68,7 +68,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         _server = server;
         this.registeredListener = Collections.synchronizedMap(new HashMap<>());
         this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
-        this.smallPacketHandler = new SplittedPacketHandler();
+        this.splittedPacketHandler = new SplittedPacketHandler();
     }
 
 
@@ -99,7 +99,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
         // handle splitted packets
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-            final WrappedPacket reconstructedPacket = smallPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_server._pluginManagerFactory), _server._pluginManagerFactory);
+            final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_server._pluginManagerFactory), _server._pluginManagerFactory);
             if (reconstructedPacket != null) {
                 if (wrappedPacket.getTargets().isEmpty() || reconstructedPacket.getTargets().contains(_server.getName())) {
                     // Returns true, if the packet is handled ONLY by the server
