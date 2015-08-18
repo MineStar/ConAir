@@ -29,10 +29,14 @@ import de.minestar.conair.common.PacketSender;
 
 public final class PluginManagerFactory {
 
+    public static PluginManagerFactory get(final String pluginFolder) {
+        return new PluginManagerFactory(pluginFolder);
+    }
+
     private final PluginManager _pluginManager;
 
 
-    public PluginManagerFactory(final String pluginFolder) {
+    private PluginManagerFactory(final String pluginFolder) {
         _pluginManager = new PluginManager(pluginFolder);
     }
 

@@ -135,6 +135,7 @@ public class ConAirTest {
             Assert.assertFalse(server.isRunning());
         } catch (Exception e) {
             e.printStackTrace();
+            Assert.fail(e.getMessage());
         }
     }
 

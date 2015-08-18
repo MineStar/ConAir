@@ -52,7 +52,7 @@ public class PacketTest {
         // Serialize packet while wrapping
         List<WrappedPacket> wrappedPackets = WrappedPacket.create(sentPacket, new ConAirMember("Server"), new ConAirMember("Server"));
         // Parse packet
-        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket(new PluginManagerFactory(""));
+        Optional<ChatPacket> possibleResult = wrappedPackets.get(0).getPacket(PluginManagerFactory.get("plugins/"));
         assertTrue(possibleResult.isPresent());
         ChatPacket receivedPacket = possibleResult.get();
         // Check if messages are equal
@@ -69,11 +69,11 @@ public class PacketTest {
         SplittedPacketHandler splittedPacketHandler = new SplittedPacketHandler();
         WrappedPacket result = null;
         for (WrappedPacket packet : wrappedPackets) {
-            result = splittedPacketHandler.handle(packet, packet.getPacket(new PluginManagerFactory("")), null);
+            result = splittedPacketHandler.handle(packet, packet.getPacket(PluginManagerFactory.get("plugins/")), null);
         }
 
         // Parse packet
-        Optional<ResourcePacket> possibleResult = result.getPacket(new PluginManagerFactory(""));
+        Optional<ResourcePacket> possibleResult = result.getPacket(PluginManagerFactory.get("plugins/"));
         assertTrue(possibleResult.isPresent());
         ResourcePacket receivedPacket = possibleResult.get();
 

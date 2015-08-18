@@ -90,7 +90,7 @@ public final class ConAirServer implements PacketSender {
         _workerGroup = new NioEventLoopGroup();
         _listenerMap = Collections.synchronizedMap(new HashMap<>());
         _clientMap = Collections.synchronizedMap(new HashMap<>());
-        _pluginManagerFactory = new PluginManagerFactory(pluginFolder);
+        _pluginManagerFactory = PluginManagerFactory.get(pluginFolder);
         _packetHandler = Collections.synchronizedMap(new HashMap<>());
         start(port);
     }
