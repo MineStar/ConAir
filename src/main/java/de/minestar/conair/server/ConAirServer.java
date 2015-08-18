@@ -40,6 +40,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +70,7 @@ public final class ConAirServer implements PacketSender {
     private final Map<String, Channel> _clientMap;
     private final PluginManagerFactory _pluginManagerFactory;
     private final ConAirMember _serverMember;
-    private ConAirServerHandler packetHandler;
+    private final Map<InetSocketAddress, ConAirServerHandler> _packetHandler;
 
 
     public ConAirServer(int port) throws Exception {
@@ -90,6 +91,7 @@ public final class ConAirServer implements PacketSender {
         _listenerMap = Collections.synchronizedMap(new HashMap<>());
         _clientMap = Collections.synchronizedMap(new HashMap<>());
         _pluginManagerFactory = new PluginManagerFactory(this, pluginFolder);
+        _packetHandler = Collections.synchronizedMap(new HashMap<>());
         start(port);
     }
 
@@ -123,13 +125,23 @@ public final class ConAirServer implements PacketSender {
                 pipeline.addLast("handshakeHandler", new ServerHandshakeHandler(ConAirServer.this));
 
                 // Add server logic
-                ConAirServer.this.packetHandler = new ConAirServerHandler(ConAirServer.this);
-                for (final Listener listener : ConAirServer.this._listenerMap.values()) {
-                    ConAirServer.this.packetHandler.registerPacketListener(listener);
+                ConAirServerHandler packetHandler = new ConAirServerHandler(ConAirServer.this);
+                for (final Listener listener : _listenerMap.values()) {
+                    packetHandler.registerPacketListener(listener);
                 }
-                pipeline.addLast(ConAirServer.this.packetHandler);
-            }
+                pipeline.addLast(packetHandler);
 
+                // save the handler
+                final InetSocketAddress localAddress = ch.localAddress();
+                _packetHandler.put(localAddress, packetHandler);
+                ch.closeFuture().addListener(new ChannelFutureListener() {
+
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        _packetHandler.remove(localAddress);
+                    }
+                });
+            }
         });
         // Start server
         _serverChannel = bootStrap.bind(port).sync().channel();
@@ -141,6 +153,7 @@ public final class ConAirServer implements PacketSender {
             }
         });
         _isRunning = true;
+        _pluginManagerFactory.loadPlugins();
     }
 
 
@@ -158,18 +171,9 @@ public final class ConAirServer implements PacketSender {
     }
 
 
-    void removeClient(Channel channel) {
+    void removeClient(String clientName) {
         synchronized (_clientMap) {
-            String clientToRemove = null;
-            for (Map.Entry<String, Channel> entry : _clientMap.entrySet()) {
-                if (channel.id() == entry.getValue().id()) {
-                    clientToRemove = entry.getKey();
-                    break;
-                }
-            }
-            if (clientToRemove != null) {
-                _clientMap.remove(clientToRemove);
-            }
+            _clientMap.remove(clientName);
         }
     }
 
@@ -244,15 +248,22 @@ public final class ConAirServer implements PacketSender {
     @Override
     public <L extends Listener> void registerPacketListener(L listener) {
         _listenerMap.put(listener.getClass().toString(), listener);
-        if (_isRunning && packetHandler != null) {
-            packetHandler.registerPacketListener(listener);
+        if (_isRunning) {
+            for (ConAirServerHandler packetHandler : _packetHandler.values()) {
+                packetHandler.registerPacketListener(listener);
+            }
         }
     }
 
 
     @Override
     public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
-        packetHandler.unregisterPacketListener(listenerClass);
+        _listenerMap.remove(listenerClass.toString());
+        if (_isRunning) {
+            for (ConAirServerHandler packetHandler : _packetHandler.values()) {
+                packetHandler.unregisterPacketListener(listenerClass);
+            }
+        }
     }
 
 

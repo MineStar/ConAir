@@ -50,11 +50,10 @@ public final class PluginManager {
         } else {
             _pluginFolder = pluginFolder + '/';
         }
-        loadPlugins();
     }
 
 
-    private void loadPlugins() {
+    void loadPlugins() {
         // create PluginFolder
         File pluginFolder = new File(_pluginFolder);
         pluginFolder.mkdir();

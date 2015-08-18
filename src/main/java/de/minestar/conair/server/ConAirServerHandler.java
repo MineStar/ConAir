@@ -30,7 +30,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.CorruptedFrameException;
-import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.lang.reflect.Method;
@@ -60,9 +59,6 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    private static final AttributeKey<Boolean> CONAIR_IS_INITIALIZED = AttributeKey.valueOf("CONAIR_IS_INITIALIZED");
-    protected static final AttributeKey<String> CONAIR_CLIENT_NAME = AttributeKey.valueOf("CONAIR_CLIENT_NAME");
-
     private final SplittedPacketHandler smallPacketHandler;
     private final ConAirServer _server;
 
@@ -80,7 +76,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         // Pre-Initialize the channel
         channels.add(ctx.channel());
         // Mark channel as not initialized - waiting for handshake
-        ctx.channel().attr(CONAIR_IS_INITIALIZED).getAndSet(Boolean.FALSE);
+        ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).getAndSet(Boolean.FALSE);
     }
 
 
@@ -89,6 +85,8 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
      * Method is invoked, when a client sends a packet to the server
      */
     public void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
+
+        System.out.println("packet: " + wrappedPacket.getPacketClassName());
 
         // handle splitted packets
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
@@ -145,6 +143,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
         if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
+            System.out.println("Packet not registered!");
             return false;
         }
 
@@ -166,11 +165,12 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
 
     private String getClientName(Channel channel) {
-        return channel.attr(CONAIR_CLIENT_NAME).get();
+        return channel.attr(ConAirServerAttributes.CLIENT_NAME).get();
     }
 
 
     <L extends Listener> void registerPacketListener(L listener) {
+        System.out.println("registering packetListener: " + listener.getClass());
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly three params and a public method
@@ -198,6 +198,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
                     registeredListener.put(packetClass, map);
                 }
                 map.put(listener.getClass(), new EventExecutor(listener, method));
+                System.out.println("adding: " + method.getName());
             }
         }
     }

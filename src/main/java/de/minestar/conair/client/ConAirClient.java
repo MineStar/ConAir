@@ -160,6 +160,7 @@ public final class ConAirClient implements PacketSender {
         // Register at server with unique name
         sendPacket(new HandshakePacket(this.clientName.getName()));
         isConnected = true;
+        _pluginManagerFactory.loadPlugins();
         _pluginManagerFactory.onConnect();
         registerPacketListener(new ClientConnectionListener(this));
     }

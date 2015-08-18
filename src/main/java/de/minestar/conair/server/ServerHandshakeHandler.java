@@ -28,7 +28,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.AttributeKey;
 
 import java.util.Optional;
 
@@ -43,8 +42,6 @@ import de.minestar.conair.common.packets.WrappedPacket;
 
 class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
-    private static final AttributeKey<Boolean> HANDSHAKE_COMPLETE = AttributeKey.valueOf("HANDSHAKE_COMPLETE");
-
     private final ConAirServer _server;
 
 
@@ -54,13 +51,13 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
 
 
     private boolean isInitialized(ChannelHandlerContext ctx) {
-        return ctx.attr(HANDSHAKE_COMPLETE).get() == Boolean.TRUE;
+        return ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).get() == Boolean.TRUE;
     }
 
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        ctx.channel().attr(HANDSHAKE_COMPLETE).getAndSet(Boolean.FALSE);
+        ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).getAndSet(Boolean.FALSE);
         super.channelActive(ctx);
     }
 
@@ -84,8 +81,8 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             HandshakePacket handshakePacket = result.get();
             if (!isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
-                ctx.channel().attr(ConAirServerHandler.CONAIR_CLIENT_NAME).set(handshakePacket.getClientName());
-                ctx.channel().attr(HANDSHAKE_COMPLETE).set(Boolean.TRUE);
+                ctx.channel().attr(ConAirServerAttributes.CLIENT_NAME).set(handshakePacket.getClientName());
+                ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).set(Boolean.TRUE);
                 _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), true));
                 _server.sendPacket(new ServerInfoPacket(_server.getName(), _server.getClientMap()), new ConAirMember(handshakePacket.getClientName()), ctx.channel());
                 _server.addClient(handshakePacket.getClientName(), ctx.channel());
@@ -93,7 +90,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
 
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
-                        _server.removeClient(ctx.channel());
+                        _server.removeClient(handshakePacket.getClientName());
                         _server.sendPacket(new ConnectionPacket(handshakePacket.getClientName(), false));
                     }
                 });
@@ -106,11 +103,11 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             throw new IllegalStateException("Channel did two handshakes!");
         }
         // Channel tries to sent packets without a handshake
-//        else {
-//            ErrorPacket packet = new ErrorPacket(ErrorType.NO_HANDSHAKE);
-//            ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
-//            throw new IllegalStateException("Channel cannot broadcast before a handshake!");
-//        }
+        else {
+            ErrorPacket packet = new ErrorPacket(ErrorType.NO_HANDSHAKE);
+            ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
+            throw new IllegalStateException("Channel cannot broadcast before a handshake!");
+        }
     }
 
 

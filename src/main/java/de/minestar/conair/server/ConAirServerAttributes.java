@@ -22,38 +22,14 @@
  * SOFTWARE.
  */
 
-package de.minestar.conair.common.plugin;
+package de.minestar.conair.server;
 
-import de.minestar.conair.common.PacketSender;
-
-
-public class PluginManagerFactory {
-
-    private final PluginManager _pluginManager;
+import io.netty.util.AttributeKey;
 
 
-    public PluginManagerFactory(final PacketSender packetSender, final String pluginFolder) {
-        _pluginManager = new PluginManager(packetSender, pluginFolder);
-    }
+class ConAirServerAttributes {
 
-
-    public void loadPlugins() {
-        _pluginManager.loadPlugins();
-    }
-
-
-    public void disablePlugins() {
-        _pluginManager.disablePlugins();
-    }
-
-
-    public void onConnect() {
-        _pluginManager.onConnected();
-    }
-
-
-    public void onDisconnect() {
-        _pluginManager.onDisconnected();
-    }
-
+//    static final AttributeKey<Boolean> CONAIR_IS_INITIALIZED = AttributeKey.valueOf("CONAIR_IS_INITIALIZED");
+    static final AttributeKey<String> CLIENT_NAME = AttributeKey.valueOf("CONAIR_CLIENT_NAME");
+    static final AttributeKey<Boolean> HANDSHAKE_COMPLETED = AttributeKey.valueOf("CONAIR_HANDSHAKE_COMPLETED");
 }
