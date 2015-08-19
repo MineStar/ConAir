@@ -28,6 +28,8 @@ import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.client.ConAirClient;
+import de.minestar.conair.common.event.listener.ProgressListener;
+import de.minestar.conair.server.ConAirServer;
 
 
 /**
@@ -73,6 +75,24 @@ public interface PacketSender {
      *            the class of the {@link Listener listener} to unregister
      */
     <L extends Listener> void unregisterPacketListener(Class<L> listenerClass);
+
+
+    /**
+     * Register a {@link ProgressListener} for {@link Packet packets}.
+     * 
+     * @param listener
+     *            the @link ProgressListener} to register
+     */
+    <P extends Packet> void registerProgressListener(Class<P> packetClass, ProgressListener listener);
+
+
+    /**
+     * Unrregister a {@link ProgressListener} for {@link Packet packets}.
+     * 
+     * @param listener
+     *            the @link ProgressListener} to unregister
+     */
+    <P extends Packet> void unregisterProgressListener(Class<P> packetClass, ProgressListener listener);
 
 
     /**

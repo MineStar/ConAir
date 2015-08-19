@@ -33,11 +33,13 @@ import java.util.zip.Checksum;
 import org.junit.Assert;
 import org.junit.Test;
 
+import de.minestar.conair.api.Packet;
 import de.minestar.conair.api.event.Listener;
 import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.client.ConAirClient;
 import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.PacketSender;
+import de.minestar.conair.common.event.listener.ProgressListener;
 import de.minestar.conair.server.ConAirServer;
 
 
@@ -127,7 +129,7 @@ public class ConAirTest {
     }
 
 
-//    @Test
+    @Test
     public void testConAir() {
         try {
             // Create the server
@@ -138,6 +140,7 @@ public class ConAirTest {
             // Create first client and connect to server
             ConAirClient client1 = new ConAirClient("Client1", "localhost", PORT);
             client1.registerPacketListener(new TestListener());
+            client1.registerProgressListener(ResourcePacket.class, new TestProgressListener());
             Assert.assertTrue(client1.isConnected());
 
             // Create second client and connect to server
@@ -206,6 +209,15 @@ public class ConAirTest {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
+    }
+
+    public static class TestProgressListener implements ProgressListener {
+
+        @Override
+        public <P extends Packet> void onProgress(Class<P> packetClass, long currentPacket, long totalPackets) {
+            System.out.println(currentPacket + " of " + totalPackets);
+        }
+
     }
 
     public static class TestListener implements Listener {

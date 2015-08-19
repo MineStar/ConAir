@@ -31,9 +31,11 @@ import io.netty.handler.codec.CorruptedFrameException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +46,7 @@ import de.minestar.conair.api.event.RegisterEvent;
 import de.minestar.conair.common.ConAirMember;
 import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.common.event.EventExecutor;
+import de.minestar.conair.common.event.listener.ProgressListener;
 import de.minestar.conair.common.packets.SplittedPacket;
 import de.minestar.conair.common.packets.SplittedPacketHandler;
 import de.minestar.conair.common.packets.WrappedPacket;
@@ -54,14 +57,16 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
     private final ConAirServer _server;
     private final SplittedPacketHandler _splittedPacketHandler;
 
-    private final Set<String> _registeredClasses;
-    private final Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> _registeredListener;
+    private final Set<String> _registeredPacketClasses;
+    private final Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> _registeredPacketListeners;
+    private final Map<String, List<ProgressListener>> _progressListeners;
 
 
     ConAirServerHandler(final ConAirServer server) {
         _server = server;
-        _registeredListener = Collections.synchronizedMap(new HashMap<>());
-        _registeredClasses = Collections.synchronizedSet(new HashSet<>());
+        _registeredPacketListeners = Collections.synchronizedMap(new HashMap<>());
+        _registeredPacketClasses = Collections.synchronizedSet(new HashSet<>());
+        _progressListeners = Collections.synchronizedMap(new HashMap<>());
         _splittedPacketHandler = new SplittedPacketHandler();
     }
 
@@ -73,15 +78,33 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
     }
 
 
-    @Override
-    /** 
+    /**
      * Method is invoked, when a client sends a packet to the server
      */
+    @SuppressWarnings("unchecked")
+    @Override
     public void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
 
         // handle splitted packets
         if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-            final WrappedPacket reconstructedPacket = _splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_server._pluginManagerFactory), _server._pluginManagerFactory);
+            Optional<SplittedPacket> optionalPacket = wrappedPacket.getPacket(_server._pluginManagerFactory);
+
+            // handle progress listeners
+            SplittedPacket splittedPacket = optionalPacket.get();
+            if (_registeredPacketClasses.contains(splittedPacket.getPacketClass())) {
+                final List<ProgressListener> list = _progressListeners.get(splittedPacket.getPacketClass());
+                if (list != null) {
+                    for (final ProgressListener listener : list) {
+                        try {
+                            listener.onProgress((Class<? extends Packet>) _server._pluginManagerFactory.classForName(splittedPacket.getPacketClass()), splittedPacket.getCurrentPacketId(), splittedPacket.getTotalPackets());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+            final WrappedPacket reconstructedPacket = _splittedPacketHandler.handle(wrappedPacket, optionalPacket, _server._pluginManagerFactory);
             if (reconstructedPacket != null) {
                 if (wrappedPacket.getTargets().isEmpty() || reconstructedPacket.getTargets().contains(_server.getName())) {
                     // Returns true, if the packet is handled ONLY by the server
@@ -132,7 +155,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
 
     private boolean handleServerPacket(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) {
-        if (!_registeredClasses.contains(wrappedPacket.getPacketClassName())) {
+        if (!_registeredPacketClasses.contains(wrappedPacket.getPacketClassName())) {
             // The packet is not registered
             return false;
         }
@@ -144,7 +167,7 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         }
         // Inform listener
         Packet packet = result.get();
-        Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packet.getClass());
+        Map<Class<? extends Listener>, EventExecutor> map = _registeredPacketListeners.get(packet.getClass());
         if (map != null) {
             for (final EventExecutor executor : map.values()) {
                 executor.execute(_server, _server.getMember(wrappedPacket.getSource()), packet);
@@ -178,13 +201,13 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
                 Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the packet class
-                _registeredClasses.add(packetClass.getName());
+                _registeredPacketClasses.add(packetClass.getName());
 
                 // register the EventExecutor
-                Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packetClass);
+                Map<Class<? extends Listener>, EventExecutor> map = _registeredPacketListeners.get(packetClass);
                 if (map == null) {
                     map = Collections.synchronizedMap(new HashMap<>());
-                    _registeredListener.put(packetClass, map);
+                    _registeredPacketListeners.put(packetClass, map);
                 }
                 map.put(listener.getClass(), new EventExecutor(listener, method));
             }
@@ -211,10 +234,35 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
                 Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the EventExecutor
-                Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packetClass);
+                Map<Class<? extends Listener>, EventExecutor> map = _registeredPacketListeners.get(packetClass);
                 if (map != null) {
                     map.remove(listenerClass);
                 }
+            }
+        }
+    }
+
+
+    <P extends Packet> void registerProgressListener(Class<P> packetClass, ProgressListener listener) {
+        List<ProgressListener> list = _progressListeners.get(packetClass.getName());
+        if (list == null) {
+            list = new ArrayList<>();
+            _progressListeners.put(packetClass.getName(), list);
+        }
+        list.add(listener);
+    }
+
+
+    <P extends Packet> void unregisterProgressListener(Class<P> packetClass, ProgressListener listener) {
+        List<ProgressListener> list = _progressListeners.get(packetClass.getName());
+        if (list != null) {
+            for (int i = list.size() - 1; i >= 0; i--) {
+                if (list.get(i).equals(listener)) {
+                    list.remove(i);
+                }
+            }
+            if (list.isEmpty()) {
+                _progressListeners.remove(packetClass.getName());
             }
         }
     }

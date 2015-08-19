@@ -57,6 +57,7 @@ import de.minestar.conair.common.PacketSender;
 import de.minestar.conair.common.codec.JsonDecoder;
 import de.minestar.conair.common.codec.JsonEncoder;
 import de.minestar.conair.common.codec.JsonFrameDecoder;
+import de.minestar.conair.common.event.listener.ProgressListener;
 import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.plugin.PluginManagerFactory;
 
@@ -332,6 +333,26 @@ public class ConAirServer implements PacketSender {
         if (_isRunning) {
             for (ConAirServerHandler packetHandler : _packetHandler.values()) {
                 packetHandler.unregisterPacketListener(listenerClass);
+            }
+        }
+    }
+
+
+    @Override
+    public <P extends Packet> void registerProgressListener(Class<P> packetClass, ProgressListener listener) {
+        if (_isRunning) {
+            for (ConAirServerHandler packetHandler : _packetHandler.values()) {
+                packetHandler.registerProgressListener(packetClass, listener);
+            }
+        }
+    }
+
+
+    @Override
+    public <P extends Packet> void unregisterProgressListener(Class<P> packetClass, ProgressListener listener) {
+        if (_isRunning) {
+            for (ConAirServerHandler packetHandler : _packetHandler.values()) {
+                packetHandler.unregisterProgressListener(packetClass, listener);
             }
         }
     }

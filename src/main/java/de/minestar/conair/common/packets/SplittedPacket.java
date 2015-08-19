@@ -44,7 +44,7 @@ public class SplittedPacket implements Packet, Comparable<SplittedPacket> {
         if (dataLength % MAX_PACKET_SIZE != 0) {
             totalPackets++;
         }
-        int currentPacketId = 0;
+        int currentPacketId = 1;
         for (int i = 0; i < dataLength; i += MAX_PACKET_SIZE) {
             packets.add(new SplittedPacket(packet, id, currentPacketId, totalPackets, data.substring(i, Math.min(i + MAX_PACKET_SIZE, dataLength))));
             currentPacketId++;
