@@ -120,7 +120,7 @@ public class ConAirClient implements PacketSender {
         if (_isConnected) {
             throw new IllegalStateException("Client is already connected!");
         }
-        Bootstrap bootStrap = new Bootstrap();
+        final Bootstrap bootStrap = new Bootstrap();
         bootStrap.group(_group).channel(NioSocketChannel.class);
         // Add initializer
         bootStrap.handler(new ChannelInitializer<SocketChannel>() {
@@ -146,7 +146,7 @@ public class ConAirClient implements PacketSender {
             }
         });
 
-        Channel channel = bootStrap.connect(host, port).sync().channel();
+        final Channel channel = bootStrap.connect(host, port).sync().channel();
         channel.closeFuture().addListeners(new ChannelFutureListener() {
 
             @Override
