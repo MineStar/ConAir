@@ -69,7 +69,7 @@ import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
-public final class ConAirClient implements PacketSender {
+public class ConAirClient implements PacketSender {
 
     private boolean isConnected;
 
@@ -157,12 +157,66 @@ public final class ConAirClient implements PacketSender {
                 _pluginManagerFactory.disablePlugins();
             }
         });
+        isConnected = true;
         // Register at server with unique name
         sendPacket(new HandshakePacket(this.clientName.getName()));
-        isConnected = true;
+        registerPacketListener(new ClientConnectionListener(this));
+        afterConnect();
         _pluginManagerFactory.loadPlugins(this);
         _pluginManagerFactory.onConnect();
-        registerPacketListener(new ClientConnectionListener(this));
+    }
+
+
+    protected void afterConnect() {
+        // NOTHING TO DO IN THE STANDARD CLIENT
+    }
+
+
+    protected void afterDisconnect() {
+        // NOTHING TO DO IN THE STANDARD CLIENT
+    }
+
+
+    /**
+     * Disconnects from the ConAir server and close connection.
+     * 
+     * @throws Exception
+     *             Something went wrong.
+     */
+    public final void disconnect() throws Exception {
+        if (!isConnected) {
+            throw new IllegalStateException("Client is not connected!");
+        }
+        channel.close().sync();
+        group.shutdownGracefully().sync();
+        isConnected = false;
+        afterDisconnect();
+    }
+
+
+    public final boolean isConnected() {
+        return isConnected;
+    }
+
+
+    @Override
+    public final ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!_conAirMembers.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
+        }
+        return _conAirMembers.get(name);
+    }
+
+
+    @Override
+    public final String getName() {
+        return clientName.toString();
+    }
+
+
+    @Override
+    public final ConAirMember getServer() {
+        return _server;
     }
 
 
@@ -191,11 +245,6 @@ public final class ConAirClient implements PacketSender {
     }
 
 
-    public boolean isConnected() {
-        return isConnected;
-    }
-
-
     /**
      * Send a packet to the ConAir server, who will deliver the packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
      * 
@@ -207,19 +256,28 @@ public final class ConAirClient implements PacketSender {
      *             Something went wrong
      */
     @Override
-    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
-        List<WrappedPacket> packetList = WrappedPacket.create(packet, clientName, targets);
-        for (final WrappedPacket wrappedPacket : packetList) {
-            ChannelFuture result = channel.writeAndFlush(wrappedPacket);
-            if (result != null) {
-                result.sync();
+    public final boolean sendPacket(Packet packet, ConAirMember... targets) {
+        try {
+            if (!isConnected) {
+                throw new Exception("Client is not connected!");
             }
+            List<WrappedPacket> packetList = WrappedPacket.create(packet, clientName, targets);
+            for (final WrappedPacket wrappedPacket : packetList) {
+                ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                if (result != null) {
+                    result.sync();
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
 
     @Override
-    public <L extends Listener> void registerPacketListener(L listener) {
+    public final <L extends Listener> void registerPacketListener(L listener) {
         final Method[] declaredMethods = listener.getClass().getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly three params and a public method
@@ -253,7 +311,7 @@ public final class ConAirClient implements PacketSender {
 
 
     @Override
-    public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
+    public final <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
         final Method[] declaredMethods = listenerClass.getDeclaredMethods();
         for (final Method method : declaredMethods) {
             // ignore static methods & we need exactly three params and a public method
@@ -278,31 +336,6 @@ public final class ConAirClient implements PacketSender {
                 }
             }
         }
-    }
-
-
-    @Override
-    public ConAirMember getMember(final String name) throws IllegalArgumentException {
-        if (!_conAirMembers.containsKey(name)) {
-            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
-        }
-        return _conAirMembers.get(name);
-    }
-
-
-    /**
-     * Disconnects from the ConAir server and close connection.
-     * 
-     * @throws Exception
-     *             Something went wrong.
-     */
-    public void disconnect() throws Exception {
-        if (!isConnected) {
-            throw new IllegalStateException("Client is not connected!");
-        }
-        channel.close().sync();
-        group.shutdownGracefully().sync();
-        isConnected = false;
     }
 
     private class PluginConAirClientHandler extends SimpleChannelInboundHandler<WrappedPacket> {
@@ -355,17 +388,5 @@ public final class ConAirClient implements PacketSender {
                 _client._conAirMembers.put(clientName, new ConAirMember(clientName));
             }
         }
-    }
-
-
-    @Override
-    public String getName() {
-        return clientName.toString();
-    }
-
-
-    @Override
-    public ConAirMember getServer() {
-        return _server;
     }
 }

@@ -59,7 +59,7 @@ import de.minestar.conair.common.packets.WrappedPacket;
 import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 
-public final class ConAirServer implements PacketSender {
+public class ConAirServer implements PacketSender {
 
     private final EventLoopGroup _bossGroup;
     private final EventLoopGroup _workerGroup;
@@ -153,7 +153,30 @@ public final class ConAirServer implements PacketSender {
             }
         });
         _isRunning = true;
+        afterStart();
         _pluginManagerFactory.loadPlugins(this);
+    }
+
+
+    public final void stop() throws Exception {
+        if (!_isRunning) {
+            throw new IllegalStateException("Server isn't running!");
+        }
+        _serverChannel.close().sync();
+        _bossGroup.shutdownGracefully().sync();
+        _workerGroup.shutdownGracefully().sync();
+        _isRunning = false;
+        afterStop();
+    }
+
+
+    protected void afterStart() {
+        // NOTHING TO DO IN THE STANDARD SERVER
+    }
+
+
+    protected void afterStop() {
+        // NOTHING TO DO IN THE STANDARD SERVER
     }
 
 
@@ -199,6 +222,32 @@ public final class ConAirServer implements PacketSender {
     }
 
 
+    public final boolean isRunning() {
+        return _isRunning;
+    }
+
+
+    @Override
+    public final ConAirMember getMember(final String name) throws IllegalArgumentException {
+        if (!_clientMap.containsKey(name)) {
+            throw new IllegalArgumentException("Member '" + name + "' not found!");
+        }
+        return new ConAirMember(name);
+    }
+
+
+    @Override
+    public final String getName() {
+        return _serverMember.getName();
+    }
+
+
+    @Override
+    public final ConAirMember getServer() {
+        return _serverMember;
+    }
+
+
     /**
      * Send a packet to the targets. If targets are empty, the packet will be broadcasted to every registered client, but not this client.
      * 
@@ -210,43 +259,44 @@ public final class ConAirServer implements PacketSender {
      *             Something went wrong
      */
     @Override
-    public void sendPacket(Packet packet, ConAirMember... targets) throws Exception {
-        if ((targets == null || targets.length < 1) && _clientMap.values().size() > 0) {
-            // broadcast
-            final List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), targets);
-            for (final Entry<String, Channel> entry : _clientMap.entrySet()) {
-                for (final WrappedPacket wrappedPacket : packetList) {
-                    ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
-                    if (result != null) {
-                        result.sync();
+    public final boolean sendPacket(Packet packet, ConAirMember... targets) {
+        try {
+            if ((targets == null || targets.length < 1) && _clientMap.values().size() > 0) {
+                // broadcast
+                final List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), targets);
+                for (final Entry<String, Channel> entry : _clientMap.entrySet()) {
+                    for (final WrappedPacket wrappedPacket : packetList) {
+                        ChannelFuture result = entry.getValue().writeAndFlush(wrappedPacket);
+                        if (result != null) {
+                            result.sync();
+                        }
+                    }
+                }
+            } else {
+                for (final ConAirMember client : targets) {
+                    Channel channel = _clientMap.get(client.getName());
+                    if (channel == null) {
+                        continue;
+                    }
+                    List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), client);
+                    for (final WrappedPacket wrappedPacket : packetList) {
+                        ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                        if (result != null) {
+                            result.sync();
+                        }
                     }
                 }
             }
-        } else {
-            for (final ConAirMember client : targets) {
-                Channel channel = _clientMap.get(client.getName());
-                if (channel == null) {
-                    continue;
-                }
-                List<WrappedPacket> packetList = WrappedPacket.create(packet, getServer(), client);
-                for (final WrappedPacket wrappedPacket : packetList) {
-                    ChannelFuture result = channel.writeAndFlush(wrappedPacket);
-                    if (result != null) {
-                        result.sync();
-                    }
-                }
-            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
 
-    public boolean isRunning() {
-        return _isRunning;
-    }
-
-
     @Override
-    public <L extends Listener> void registerPacketListener(L listener) {
+    public final <L extends Listener> void registerPacketListener(L listener) {
         _listenerMap.put(listener.getClass().toString(), listener);
         if (_isRunning) {
             for (ConAirServerHandler packetHandler : _packetHandler.values()) {
@@ -257,45 +307,13 @@ public final class ConAirServer implements PacketSender {
 
 
     @Override
-    public <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
+    public final <L extends Listener> void unregisterPacketListener(Class<L> listenerClass) {
         _listenerMap.remove(listenerClass.toString());
         if (_isRunning) {
             for (ConAirServerHandler packetHandler : _packetHandler.values()) {
                 packetHandler.unregisterPacketListener(listenerClass);
             }
         }
-    }
-
-
-    @Override
-    public ConAirMember getMember(final String name) throws IllegalArgumentException {
-        if (!_clientMap.containsKey(name)) {
-            throw new IllegalArgumentException("Member '" + name + "' not found!");
-        }
-        return new ConAirMember(name);
-    }
-
-
-    public void stop() throws Exception {
-        if (!_isRunning) {
-            throw new IllegalStateException("Server isn't running!");
-        }
-        _serverChannel.close().sync();
-        _bossGroup.shutdownGracefully().sync();
-        _workerGroup.shutdownGracefully().sync();
-        _isRunning = false;
-    }
-
-
-    @Override
-    public String getName() {
-        return _serverMember.getName();
-    }
-
-
-    @Override
-    public ConAirMember getServer() {
-        return _serverMember;
     }
 
 }

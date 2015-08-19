@@ -44,7 +44,7 @@ public interface PacketSender {
      *            the {@link ConAirMember targets} to send the packet to. If no targets are given, the packet will be broadcasted to everyone.
      * @throws Exception
      */
-    void sendPacket(final Packet packet, final ConAirMember... targets) throws Exception;
+    boolean sendPacket(final Packet packet, final ConAirMember... targets);
 
 
     /**
