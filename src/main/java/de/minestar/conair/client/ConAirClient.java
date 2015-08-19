@@ -71,20 +71,19 @@ import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 public class ConAirClient implements PacketSender {
 
-    private boolean isConnected;
+    private boolean _isConnected;
+    private ConAirMember _server = null;
 
-    private final EventLoopGroup group;
-    private Channel channel;
-
-    private final Set<String> registeredClasses;
-    private final Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> registeredListener;
-    private final ConAirMember clientName;
+    private final ConAirMember _clientName;
+    private final EventLoopGroup _group;
+    private final Channel _channel;
     private final Map<String, ConAirMember> _conAirMembers;
 
-    private final SplittedPacketHandler splittedPacketHandler;
-    private final PluginManagerFactory _pluginManagerFactory;
+    private final Set<String> _registeredClasses;
+    private final Map<Class<? extends Packet>, Map<Class<? extends Listener>, EventExecutor>> _registeredListener;
 
-    private ConAirMember _server = null;
+    private final SplittedPacketHandler _splittedPacketHandler;
+    private final PluginManagerFactory _pluginManagerFactory;
 
 
     public ConAirClient(String clientName, String host, int port) throws Exception {
@@ -93,23 +92,22 @@ public class ConAirClient implements PacketSender {
 
 
     public ConAirClient(String clientName, String host, int port, String pluginFolder) throws Exception {
-        this.clientName = new ConAirMember(clientName.replaceAll("\"", ""));
-        this.isConnected = false;
-        this.group = new NioEventLoopGroup();
-        this.registeredListener = Collections.synchronizedMap(new HashMap<>());
-        this.registeredClasses = Collections.synchronizedSet(new HashSet<>());
-        this.splittedPacketHandler = new SplittedPacketHandler();
-        this._conAirMembers = Collections.synchronizedMap(new HashMap<>());
+        _clientName = new ConAirMember(clientName.replaceAll("\"", ""));
+        _isConnected = false;
+        _group = new NioEventLoopGroup();
+        _registeredListener = Collections.synchronizedMap(new HashMap<>());
+        _registeredClasses = Collections.synchronizedSet(new HashSet<>());
+        _splittedPacketHandler = new SplittedPacketHandler();
+        _conAirMembers = Collections.synchronizedMap(new HashMap<>());
         _pluginManagerFactory = PluginManagerFactory.get(pluginFolder);
-        connect(host, port);
+        _channel = _connect(host, port);
+        _afterConnect();
     }
 
 
     /**
      * Establish a connection to ConAir server. Must be called before {@link #sendPacket(Packet)} can get used.
      * 
-     * @param clientName
-     *            The unique name of this client to identify itself in the ConAir network, for example "Main" or "ModServer"
      * @param host
      *            The address of the ConAir server as an IP or domain.
      * @param port
@@ -118,12 +116,12 @@ public class ConAirClient implements PacketSender {
      *             Something went wrong
      */
     @SuppressWarnings("unchecked")
-    private void connect(String host, int port) throws Exception {
-        if (isConnected) {
+    private Channel _connect(String host, int port) throws Exception {
+        if (_isConnected) {
             throw new IllegalStateException("Client is already connected!");
         }
         Bootstrap bootStrap = new Bootstrap();
-        bootStrap.group(group).channel(NioSocketChannel.class);
+        bootStrap.group(_group).channel(NioSocketChannel.class);
         // Add initializer
         bootStrap.handler(new ChannelInitializer<SocketChannel>() {
 
@@ -148,7 +146,7 @@ public class ConAirClient implements PacketSender {
             }
         });
 
-        channel = bootStrap.connect(host, port).sync().channel();
+        Channel channel = bootStrap.connect(host, port).sync().channel();
         channel.closeFuture().addListeners(new ChannelFutureListener() {
 
             @Override
@@ -157,13 +155,43 @@ public class ConAirClient implements PacketSender {
                 _pluginManagerFactory.disablePlugins();
             }
         });
-        isConnected = true;
+        _isConnected = true;
+        return channel;
+    }
+
+
+    private void _afterConnect() {
         // Register at server with unique name
-        sendPacket(new HandshakePacket(this.clientName.getName()));
+        sendPacket(new HandshakePacket(_clientName.getName()));
         registerPacketListener(new ClientConnectionListener(this));
         afterConnect();
         _pluginManagerFactory.loadPlugins(this);
         _pluginManagerFactory.onConnect();
+    }
+
+
+    private void _onPacketReceived(WrappedPacket wrappedPacket) {
+        if (!_registeredClasses.contains(wrappedPacket.getPacketClassName())) {
+            // The packet is not registered in this client
+            return;
+        }
+        Optional<Packet> result = wrappedPacket.getPacket(_pluginManagerFactory);
+        if (!result.isPresent()) {
+            System.err.println("Error while parsing " + wrappedPacket + "!");
+            return;
+        }
+        // Inform listener
+        Packet packet = result.get();
+        Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packet.getClass());
+        if (map != null) {
+            for (final EventExecutor executor : map.values()) {
+                try {
+                    executor.execute(this, getMember(wrappedPacket.getSource()), packet);
+                } catch (Exception e) {
+                    executor.execute(this, new ConAirMember(wrappedPacket.getSource()), packet);
+                }
+            }
+        }
     }
 
 
@@ -184,25 +212,25 @@ public class ConAirClient implements PacketSender {
      *             Something went wrong.
      */
     public final void disconnect() throws Exception {
-        if (!isConnected) {
+        if (!_isConnected) {
             throw new IllegalStateException("Client is not connected!");
         }
-        channel.close().sync();
-        group.shutdownGracefully().sync();
-        isConnected = false;
+        _channel.close().sync();
+        _group.shutdownGracefully().sync();
+        _isConnected = false;
         afterDisconnect();
     }
 
 
     public final boolean isConnected() {
-        return isConnected;
+        return _isConnected;
     }
 
 
     @Override
     public final ConAirMember getMember(final String name) throws IllegalArgumentException {
         if (!_conAirMembers.containsKey(name)) {
-            throw new IllegalArgumentException("Member '" + name + "' not found! (" + clientName + ") ");
+            throw new IllegalArgumentException("Member '" + name + "' not found! (" + _clientName + ") ");
         }
         return _conAirMembers.get(name);
     }
@@ -210,38 +238,13 @@ public class ConAirClient implements PacketSender {
 
     @Override
     public final String getName() {
-        return clientName.toString();
+        return _clientName.toString();
     }
 
 
     @Override
     public final ConAirMember getServer() {
         return _server;
-    }
-
-
-    private void onPacketReceived(WrappedPacket wrappedPacket) {
-        if (!registeredClasses.contains(wrappedPacket.getPacketClassName())) {
-            // The packet is not registered in this client
-            return;
-        }
-        Optional<Packet> result = wrappedPacket.getPacket(_pluginManagerFactory);
-        if (!result.isPresent()) {
-            System.err.println("Error while parsing " + wrappedPacket + "!");
-            return;
-        }
-        // Inform listener
-        Packet packet = result.get();
-        Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packet.getClass());
-        if (map != null) {
-            for (final EventExecutor executor : map.values()) {
-                try {
-                    executor.execute(this, getMember(wrappedPacket.getSource()), packet);
-                } catch (Exception e) {
-                    executor.execute(this, new ConAirMember(wrappedPacket.getSource()), packet);
-                }
-            }
-        }
     }
 
 
@@ -258,12 +261,12 @@ public class ConAirClient implements PacketSender {
     @Override
     public final boolean sendPacket(Packet packet, ConAirMember... targets) {
         try {
-            if (!isConnected) {
+            if (!_isConnected) {
                 throw new Exception("Client is not connected!");
             }
-            List<WrappedPacket> packetList = WrappedPacket.create(packet, clientName, targets);
+            List<WrappedPacket> packetList = WrappedPacket.create(packet, _clientName, targets);
             for (final WrappedPacket wrappedPacket : packetList) {
-                ChannelFuture result = channel.writeAndFlush(wrappedPacket);
+                ChannelFuture result = _channel.writeAndFlush(wrappedPacket);
                 if (result != null) {
                     result.sync();
                 }
@@ -296,13 +299,13 @@ public class ConAirClient implements PacketSender {
                 Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the packet class
-                registeredClasses.add(packetClass.getName());
+                _registeredClasses.add(packetClass.getName());
 
                 // register the EventExecutor
-                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packetClass);
                 if (map == null) {
                     map = Collections.synchronizedMap(new HashMap<>());
-                    registeredListener.put(packetClass, map);
+                    _registeredListener.put(packetClass, map);
                 }
                 map.put(listener.getClass(), new EventExecutor(listener, method));
             }
@@ -330,7 +333,7 @@ public class ConAirClient implements PacketSender {
                 Class<? extends Packet> packetClass = (Class<? extends Packet>) method.getParameterTypes()[2];
 
                 // register the EventExecutor
-                Map<Class<? extends Listener>, EventExecutor> map = registeredListener.get(packetClass);
+                Map<Class<? extends Listener>, EventExecutor> map = _registeredListener.get(packetClass);
                 if (map != null) {
                     map.remove(listenerClass);
                 }
@@ -344,14 +347,14 @@ public class ConAirClient implements PacketSender {
         protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
             // handle splitted packets
             if (wrappedPacket.getPacketClassName().equals(SplittedPacket.class.getName())) {
-                final WrappedPacket reconstructedPacket = splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_pluginManagerFactory), _pluginManagerFactory);
+                final WrappedPacket reconstructedPacket = _splittedPacketHandler.handle(wrappedPacket, wrappedPacket.getPacket(_pluginManagerFactory), _pluginManagerFactory);
                 if (reconstructedPacket != null) {
                     wrappedPacket = reconstructedPacket;
                 }
             }
 
             // handle received packets
-            onPacketReceived(wrappedPacket);
+            _onPacketReceived(wrappedPacket);
         }
     }
 
