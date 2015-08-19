@@ -61,11 +61,11 @@ import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 public class ConAirServer implements PacketSender {
 
+    private boolean _isRunning;
     private final EventLoopGroup _bossGroup;
     private final EventLoopGroup _workerGroup;
     private final Channel _serverChannel;
 
-    private boolean _isRunning;
     private final ConAirMember _serverMember;
 
     private final Map<String, Listener> _listenerMap;

@@ -29,34 +29,34 @@ import de.minestar.conair.api.Packet;
 
 public class ConnectionPacket implements Packet {
 
-    private final String clientName;
-    private final boolean connect;
+    private final String _clientName;
+    private final boolean _connect;
 
 
     public ConnectionPacket(String clientName, boolean connect) {
-        this.clientName = clientName;
-        this.connect = connect;
+        _clientName = clientName;
+        _connect = connect;
     }
 
 
     public boolean isConnect() {
-        return connect;
+        return _connect;
     }
 
 
     public boolean isDisconnect() {
-        return !connect;
+        return !_connect;
     }
 
 
     public String getClientName() {
-        return clientName;
+        return _clientName;
     }
 
 
     @Override
     public String toString() {
-        return "ConnectionPacket [clientName=" + clientName + ", connect=" + connect + "]";
+        return "ConnectionPacket [clientName=" + _clientName + ", connect=" + _connect + "]";
     }
 
 }

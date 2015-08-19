@@ -36,22 +36,22 @@ public class ErrorPacket implements Packet {
         GENERAL, DUPLICATE_HANDSHAKE, NO_HANDSHAKE;
     }
 
-    private final ErrorType type;
+    private final ErrorType _type;
 
 
     public ErrorPacket(ErrorType type) {
-        this.type = type;
+        _type = type;
     }
 
 
     public ErrorType getType() {
-        return type;
+        return _type;
     }
 
 
     @Override
     public String toString() {
-        return "ErrorPacket [type=" + type + "]";
+        return "ErrorPacket [type=" + _type + "]";
     }
 
 }

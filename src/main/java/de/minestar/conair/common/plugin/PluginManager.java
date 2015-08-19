@@ -79,7 +79,7 @@ public final class PluginManager {
                     } else {
                         try {
                             // initialize the plugin
-                            Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("initialize", PacketSender.class, String.class, PluginManager.class);
+                            Method initializeMethod = ConAirPlugin.class.getDeclaredMethod("_initialize", PacketSender.class, String.class, PluginManager.class);
                             initializeMethod.setAccessible(true);
                             initializeMethod.invoke(plugin, packetSender, plugin.getClass().getSimpleName(), this);
                             initializeMethod.setAccessible(false);

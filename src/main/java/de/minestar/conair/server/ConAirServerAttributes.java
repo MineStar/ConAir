@@ -29,7 +29,6 @@ import io.netty.util.AttributeKey;
 
 class ConAirServerAttributes {
 
-//    static final AttributeKey<Boolean> CONAIR_IS_INITIALIZED = AttributeKey.valueOf("CONAIR_IS_INITIALIZED");
     static final AttributeKey<String> CLIENT_NAME = AttributeKey.valueOf("CONAIR_CLIENT_NAME");
     static final AttributeKey<Boolean> HANDSHAKE_COMPLETED = AttributeKey.valueOf("CONAIR_HANDSHAKE_COMPLETED");
 }

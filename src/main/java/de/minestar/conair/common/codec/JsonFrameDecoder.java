@@ -36,18 +36,18 @@ import java.util.List;
 
 public class JsonFrameDecoder extends ByteToMessageDecoder {
 
-    private final int maxObjectLength;
-
-    private int openBracesCount = 0;
-    private boolean inQuote = false;
-    private final ByteBuf frame = Unpooled.buffer(1024);
     private final static byte BRACKET_LEFT = '{';
     private final static byte BRACKET_RIGHT = '}';
     private final static byte QUOTE = '"';
 
+    private int _openBracesCount = 0;
+    private boolean _inQuote = false;
+    private final int _maxLength;
+    private final ByteBuf _frame = Unpooled.buffer(1024);
+
 
     public JsonFrameDecoder(int maxObjectLength) {
-        this.maxObjectLength = maxObjectLength;
+        this._maxLength = maxObjectLength;
     }
 
 
@@ -63,28 +63,27 @@ public class JsonFrameDecoder extends ByteToMessageDecoder {
             byte next = in.readByte();
 
             if (next == QUOTE) { // "
-                inQuote = !inQuote;
+                _inQuote = !_inQuote;
             }
 
-            if (!inQuote) {
+            if (!_inQuote) {
                 if (next == BRACKET_LEFT) { // {
-                    openBracesCount++;
+                    _openBracesCount++;
                 } else if (next == BRACKET_RIGHT) { // }
-                    openBracesCount--;
+                    _openBracesCount--;
                 }
             }
-            frame.writeByte(next);
-            if (openBracesCount == 0) {
-                out.add(frame.toString(Charset.defaultCharset()));
-                frame.clear();
+            _frame.writeByte(next);
+            if (_openBracesCount == 0) {
+                out.add(_frame.toString(Charset.defaultCharset()));
+                _frame.clear();
             }
         }
 
         // Check for corrupt frame
-        if (frame.readableBytes() > maxObjectLength) {
-            throw new TooLongFrameException("object length of " + frame.readableBytes() + " exceeds " + maxObjectLength + "bytes");
+        if (_frame.readableBytes() > _maxLength) {
+            throw new TooLongFrameException("object length of " + _frame.readableBytes() + " exceeds " + _maxLength + "bytes");
         }
-
     }
 
 }

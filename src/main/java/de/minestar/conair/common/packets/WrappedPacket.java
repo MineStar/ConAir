@@ -53,11 +53,11 @@ public class WrappedPacket {
 
     private final static int MAX_PACKET_SIZE = 1 * 1024; // 1 KB
 
-    private final String packetAsJSON;
-    private final String packetClassName;
+    private final String _packetAsJSON;
+    private final String _packetClassName;
 
-    private final List<String> targets;
-    private final String source;
+    private final List<String> _targets;
+    private final String _source;
 
 
     /**
@@ -83,10 +83,10 @@ public class WrappedPacket {
      *            The target clients in the network.
      */
     private <P extends Packet> WrappedPacket(String packetClassName, String packetData, String source, List<String> targets) {
-        this.packetAsJSON = packetData;
-        this.source = source;
-        this.packetClassName = packetClassName;
-        this.targets = targets;
+        _packetAsJSON = packetData;
+        _source = source;
+        _packetClassName = packetClassName;
+        _targets = targets;
     }
 
 
@@ -123,10 +123,10 @@ public class WrappedPacket {
      *            The source of the packet.
      */
     private WrappedPacket(final WrappedPacket wrappedPacket, String source, String target) {
-        this.packetAsJSON = wrappedPacket.packetAsJSON;
-        this.packetClassName = wrappedPacket.packetClassName;
-        this.source = source;
-        this.targets = Arrays.asList(target);
+        _packetAsJSON = wrappedPacket._packetAsJSON;
+        _packetClassName = wrappedPacket._packetClassName;
+        _source = source;
+        _targets = Arrays.asList(target);
     }
 
 
@@ -138,7 +138,7 @@ public class WrappedPacket {
      * @return <code>true</code> if, and only if, this packet class name is equals to {@link Class#getName()}
      */
     public boolean is(Class<? extends Packet> clazz) {
-        return packetClassName.equals(clazz.getName());
+        return _packetClassName.equals(clazz.getName());
     }
 
 
@@ -150,7 +150,7 @@ public class WrappedPacket {
     public <T extends Packet> Optional<T> getPacket(final PluginManagerFactory pluginManagerFactory) {
         T result = null;
         try {
-            result = decodePacket(packetAsJSON, (Class<T>) pluginManagerFactory.classForName(packetClassName));
+            result = decodePacket(_packetAsJSON, (Class<T>) pluginManagerFactory.classForName(_packetClassName));
             if (result != null) {
                 return Optional.of(result);
             } else {
@@ -196,7 +196,7 @@ public class WrappedPacket {
      * @return Empty list for broadcast or targeted client names.
      */
     public List<String> getTargets() {
-        return targets;
+        return _targets;
     }
 
 
@@ -204,7 +204,7 @@ public class WrappedPacket {
      * @return The complete name of the encapsulated class name
      */
     public String getPacketClassName() {
-        return packetClassName;
+        return _packetClassName;
     }
 
 
@@ -214,13 +214,13 @@ public class WrappedPacket {
      * @return
      */
     public String getSource() {
-        return source;
+        return _source;
     }
 
 
     @Override
     public String toString() {
-        return "WrappedPacket [packetAsJSON=" + packetAsJSON + ", packetClassName=" + packetClassName + ", targets=" + targets + "]";
+        return "WrappedPacket [packetAsJSON=" + _packetAsJSON + ", packetClassName=" + _packetClassName + ", targets=" + _targets + "]";
     }
 
 
@@ -242,11 +242,11 @@ public class WrappedPacket {
         }
         final WrappedPacket completePacket = new WrappedPacket(packet, source.getName(), targetList);
 
-        final byte[] packetData = completePacket.packetAsJSON.getBytes();
+        final byte[] packetData = completePacket._packetAsJSON.getBytes();
         if (packetData.length > MAX_PACKET_SIZE) {
-            Collection<SplittedPacket> split = SplittedPacket.split(MAX_PACKET_SIZE, packetData.length, packet, completePacket.packetAsJSON);
+            Collection<SplittedPacket> split = SplittedPacket.split(MAX_PACKET_SIZE, packetData.length, packet, completePacket._packetAsJSON);
             for (final SplittedPacket smallPacket : split) {
-                packets.add(new WrappedPacket(smallPacket, completePacket.source, completePacket.targets));
+                packets.add(new WrappedPacket(smallPacket, completePacket._source, completePacket._targets));
             }
         } else {
             packets.add(completePacket);
@@ -275,6 +275,6 @@ public class WrappedPacket {
         for (final SplittedPacket packet : packets) {
             builder.append(packet.getData());
         }
-        return new WrappedPacket(packetClassName, builder.toString(), wrappedPacket.source, wrappedPacket.targets);
+        return new WrappedPacket(packetClassName, builder.toString(), wrappedPacket._source, wrappedPacket._targets);
     }
 }

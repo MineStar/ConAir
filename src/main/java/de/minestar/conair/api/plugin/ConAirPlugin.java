@@ -69,7 +69,7 @@ public abstract class ConAirPlugin {
      *            the {@link PluginManager}
      */
     @SuppressWarnings("unused")
-    private final void initialize(PacketSender packetSender, String pluginName, PluginManager pluginManager) {
+    private final void _initialize(PacketSender packetSender, String pluginName, PluginManager pluginManager) {
         _packetSender = packetSender;
         _pluginName = pluginName;
         _pluginManager = pluginManager;

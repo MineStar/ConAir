@@ -50,15 +50,8 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
     }
 
 
-    private boolean isInitialized(ChannelHandlerContext ctx) {
+    private boolean _isInitialized(ChannelHandlerContext ctx) {
         return ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).get() == Boolean.TRUE;
-    }
-
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).getAndSet(Boolean.FALSE);
-        super.channelActive(ctx);
     }
 
 
@@ -67,19 +60,19 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
     protected void channelRead0(ChannelHandlerContext ctx, WrappedPacket wrappedPacket) throws Exception {
         // Channel is initialized and packet is not a handshake - client will be
         // handled in later handlers.
-        if (isInitialized(ctx) && !wrappedPacket.is(HandshakePacket.class)) {
+        if (_isInitialized(ctx) && !wrappedPacket.is(HandshakePacket.class)) {
             ctx.fireChannelRead(wrappedPacket);
             return;
         }
 
         // Channel starts handshake
-        if (!isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
+        if (!_isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
             Optional<HandshakePacket> result = wrappedPacket.getPacket(_server._pluginManagerFactory);
             if (!result.isPresent()) {
                 throw new Exception("Error while parsing " + wrappedPacket + " as HandshakePacket!");
             }
             HandshakePacket handshakePacket = result.get();
-            if (!isInitialized(ctx)) {
+            if (!_isInitialized(ctx)) {
                 // Mark the client as initialized and assign a client name
                 ctx.channel().attr(ConAirServerAttributes.CLIENT_NAME).set(handshakePacket.getClientName());
                 ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).set(Boolean.TRUE);
@@ -97,7 +90,7 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             }
         }
         // Channel tries a twice handshake
-        else if (isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
+        else if (_isInitialized(ctx) && wrappedPacket.is(HandshakePacket.class)) {
             ErrorPacket packet = new ErrorPacket(ErrorType.DUPLICATE_HANDSHAKE);
             ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
             throw new IllegalStateException("Channel did two handshakes!");
@@ -108,6 +101,13 @@ class ServerHandshakeHandler extends SimpleChannelInboundHandler<WrappedPacket> 
             ctx.writeAndFlush(WrappedPacket.create(packet, _server.getServer()));
             throw new IllegalStateException("Channel cannot broadcast before a handshake!");
         }
+    }
+
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).getAndSet(Boolean.FALSE);
+        super.channelActive(ctx);
     }
 
 

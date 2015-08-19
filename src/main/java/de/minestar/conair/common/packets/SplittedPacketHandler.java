@@ -36,7 +36,7 @@ import de.minestar.conair.common.plugin.PluginManagerFactory;
 
 public class SplittedPacketHandler {
 
-    private final Map<Long, List<SplittedPacket>> map = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Long, List<SplittedPacket>> _map = Collections.synchronizedMap(new HashMap<>());
 
 
     public WrappedPacket handle(final WrappedPacket wrappedPacket, final Optional<SplittedPacket> optionalPacket, final PluginManagerFactory pluginManagerFactory) throws ClassNotFoundException {
@@ -47,17 +47,17 @@ public class SplittedPacketHandler {
         }
 
         final SplittedPacket packet = optionalPacket.get();
-        List<SplittedPacket> list = map.get(packet.getId());
+        List<SplittedPacket> list = _map.get(packet.getId());
         if (list == null) {
             list = new ArrayList<SplittedPacket>();
-            map.put(packet.getId(), list);
+            _map.put(packet.getId(), list);
         }
         list.add(packet);
 
         // all packets received => reconstruct the packet
         if (list.size() == packet.getTotalPackets()) {
             WrappedPacket completePacket = WrappedPacket.construct(wrappedPacket, list, pluginManagerFactory, packet.getPacketClass());
-            map.remove(packet.getId());
+            _map.remove(packet.getId());
             list.clear();
             return completePacket;
         }

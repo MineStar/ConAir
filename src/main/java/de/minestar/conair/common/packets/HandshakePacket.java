@@ -32,7 +32,7 @@ import de.minestar.conair.api.Packet;
  */
 public class HandshakePacket implements Packet {
 
-    private final String clientName;
+    private final String _clientName;
 
 
     /**
@@ -42,18 +42,18 @@ public class HandshakePacket implements Packet {
      *            The unique client name of the client.
      */
     public HandshakePacket(String clientName) {
-        this.clientName = clientName;
+        _clientName = clientName;
     }
 
 
     public String getClientName() {
-        return clientName;
+        return _clientName;
     }
 
 
     @Override
     public String toString() {
-        return "HandshakePaket [clientName=" + clientName + "]";
+        return "HandshakePaket [clientName=" + _clientName + "]";
     }
 
 }
