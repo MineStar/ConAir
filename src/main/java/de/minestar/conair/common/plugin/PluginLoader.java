@@ -26,6 +26,7 @@ package de.minestar.conair.common.plugin;
 
 import java.io.File;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -43,7 +44,7 @@ import de.minestar.conair.common.utils.Unsafe;
 final class PluginLoader {
 
     private final Map<String, Class<?>> _classes = new HashMap<String, Class<?>>();
-    private final Map<String, PluginClassLoader> _loaders = new HashMap<String, PluginClassLoader>();
+    private final Map<String, URLClassLoader> _loaders = new HashMap<String, URLClassLoader>();
 
 
     public Collection<ConAirPlugin> loadPlugins(PluginManager pluginManager, File file) {
@@ -74,10 +75,10 @@ final class PluginLoader {
 
         try {
             final URL[] urls = new URL[]{file.toURI().toURL()};
-            final PluginClassLoader classLoader = new PluginClassLoader(this, urls, getClass().getClassLoader());
+            final URLClassLoader classLoader = new URLClassLoader(urls, getClass().getClassLoader());
             for (final String className : pluginClasses) {
                 try {
-                    final Class<?> jarClass = Class.forName(className);
+                    final Class<?> jarClass = classLoader.loadClass(className);
                     _loaders.put(className, classLoader);
                     if (!ConAirPlugin.class.isAssignableFrom(jarClass)) {
                         continue;
@@ -103,9 +104,9 @@ final class PluginLoader {
             return cachedClass;
         } else {
             for (String current : _loaders.keySet()) {
-                PluginClassLoader loader = _loaders.get(current);
+                URLClassLoader loader = _loaders.get(current);
                 try {
-                    cachedClass = loader.findClass(name, false);
+                    cachedClass = loader.loadClass(name);
                 } catch (ClassNotFoundException cnfe) {
                 }
                 if (cachedClass != null) {
