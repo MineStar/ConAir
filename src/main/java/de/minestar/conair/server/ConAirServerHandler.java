@@ -27,10 +27,7 @@ package de.minestar.conair.server;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.CorruptedFrameException;
-import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -54,8 +51,6 @@ import de.minestar.conair.common.packets.WrappedPacket;
 
 class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
-    private static final ChannelGroup CHANNELS = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-
     private final ConAirServer _server;
     private final SplittedPacketHandler _splittedPacketHandler;
 
@@ -73,8 +68,6 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
-        // Pre-Initialize the channel
-        CHANNELS.add(ctx.channel());
         // Mark channel as not initialized - waiting for handshake
         ctx.channel().attr(ConAirServerAttributes.HANDSHAKE_COMPLETED).getAndSet(Boolean.FALSE);
     }
@@ -112,14 +105,14 @@ class ConAirServerHandler extends SimpleChannelInboundHandler<WrappedPacket> {
         // Broadcast packet - except for the channel, which is the sender of the
         // packet and which haven't finished handhake with the server.
         if (wrappedPacket.getTargets().isEmpty()) {
-            for (Channel target : CHANNELS) {
+            for (Channel target : _server._clientChannels) {
                 if (target != ctx.channel()) {
                     target.writeAndFlush(packet);
                 }
             }
         } else {
             // Send packet to designated clients
-            for (Channel target : CHANNELS) {
+            for (Channel target : _server._clientChannels) {
                 if (target != ctx.channel() && wrappedPacket.getTargets().contains(getClientName(target))) {
                     target.writeAndFlush(packet);
                 }

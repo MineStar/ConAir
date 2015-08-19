@@ -64,27 +64,90 @@ public class ConAirTest {
 
 
     @Test
+    public void multipleServerTest() throws Exception {
+        // Create the server
+        ConAirServer server = new ConAirServer("MyTestServer_1", PORT);
+        server.registerPacketListener(new TestListener());
+        Assert.assertTrue(server.isRunning());
+
+        // Create the server
+        ConAirServer server2 = new ConAirServer("MyTestServer_2", PORT + 1);
+        server2.registerPacketListener(new TestListener());
+        Assert.assertTrue(server2.isRunning());
+
+        // Create first client and connect to server
+        ConAirClient client1 = new ConAirClient("Client1", "localhost", PORT);
+        client1.registerPacketListener(new TestListener());
+        Assert.assertTrue(client1.isConnected());
+
+        // Create second client and connect to server
+        ConAirClient client2 = new ConAirClient("Client2", "127.0.0.1", PORT);
+        client2.registerPacketListener(new TestListener());
+        Assert.assertTrue(client2.isConnected());
+
+        // Create third client and connect to server
+        ConAirClient client3 = new ConAirClient("Client3", "::1", PORT + 1);
+        client3.registerPacketListener(new TestListener());
+        Assert.assertTrue(client3.isConnected());
+
+        // Create third client and connect to server, This client hasn't a
+        // packet registered!
+        ConAirClient client4 = new ConAirClient("Client4", "::1", PORT + 1);
+        client4.registerPacketListener(new TestListener());
+        Assert.assertTrue(client4.isConnected());
+
+        // Clients are sending packets to everyone in the network
+        client1.sendPacket(new ChatPacket("Aloha C2 & S1!"));
+        client1.sendPacket(new ChatPacket("Aloha C2!"), client1.getMember("Client2"));
+        Thread.sleep(50);
+        client2.sendPacket(new ChatPacket("Hello C1 & S1!"));
+        Thread.sleep(50);
+        client3.sendPacket(new ChatPacket("Moin C4 & S2!"));
+        Thread.sleep(50);
+        client4.sendPacket(new ChatPacket("Hi C3 & S2!"));
+        Thread.sleep(50);
+
+        // Clients are disconnecting, server is shutting down
+        System.out.println("Shutting down...");
+        Thread.sleep(500);
+        client1.disconnect();
+        client2.disconnect();
+        client3.disconnect();
+        client4.disconnect();
+        Assert.assertFalse(client1.isConnected());
+        Assert.assertFalse(client2.isConnected());
+        Assert.assertFalse(client3.isConnected());
+        Assert.assertFalse(client4.isConnected());
+
+        // server shutdown
+        server.stop();
+        Assert.assertFalse(server.isRunning());
+        server2.stop();
+        Assert.assertFalse(server2.isRunning());
+    }
+
+
+    @Test
     public void testConAir() {
         try {
-
             // Create the server
             ConAirServer server = new ConAirServer("MyTestServer", PORT);
-            server.registerPacketListener(new TestListener("S"));
+            server.registerPacketListener(new TestListener());
             Assert.assertTrue(server.isRunning());
 
             // Create first client and connect to server
             ConAirClient client1 = new ConAirClient("Client1", "localhost", PORT);
-            client1.registerPacketListener(new TestListener("C1"));
+            client1.registerPacketListener(new TestListener());
             Assert.assertTrue(client1.isConnected());
 
             // Create second client and connect to server
             ConAirClient client2 = new ConAirClient("Client2", "127.0.0.1", PORT);
-            client2.registerPacketListener(new TestListener("C2"));
+            client2.registerPacketListener(new TestListener());
             Assert.assertTrue(client2.isConnected());
 
             // Create third client and connect to server
             ConAirClient client3 = new ConAirClient("Client3", "::1", PORT);
-            client3.registerPacketListener(new TestListener("C3"));
+            client3.registerPacketListener(new TestListener());
             Assert.assertTrue(client3.isConnected());
 
             // Create third client and connect to server, This client hasn't a
@@ -93,22 +156,27 @@ public class ConAirTest {
             Assert.assertTrue(client4.isConnected());
 
             // Clients are sending packets to everyone in the network
+            Thread.sleep(50);
             client1.sendPacket(new ChatPacket("Hi Client2!"), client1.getMember("Client2"));
             Thread.sleep(50);
             client2.sendPacket(new ChatPacket("Hello!"));
             Thread.sleep(50);
             client3.sendPacket(new ChatPacket("Moin!"));
 
+            Thread.sleep(50);
             // Client 1 talks to client 3
             client1.sendPacket(new ChatPacket("Pssst...client3....can you hear me?"), client1.getMember("Client3"));
 
+            Thread.sleep(50);
             // send a resourcepacket
             ResourcePacket resourcePacket = new ResourcePacket(new File("send.jpg"));
             CRC_CHECK = crc(resourcePacket.getData());
             client2.sendPacket(resourcePacket, client2.getMember("Client1"));
+            Thread.sleep(50);
 
             // send a packet for the server only
             client3.sendPacket(new ChatPacket("Just for the server."), client3.getServer());
+            Thread.sleep(50);
 
             // send a packet from the server to client 3
             server.sendPacket(new ChatPacket("Thank you!"), server.getMember("Client3"));
@@ -117,11 +185,11 @@ public class ConAirTest {
             // unregister and send the packet again
             client3.unregisterPacketListener(TestListener.class);
             server.sendPacket(new ChatPacket("Thank you again! (YOU SHOULD NOT SEE THIS)"), server.getMember("Client3"));
-
-            Thread.sleep(1000); // Just for test
+            Thread.sleep(50);
 
             // Clients are disconnecting, server is shutting down
             System.out.println("Shutting down...");
+            Thread.sleep(500);
             client1.disconnect();
             client2.disconnect();
             client3.disconnect();
@@ -131,6 +199,7 @@ public class ConAirTest {
             Assert.assertFalse(client3.isConnected());
             Assert.assertFalse(client4.isConnected());
 
+            // server shutdown
             server.stop();
             Assert.assertFalse(server.isRunning());
         } catch (Exception e) {
@@ -141,28 +210,20 @@ public class ConAirTest {
 
     public static class TestListener implements Listener {
 
-        private String name;
-
-
-        public TestListener(String n) {
-            name = n;
-        }
-
-
         @RegisterEvent
         public void onChatPacket(final PacketSender receiver, final ConAirMember sender, final ChatPacket packet) throws Exception {
             if (sender.getName().equals("Client1") && packet.getMessage().contains("Pssst...client3....can you hear me?")) {
-                System.out.println("[WHISPER] [ to: " + name + " ] [ from: " + sender + " ] " + packet.getMessage());
+                System.out.println("[WHISPER] [ " + sender + " -> " + receiver.getName() + " ] " + packet.getMessage());
                 receiver.sendPacket(new ChatPacket("Roger " + sender + ", I hear you loud and clear."), sender);
             } else {
-                System.out.println("[ to: " + name + " ] [ from: " + sender + " ] " + packet.getMessage());
+                System.out.println("[ " + sender + " -> " + receiver.getName() + " ] " + packet.getMessage());
             }
         }
 
 
         @RegisterEvent
         public void onResourcePacket(final PacketSender receiver, final ConAirMember sender, final ResourcePacket packet) {
-            System.out.println("[ to: " + name + " ] [ from: " + sender + " ] ResourcePacket: " + packet.toString());
+            System.out.println("[ " + sender + " -> " + receiver.getName() + " ] ResourcePacket: " + packet.toString());
             Assert.assertEquals("CRC IS DIFFERENT!!!!", crc(packet.getData()), CRC_CHECK);
             try {
                 String filename = "rec.jpg";

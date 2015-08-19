@@ -43,9 +43,11 @@ import io.netty.util.CharsetUtil;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import de.minestar.conair.api.ConAir;
 import de.minestar.conair.api.Packet;
@@ -72,6 +74,7 @@ public class ConAirServer implements PacketSender {
     private final Map<String, Channel> _clientMap;
     private final Map<InetSocketAddress, ConAirServerHandler> _packetHandler;
 
+    final Set<Channel> _clientChannels;
     final PluginManagerFactory _pluginManagerFactory;
 
 
@@ -94,6 +97,7 @@ public class ConAirServer implements PacketSender {
         _clientMap = Collections.synchronizedMap(new HashMap<>());
         _pluginManagerFactory = PluginManagerFactory.get(pluginFolder);
         _packetHandler = Collections.synchronizedMap(new HashMap<>());
+        _clientChannels = Collections.synchronizedSet(new HashSet<>());
         _serverChannel = _start(port);
         _afterStart();
     }
@@ -133,6 +137,9 @@ public class ConAirServer implements PacketSender {
 
                 pipeline.addLast("handshakeHandler", new ServerHandshakeHandler(ConAirServer.this));
 
+                // save channel for later use
+                _clientChannels.add(ch);
+
                 // Add server logic
                 ConAirServerHandler packetHandler = new ConAirServerHandler(ConAirServer.this);
                 for (final Listener listener : _listenerMap.values()) {
@@ -148,6 +155,7 @@ public class ConAirServer implements PacketSender {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         _packetHandler.remove(localAddress);
+                        _clientChannels.remove(ch);
                     }
                 });
             }
@@ -169,6 +177,10 @@ public class ConAirServer implements PacketSender {
     public final void stop() throws Exception {
         if (!_isRunning) {
             throw new IllegalStateException("Server isn't running!");
+        }
+        // close channels
+        for (Channel channel : _clientChannels) {
+            channel.close().awaitUninterruptibly();
         }
         _serverChannel.close().sync();
         _bossGroup.shutdownGracefully().sync();
